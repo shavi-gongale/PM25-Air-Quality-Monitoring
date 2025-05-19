@@ -1289,6 +1289,149 @@ elif page == "PM2.5 Predictions":
                 st.markdown(download_link, unsafe_allow_html=True)
 
 # Historical Analysis page
+elif page == "Satellite Imagery":
+    st.header("Satellite Imagery & Air Quality Maps")
+    
+    # Date selection for satellite imagery
+    sat_date = st.date_input("Select Date for Satellite Data", datetime.now().date())
+    sat_date_str = sat_date.strftime("%Y-%m-%d")
+    
+    # Create two columns for different satellite views
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.subheader(f"Air Quality Map for {selected_station}")
+        
+        # Get air quality map
+        air_quality_map = get_air_quality_map(selected_station, sat_date_str)
+        
+        if air_quality_map:
+            st.markdown(f'<img src="{air_quality_map}" style="width:100%">', unsafe_allow_html=True)
+            st.markdown("""
+            This air quality heatmap shows PM2.5 concentration levels as measured by satellite data. 
+            Darker red areas indicate higher PM2.5 levels.
+            """)
+        else:
+            st.error("Unable to retrieve air quality map. Please try another date.")
+    
+    with col2:
+        st.subheader(f"Satellite Imagery for {selected_station}")
+        
+        # Get satellite imagery
+        imagery = get_satellite_imagery(selected_station, sat_date_str)
+        
+        if imagery:
+            st.image(imagery, caption=f"Satellite imagery of {selected_station}", use_column_width=True)
+        else:
+            st.error("Unable to retrieve satellite imagery. Please try another date.")
+    
+    # Historical satellite data analysis
+    st.header("Historical Satellite Data Analysis")
+    
+    # Date range selection
+    hist_col1, hist_col2 = st.columns(2)
+    with hist_col1:
+        sat_start_date = st.date_input("Start Date", datetime.now().date() - timedelta(days=30), key="sat_start")
+    with hist_col2:
+        sat_end_date = st.date_input("End Date", datetime.now().date(), key="sat_end")
+    
+    if sat_start_date <= sat_end_date:
+        # Get historical satellite data
+        sat_data = get_historical_satellite_data(
+            selected_station, 
+            sat_start_date.strftime("%Y-%m-%d"), 
+            sat_end_date.strftime("%Y-%m-%d")
+        )
+        
+        if not sat_data.empty:
+            # Display the data
+            st.subheader("Satellite-Derived PM2.5 Estimates")
+            st.dataframe(sat_data)
+            
+            # Plot the data
+            fig = px.line(
+                sat_data,
+                x='Date',
+                y='Satellite_PM2.5',
+                title=f'Satellite-Derived PM2.5 Estimates for {selected_station}',
+                labels={'Satellite_PM2.5': 'PM2.5 (μg/m³)', 'Date': 'Date'}
+            )
+            
+            st.plotly_chart(fig, use_container_width=True)
+            
+            # Compare with ground-based measurements if available
+            st.subheader("Comparison with Ground Measurements")
+            
+            # Filter data for the selected station and date range
+            ground_data = data[
+                (data['Station'] == selected_station) &
+                (pd.to_datetime(data['Date']).dt.date >= sat_start_date) &
+                (pd.to_datetime(data['Date']).dt.date <= sat_end_date)
+            ].copy()
+            
+            if not ground_data.empty:
+                # Convert data for comparison
+                ground_data['Date_Str'] = pd.to_datetime(ground_data['Date']).dt.strftime('%Y-%m-%d')
+                
+                # Merge satellite and ground data
+                comparison_data = pd.merge(
+                    sat_data, 
+                    ground_data[['Date_Str', 'PM2.5']], 
+                    left_on='Date', 
+                    right_on='Date_Str',
+                    how='inner'
+                )
+                
+                if not comparison_data.empty:
+                    # Display comparison data
+                    comparison_data = comparison_data.rename(columns={'PM2.5': 'Ground_PM2.5'})
+                    st.dataframe(comparison_data[['Date', 'Satellite_PM2.5', 'Ground_PM2.5']])
+                    
+                    # Plot comparison
+                    fig_comp = go.Figure()
+                    
+                    # Add satellite data
+                    fig_comp.add_trace(go.Scatter(
+                        x=comparison_data['Date'],
+                        y=comparison_data['Satellite_PM2.5'],
+                        mode='lines+markers',
+                        name='Satellite PM2.5'
+                    ))
+                    
+                    # Add ground data
+                    fig_comp.add_trace(go.Scatter(
+                        x=comparison_data['Date'],
+                        y=comparison_data['Ground_PM2.5'],
+                        mode='lines+markers',
+                        name='Ground PM2.5'
+                    ))
+                    
+                    fig_comp.update_layout(
+                        title=f'Satellite vs Ground PM2.5 Measurements for {selected_station}',
+                        xaxis_title='Date',
+                        yaxis_title='PM2.5 (μg/m³)',
+                        legend=dict(x=0, y=1, traceorder='normal')
+                    )
+                    
+                    st.plotly_chart(fig_comp, use_container_width=True)
+                    
+                    # Calculate correlation
+                    corr = comparison_data['Satellite_PM2.5'].corr(comparison_data['Ground_PM2.5'])
+                    
+                    st.markdown(f"""
+                    **Correlation between satellite and ground measurements: {corr:.4f}**
+                    
+                    This {'strong' if abs(corr) > 0.7 else 'moderate' if abs(corr) > 0.4 else 'weak'} correlation indicates that 
+                    satellite measurements {'accurately reflect' if abs(corr) > 0.7 else 'somewhat reflect' if abs(corr) > 0.4 else 'may not accurately reflect'} 
+                    ground-based PM2.5 levels.
+                    """)
+            else:
+                st.info("No ground-based measurements available for the selected date range.")
+        else:
+            st.warning("No satellite data available for the selected date range.")
+    else:
+        st.warning("Please select a valid date range.")
+
 elif page == "Historical Analysis":
     st.header("Historical Data Analysis")
     
@@ -1337,10 +1480,15 @@ elif page == "Historical Analysis":
             # Date range selection
             st.subheader("Select Data Range")
             ha_col1, ha_col2 = st.columns(2)
+            
+            # Get min and max dates from data for valid range
+            min_date = min(pd.to_datetime(data['Date'])).date()
+            max_date = max(pd.to_datetime(data['Date'])).date()
+            
             with ha_col1:
-                ha_start_date = st.date_input("Start Date", min(pd.to_datetime(data['Date'])).date(), key="ha_start")
+                ha_start_date = st.date_input("Start Date", min_date, min_value=min_date, max_value=max_date, key="ha_start")
             with ha_col2:
-                ha_end_date = st.date_input("End Date", max(pd.to_datetime(data['Date'])).date(), key="ha_end")
+                ha_end_date = st.date_input("End Date", max_date, min_value=min_date, max_value=max_date, key="ha_end")
             
             # Station selection
             ha_station_filter = st.multiselect(
@@ -1350,13 +1498,25 @@ elif page == "Historical Analysis":
                 key="ha_stations"
             )
             
-            if ha_start_date <= ha_end_date and ha_station_filter:
+            # Check for valid selections
+            if ha_start_date > ha_end_date:
+                st.warning("⚠️ Start date must be before or equal to end date. Please adjust your selection.")
+                analysis_data = None
+            elif not ha_station_filter:
+                st.warning("⚠️ Please select at least one station.")
+                analysis_data = None
+            else:
                 # Filter data based on date range and stations
                 analysis_data = data[
                     (pd.to_datetime(data['Date']).dt.date >= ha_start_date) &
                     (pd.to_datetime(data['Date']).dt.date <= ha_end_date) &
                     (data['Station'].isin(ha_station_filter))
                 ].copy()
+                
+                # Check if filtered data is empty
+                if analysis_data.empty:
+                    st.warning(f"No data available for the selected date range and stations. Try expanding your selection.")
+                    analysis_data = None
         
         if analysis_data is not None and not analysis_data.empty:
             # Create tabs for different analysis options
