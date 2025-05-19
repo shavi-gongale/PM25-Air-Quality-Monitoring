@@ -45,9 +45,15 @@ if not os.path.exists('data/user_data'):
     os.makedirs('data/user_data', exist_ok=True)
 
 # Load the dataset
-@st.cache_data
+@st.cache_data(ttl=300)  # Cache expires after 5 minutes
 def get_data():
-    return load_data()
+    data = load_data()
+    # Ensure date range is from 2021-01-01 to 2025-01-15
+    data['Date'] = pd.to_datetime(data['Date'])
+    start_date = pd.to_datetime('2021-01-01')
+    end_date = pd.to_datetime('2025-01-15')
+    data = data[(data['Date'] >= start_date) & (data['Date'] <= end_date)]
+    return data
 
 data = get_data()
 
