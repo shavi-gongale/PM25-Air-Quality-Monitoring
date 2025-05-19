@@ -131,6 +131,7 @@ if page == "Overview":
         - **Model Comparison**: Compare different models' performance with metrics like RMSE and correlation
         - **Data Analysis**: Explore historical trends and relationships between parameters
         - **Data Download**: Export historical and prediction data in various formats
+        - **Historical Data Storage**: Store and manage your downloaded historical data
         """)
         
         st.image("https://pixabay.com/get/gd9254fa6c0fd331ab3029d83b28d4e5f966740bd31b6f33cd52e651956326f8a6ff241f438d94b25c947143be03007da94730d81e5ad2094fba1ff6772233819_1280.jpg", 
@@ -386,117 +387,18 @@ elif page == "Predictions":
         )
         
         if prediction_method == "Use live weather forecast data":
-            # Get weather forecast data
+            # Get weather forecast data from API
             with st.spinner("Fetching weather forecast data..."):
                 forecast_data = get_weather_forecast(selected_station)
+            
+            if forecast_data:
+                # Display the forecast data
+                st.subheader("Weather Forecast Data")
+                forecast_df = pd.DataFrame(forecast_data)
+                st.dataframe(forecast_df)
                 
-                if forecast_data:
-                    st.success("Weather forecast data retrieved successfully!")
-                    
-                    # Display the forecast data
-                    st.subheader("Weather Forecast Data")
-                    
-                    # Create a dataframe for the forecast
-                    forecast_df = pd.DataFrame(forecast_data)
-                    
-                    # Display the forecast dataframe
-                    st.dataframe(forecast_df)
-                    
-                    # Make predictions using the forecast data
-                    with st.spinner("Generating PM2.5 predictions..."):
-                        # Preprocess the data
-                        processed_data = preprocess_data(station_data)
-                        
-                        # Split the data for training
-                        X_train, X_test, y_train, y_test = split_data(processed_data, test_size=0.2)
-                        
-                        # Train the models
-                        models = train_models(X_train, y_train)
-                        
-                        # Make predictions
-                        prediction_results = predict_pm25(models, forecast_data)
-                        
-                        # Display prediction results
-                        st.subheader("PM2.5 Predictions")
-                        
-                        # Create a dataframe for the predictions
-                        predictions_df = pd.DataFrame({
-                            'Date': [pd.to_datetime(date).strftime("%Y-%m-%d") for date in forecast_df['Date']],
-                            'Model Tree': prediction_results['Model Tree'],
-                            'NLR': prediction_results['NLR'],
-                            'Random Forest': prediction_results['Random Forest'],
-                            'Logistic Regression': prediction_results['Logistic Regression']
-                        })
-                        
-                        # Display the predictions dataframe
-                        st.dataframe(predictions_df)
-                        
-                        # Create a plot for the predictions
-                        fig_pred = plot_forecast(predictions_df)
-                        st.plotly_chart(fig_pred, use_container_width=True)
-                        
-                        # Calculate and display average predictions
-                        predictions_df['Average'] = predictions_df[['Model Tree', 'NLR', 'Random Forest', 'Logistic Regression']].mean(axis=1)
-                        
-                        st.subheader("Summary of Predictions")
-                        
-                        # Display cards for each prediction day
-                        cols = st.columns(len(predictions_df))
-                        
-                        for i, (_, row) in enumerate(predictions_df.iterrows()):
-                            with cols[i]:
-                                day_label = "Today" if i == 0 else f"{i} days ahead"
-                                st.metric(
-                                    label=f"{day_label} ({row['Date']})",
-                                    value=f"{row['Average']:.2f} μg/m³"
-                                )
-                                
-                                # Add a color indicator based on PM2.5 level
-                                pm25_level = row['Average']
-                                if pm25_level <= 12:
-                                    st.success("Good")
-                                elif pm25_level <= 35:
-                                    st.info("Moderate")
-                                elif pm25_level <= 55:
-                                    st.warning("Unhealthy for Sensitive Groups")
-                                else:
-                                    st.error("Unhealthy")
-                else:
-                    st.error("Failed to retrieve weather forecast data. Please try the manual input method.")
-        
-        else:  # Manual parameter input
-            st.subheader("Enter Weather Parameters")
-            
-            # Get parameter ranges from the dataset
-            temp_min, temp_max = station_data['Temperature'].min(), station_data['Temperature'].max()
-            solar_min, solar_max = station_data['Solar_Radiation'].min(), station_data['Solar_Radiation'].max()
-            wind_min, wind_max = station_data['Wind_Speed'].min(), station_data['Wind_Speed'].max()
-            humidity_min, humidity_max = station_data['Relative_Humidity'].min(), station_data['Relative_Humidity'].max()
-            
-            # Input for current day
-            st.write("**Parameters for Current Day:**")
-            col1, col2 = st.columns(2)
-            
-            with col1:
-                temp_today = st.slider("Temperature (°C)", float(temp_min), float(temp_max), float((temp_min + temp_max) / 2))
-                solar_today = st.slider("Solar Radiation (W/m²)", float(solar_min), float(solar_max), float((solar_min + solar_max) / 2))
-            
-            with col2:
-                wind_today = st.slider("Wind Speed (m/s)", float(wind_min), float(wind_max), float((wind_min + wind_max) / 2))
-                humidity_today = st.slider("Relative Humidity (%)", float(humidity_min), float(humidity_max), float((humidity_min + humidity_max) / 2))
-            
-            # Create manual forecast data
-            manual_forecast = [{
-                'Date': (datetime.now() + timedelta(days=i)).strftime("%Y-%m-%d"),
-                'Temperature': temp_today * (1 + (np.random.random() - 0.5) * 0.1 * i),  # slight random variation for future days
-                'Solar_Radiation': solar_today * (1 + (np.random.random() - 0.5) * 0.1 * i),
-                'Wind_Speed': wind_today * (1 + (np.random.random() - 0.5) * 0.1 * i),
-                'Relative_Humidity': humidity_today * (1 + (np.random.random() - 0.5) * 0.1 * i)
-            } for i in range(5)]  # 0 = today, 1 = tomorrow, etc.
-            
-            # Make predictions button
-            if st.button("Generate Predictions"):
-                with st.spinner("Generating PM2.5 predictions..."):
+                # Train models using historical data
+                with st.spinner("Training prediction models..."):
                     # Preprocess the data
                     processed_data = preprocess_data(station_data)
                     
@@ -505,298 +407,343 @@ elif page == "Predictions":
                     
                     # Train the models
                     models = train_models(X_train, y_train)
+                
+                # Make predictions for the forecast days
+                with st.spinner("Making predictions..."):
+                    prediction_results = predict_pm25(models, forecast_data)
+                
+                # Create a dataframe for displaying predictions
+                predictions_df = pd.DataFrame({
+                    'Date': [item['Date'] for item in forecast_data]
+                })
+                
+                for model_name, predictions in prediction_results.items():
+                    predictions_df[model_name] = predictions
+                
+                # Display predictions
+                st.subheader("PM2.5 Predictions")
+                st.dataframe(predictions_df)
+                
+                # Plot predictions
+                fig = plot_forecast(predictions_df)
+                st.plotly_chart(fig, use_container_width=True)
+                
+                # Find the best model based on historical performance
+                with st.spinner("Evaluating model performance..."):
+                    evaluation_results = evaluate_models(models, X_test, y_test)
+                    best_model_name = min(evaluation_results, key=lambda x: evaluation_results[x]['rmse'])
+                
+                st.subheader("Best Model Prediction")
+                st.write(f"Based on historical performance, the **{best_model_name}** model is most accurate with an RMSE of {evaluation_results[best_model_name]['rmse']:.2f}.")
+                
+                # Display best model predictions
+                best_pred_df = pd.DataFrame({
+                    'Date': predictions_df['Date'],
+                    'PM2.5': predictions_df[best_model_name]
+                })
+                
+                st.dataframe(best_pred_df)
+                
+                # Save forecast data to historical storage
+                if st.button("Save Forecast Data"):
+                    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                    forecast_filename = f"pm25_forecast_{selected_station}_{timestamp}.csv"
+                    forecast_path = os.path.join('data', 'predictions', forecast_filename)
                     
-                    # Make predictions
-                    prediction_results = predict_pm25(models, manual_forecast)
-                    
-                    # Display prediction results
-                    st.subheader("PM2.5 Predictions")
-                    
-                    # Create a dataframe for the manual forecast
-                    forecast_df = pd.DataFrame(manual_forecast)
-                    
-                    # Create a dataframe for the predictions
-                    predictions_df = pd.DataFrame({
-                        'Date': [pd.to_datetime(date).strftime("%Y-%m-%d") for date in forecast_df['Date']],
-                        'Model Tree': prediction_results['Model Tree'],
-                        'NLR': prediction_results['NLR'],
-                        'Random Forest': prediction_results['Random Forest'],
-                        'Logistic Regression': prediction_results['Logistic Regression']
+                    # Save the forecast data and predictions
+                    save_df = pd.DataFrame({
+                        'Date': [item['Date'] for item in forecast_data],
+                        'Temperature': [item['Temperature'] for item in forecast_data],
+                        'Solar_Radiation': [item['Solar_Radiation'] for item in forecast_data],
+                        'Wind_Speed': [item['Wind_Speed'] for item in forecast_data],
+                        'Relative_Humidity': [item['Relative_Humidity'] for item in forecast_data]
                     })
                     
-                    # Display the predictions dataframe
-                    st.dataframe(predictions_df)
+                    for model_name, predictions in prediction_results.items():
+                        save_df[f'PM2.5_{model_name}'] = predictions
                     
-                    # Create a plot for the predictions
-                    fig_pred = plot_forecast(predictions_df)
-                    st.plotly_chart(fig_pred, use_container_width=True)
-                    
-                    # Calculate and display average predictions
-                    predictions_df['Average'] = predictions_df[['Model Tree', 'NLR', 'Random Forest', 'Logistic Regression']].mean(axis=1)
-                    
-                    st.subheader("Summary of Predictions")
-                    
-                    # Display cards for each prediction day
-                    cols = st.columns(len(predictions_df))
-                    
-                    for i, (_, row) in enumerate(predictions_df.iterrows()):
-                        with cols[i]:
-                            day_label = "Today" if i == 0 else f"{i} days ahead"
-                            st.metric(
-                                label=f"{day_label} ({row['Date']})",
-                                value=f"{row['Average']:.2f} μg/m³"
-                            )
-                            
-                            # Add a color indicator based on PM2.5 level
-                            pm25_level = row['Average']
-                            if pm25_level <= 12:
-                                st.success("Good")
-                            elif pm25_level <= 35:
-                                st.info("Moderate")
-                            elif pm25_level <= 55:
-                                st.warning("Unhealthy for Sensitive Groups")
-                            else:
-                                st.error("Unhealthy")
+                    save_df.to_csv(forecast_path, index=False)
+                    st.success(f"Forecast data saved to {forecast_path}")
+                
+                # Add a download link for the forecast data
+                csv_data = predictions_df.to_csv(index=False)
+                download_link = get_download_link(csv_data, f"pm25_forecast_{selected_station}.csv", "text/csv")
+                st.markdown(download_link, unsafe_allow_html=True)
+                
+            else:
+                st.error("Unable to retrieve weather forecast data. Please try again or use manual parameter input.")
         
-        # Display air quality monitoring station image
-        st.image("https://pixabay.com/get/g0f687b6e9401a80e1b2c684c0ab1d8528977f03b31ace081ebd832d704d077bdf1c9442dad533d6708c8c088e3c02fba41ead700a93934d380e4b9465809becf_1280.jpg", 
-                 caption="Air Quality Monitoring Station")
-        
-        # Health implications of PM2.5 levels
-        with st.expander("Health Implications of PM2.5 Levels"):
-            st.markdown("""
-            ### PM2.5 Air Quality Index (AQI)
+        else:  # Manual parameter input
+            st.subheader("Enter Weather Parameters")
             
-            | PM2.5 Level (μg/m³) | Category | Health Implications |
-            | --- | --- | --- |
-            | 0-12 | Good | Air quality is satisfactory, and air pollution poses little or no risk. |
-            | 12.1-35.4 | Moderate | Air quality is acceptable. However, there may be a risk for some people, particularly those who are unusually sensitive to air pollution. |
-            | 35.5-55.4 | Unhealthy for Sensitive Groups | Members of sensitive groups may experience health effects. The general public is less likely to be affected. |
-            | 55.5-150.4 | Unhealthy | Some members of the general public may experience health effects; members of sensitive groups may experience more serious health effects. |
-            | 150.5-250.4 | Very Unhealthy | Health alert: The risk of health effects is increased for everyone. |
-            | 250.5+ | Hazardous | Health warning of emergency conditions: everyone is more likely to be affected. |
-            """)
+            # Create five columns for the five prediction days
+            cols = st.columns(5)
+            days = [0, 1, 2, 4, 7]  # Present, and 1, 2, 4, 7 days ahead
+            
+            manual_forecast_data = []
+            
+            for i, day in enumerate(days):
+                with cols[i]:
+                    forecast_date = (datetime.now() + timedelta(days=day)).strftime("%Y-%m-%d")
+                    st.write(f"**{forecast_date}**")
+                    
+                    temp = st.number_input(f"Temperature (°C) - Day {day}", min_value=-20.0, max_value=50.0, value=25.0, key=f"temp_{i}")
+                    solar = st.number_input(f"Solar Radiation (W/m²) - Day {day}", min_value=0.0, max_value=1500.0, value=250.0, key=f"solar_{i}")
+                    wind = st.number_input(f"Wind Speed (m/s) - Day {day}", min_value=0.0, max_value=30.0, value=3.0, key=f"wind_{i}")
+                    humidity = st.number_input(f"Relative Humidity (%) - Day {day}", min_value=0.0, max_value=100.0, value=65.0, key=f"humidity_{i}")
+                    
+                    manual_forecast_data.append({
+                        'Date': forecast_date,
+                        'Temperature': temp,
+                        'Solar_Radiation': solar,
+                        'Wind_Speed': wind,
+                        'Relative_Humidity': humidity
+                    })
+            
+            if st.button("Make Predictions"):
+                # Train models using historical data
+                with st.spinner("Training prediction models..."):
+                    # Preprocess the data
+                    processed_data = preprocess_data(station_data)
+                    
+                    # Split the data for training
+                    X_train, X_test, y_train, y_test = split_data(processed_data, test_size=0.2)
+                    
+                    # Train the models
+                    models = train_models(X_train, y_train)
+                
+                # Make predictions for the forecast days
+                with st.spinner("Making predictions..."):
+                    prediction_results = predict_pm25(models, manual_forecast_data)
+                
+                # Create a dataframe for displaying predictions
+                predictions_df = pd.DataFrame({
+                    'Date': [item['Date'] for item in manual_forecast_data]
+                })
+                
+                for model_name, predictions in prediction_results.items():
+                    predictions_df[model_name] = predictions
+                
+                # Display predictions
+                st.subheader("PM2.5 Predictions")
+                st.dataframe(predictions_df)
+                
+                # Plot predictions
+                fig = plot_forecast(predictions_df)
+                st.plotly_chart(fig, use_container_width=True)
+                
+                # Find the best model based on historical performance
+                with st.spinner("Evaluating model performance..."):
+                    evaluation_results = evaluate_models(models, X_test, y_test)
+                    best_model_name = min(evaluation_results, key=lambda x: evaluation_results[x]['rmse'])
+                
+                st.subheader("Best Model Prediction")
+                st.write(f"Based on historical performance, the **{best_model_name}** model is most accurate with an RMSE of {evaluation_results[best_model_name]['rmse']:.2f}.")
+                
+                # Display best model predictions
+                best_pred_df = pd.DataFrame({
+                    'Date': predictions_df['Date'],
+                    'PM2.5': predictions_df[best_model_name]
+                })
+                
+                st.dataframe(best_pred_df)
+                
+                # Save manual forecast data to historical storage
+                if st.button("Save Forecast Data"):
+                    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                    forecast_filename = f"pm25_manual_forecast_{selected_station}_{timestamp}.csv"
+                    forecast_path = os.path.join('data', 'predictions', forecast_filename)
+                    
+                    # Save the forecast data and predictions
+                    save_df = pd.DataFrame({
+                        'Date': [item['Date'] for item in manual_forecast_data],
+                        'Temperature': [item['Temperature'] for item in manual_forecast_data],
+                        'Solar_Radiation': [item['Solar_Radiation'] for item in manual_forecast_data],
+                        'Wind_Speed': [item['Wind_Speed'] for item in manual_forecast_data],
+                        'Relative_Humidity': [item['Relative_Humidity'] for item in manual_forecast_data]
+                    })
+                    
+                    for model_name, predictions in prediction_results.items():
+                        save_df[f'PM2.5_{model_name}'] = predictions
+                    
+                    save_df.to_csv(forecast_path, index=False)
+                    st.success(f"Manual forecast data saved to {forecast_path}")
+                
+                # Add a download link for the forecast data
+                csv_data = predictions_df.to_csv(index=False)
+                download_link = get_download_link(csv_data, f"pm25_manual_forecast_{selected_station}.csv", "text/csv")
+                st.markdown(download_link, unsafe_allow_html=True)
 
 # Historical Analysis page
 elif page == "Historical Analysis":
     st.header("Historical Data Analysis")
     
     if data.empty:
-        st.warning("No historical data available for analysis.")
+        st.warning("No data available for analysis.")
     else:
-        st.subheader("Explore Historical PM2.5 Data")
-        
         # Date range selection
-        min_date = pd.to_datetime(data['Date']).min().date()
-        max_date = pd.to_datetime(data['Date']).max().date()
-        
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            start_date = st.date_input("Start Date", min_date, min_value=min_date, max_value=max_date)
-        
-        with col2:
-            end_date = st.date_input("End Date", max_date, min_value=min_date, max_value=max_date)
+        st.subheader("Select Date Range")
+        ha_col1, ha_col2 = st.columns(2)
+        with ha_col1:
+            ha_start_date = st.date_input("Start Date", min(pd.to_datetime(data['Date'])).date(), key="ha_start")
+        with ha_col2:
+            ha_end_date = st.date_input("End Date", max(pd.to_datetime(data['Date'])).date(), key="ha_end")
         
         # Station selection
-        station_filter_hist = st.multiselect(
+        ha_station_filter = st.multiselect(
             "Select Stations",
             ["Fort William", "Bidhannagar"],
-            default=["Fort William", "Bidhannagar"]
+            default=["Fort William", "Bidhannagar"],
+            key="ha_stations"
         )
         
-        if start_date <= end_date and station_filter_hist:
+        if ha_start_date <= ha_end_date and ha_station_filter:
             # Filter data based on date range and stations
-            filtered_data = data[
-                (pd.to_datetime(data['Date']).dt.date >= start_date) &
-                (pd.to_datetime(data['Date']).dt.date <= end_date) &
-                (data['Station'].isin(station_filter_hist))
+            ha_filtered_data = data[
+                (pd.to_datetime(data['Date']).dt.date >= ha_start_date) &
+                (pd.to_datetime(data['Date']).dt.date <= ha_end_date) &
+                (data['Station'].isin(ha_station_filter))
             ].copy()
             
-            # Display the number of records
-            st.write(f"**Number of records:** {len(filtered_data)}")
+            # Display filtered data
+            st.subheader("Filtered Data")
+            st.dataframe(ha_filtered_data)
             
-            # Show the filtered data
-            with st.expander("View Filtered Data"):
-                st.dataframe(filtered_data)
+            # Plot historical trends
+            st.subheader("Historical PM2.5 Trends")
+            fig_hist = plot_historical_data(ha_filtered_data)
+            st.plotly_chart(fig_hist, use_container_width=True)
             
-            # PM2.5 trend over time
-            st.subheader("PM2.5 Trend Over Time")
+            # Calculate and display statistics
+            st.subheader("Statistical Summary")
             
-            fig_trend = px.line(
-                filtered_data,
+            # Group by station and calculate statistics
+            stats = ha_filtered_data.groupby('Station')['PM2.5'].agg(['mean', 'median', 'min', 'max', 'std']).reset_index()
+            stats.columns = ['Station', 'Mean', 'Median', 'Minimum', 'Maximum', 'Std Dev']
+            stats = stats.round(2)
+            
+            st.dataframe(stats)
+            
+            # Bar chart for comparing statistics
+            fig_stats = px.bar(
+                stats,
+                x='Station',
+                y=['Mean', 'Median', 'Minimum', 'Maximum'],
+                barmode='group',
+                title='PM2.5 Statistics by Station',
+                labels={'value': 'PM2.5 (μg/m³)', 'variable': 'Statistic'}
+            )
+            st.plotly_chart(fig_stats, use_container_width=True)
+            
+            # Time series decomposition
+            st.subheader("Time Series Analysis")
+            
+            # Select station for time series analysis
+            ts_station = st.selectbox("Select Station for Time Series Analysis", ha_station_filter)
+            
+            # Filter data for the selected station
+            ts_data = ha_filtered_data[ha_filtered_data['Station'] == ts_station].copy()
+            
+            # Ensure data is sorted by date
+            ts_data = ts_data.sort_values('Date')
+            
+            # Plot the time series
+            fig_ts = px.line(
+                ts_data,
                 x='Date',
                 y='PM2.5',
-                color='Station',
-                title='PM2.5 Levels Over Time',
+                title=f'PM2.5 Time Series for {ts_station}',
                 labels={'PM2.5': 'PM2.5 (μg/m³)', 'Date': 'Date'}
             )
             
-            st.plotly_chart(fig_trend, use_container_width=True)
+            # Add a trendline
+            ts_data['day_index'] = range(len(ts_data))
+            z = np.polyfit(ts_data['day_index'], ts_data['PM2.5'], 1)
+            trend = np.poly1d(z)
             
-            # Monthly averages
-            st.subheader("Monthly Average PM2.5 Levels")
+            fig_ts.add_trace(go.Scatter(
+                x=ts_data['Date'],
+                y=trend(ts_data['day_index']),
+                mode='lines',
+                name='Trend',
+                line=dict(color='red', dash='dash')
+            ))
             
-            # Add month and year columns for analysis
-            filtered_data['Month'] = pd.to_datetime(filtered_data['Date']).dt.month
-            filtered_data['Year'] = pd.to_datetime(filtered_data['Date']).dt.year
+            st.plotly_chart(fig_ts, use_container_width=True)
             
-            # Group by year, month, and station to calculate monthly averages
-            monthly_avg = filtered_data.groupby(['Year', 'Month', 'Station'])['PM2.5'].mean().reset_index()
-            monthly_avg['Date'] = pd.to_datetime(monthly_avg[['Year', 'Month']].assign(Day=1))
+            # Display trend information
+            if z[0] > 0:
+                st.write(f"The PM2.5 levels in {ts_station} show an **increasing trend** of {z[0]:.4f} μg/m³ per day.")
+            elif z[0] < 0:
+                st.write(f"The PM2.5 levels in {ts_station} show a **decreasing trend** of {abs(z[0]):.4f} μg/m³ per day.")
+            else:
+                st.write(f"The PM2.5 levels in {ts_station} show **no significant trend**.")
             
+            # Monthly average analysis
+            st.subheader("Monthly Average Analysis")
+            
+            # Extract month and year
+            ts_data['Month'] = pd.to_datetime(ts_data['Date']).dt.month
+            ts_data['Year'] = pd.to_datetime(ts_data['Date']).dt.year
+            
+            # Group by month and calculate average
+            monthly_avg = ts_data.groupby(['Year', 'Month'])['PM2.5'].mean().reset_index()
+            monthly_avg['Date'] = pd.to_datetime(monthly_avg[['Year', 'Month']].assign(day=1))
+            
+            # Plot monthly averages
             fig_monthly = px.line(
                 monthly_avg,
                 x='Date',
                 y='PM2.5',
-                color='Station',
                 markers=True,
-                title='Monthly Average PM2.5 Levels',
-                labels={'PM2.5': 'Average PM2.5 (μg/m³)', 'Date': 'Month-Year'}
+                title=f'Monthly Average PM2.5 Levels for {ts_station}',
+                labels={'PM2.5': 'Average PM2.5 (μg/m³)', 'Date': 'Month'}
             )
             
             st.plotly_chart(fig_monthly, use_container_width=True)
             
-            # Seasonal analysis
-            st.subheader("Seasonal Analysis")
+            # Seasonal patterns
+            st.subheader("Seasonal Patterns")
             
-            # Define seasons (meteorological seasons in Northern Hemisphere)
-            season_mapping = {
-                1: 'Winter', 2: 'Winter', 3: 'Spring',
-                4: 'Spring', 5: 'Spring', 6: 'Summer',
-                7: 'Summer', 8: 'Summer', 9: 'Autumn',
-                10: 'Autumn', 11: 'Autumn', 12: 'Winter'
-            }
+            # Group by month across all years
+            seasonal_avg = ts_data.groupby('Month')['PM2.5'].mean().reset_index()
             
-            filtered_data['Season'] = filtered_data['Month'].map(season_mapping)
-            
-            # Group by season and station to calculate seasonal averages
-            seasonal_avg = filtered_data.groupby(['Season', 'Station'])['PM2.5'].mean().reset_index()
-            
-            # Define season order
-            season_order = ['Winter', 'Spring', 'Summer', 'Autumn']
-            seasonal_avg['Season'] = pd.Categorical(seasonal_avg['Season'], categories=season_order, ordered=True)
-            seasonal_avg = seasonal_avg.sort_values('Season')
-            
-            fig_seasonal = px.bar(
+            # Plot seasonal pattern
+            fig_seasonal = px.line(
                 seasonal_avg,
-                x='Season',
+                x='Month',
                 y='PM2.5',
-                color='Station',
-                barmode='group',
-                title='Seasonal Average PM2.5 Levels',
-                labels={'PM2.5': 'Average PM2.5 (μg/m³)', 'Season': 'Season'}
+                markers=True,
+                title=f'Seasonal PM2.5 Pattern for {ts_station}',
+                labels={'PM2.5': 'Average PM2.5 (μg/m³)', 'Month': 'Month'}
             )
+            
+            # Update x-axis to show month names
+            month_names = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+            fig_seasonal.update_xaxes(tickvals=list(range(1, 13)), ticktext=month_names)
             
             st.plotly_chart(fig_seasonal, use_container_width=True)
-            
-            # Yearly trend analysis
-            st.subheader("Yearly Trend Analysis")
-            
-            # Group by year and station to calculate yearly averages
-            yearly_avg = filtered_data.groupby(['Year', 'Station'])['PM2.5'].mean().reset_index()
-            
-            fig_yearly = px.line(
-                yearly_avg,
-                x='Year',
-                y='PM2.5',
-                color='Station',
-                markers=True,
-                title='Yearly Average PM2.5 Levels',
-                labels={'PM2.5': 'Average PM2.5 (μg/m³)', 'Year': 'Year'}
-            )
-            
-            # Format x-axis to show only years
-            fig_yearly.update_xaxes(tickvals=yearly_avg['Year'].unique())
-            
-            st.plotly_chart(fig_yearly, use_container_width=True)
-            
-            # Weather parameter correlation with PM2.5
-            st.subheader("Weather Parameter Correlation with PM2.5")
-            
-            # Select station for correlation analysis
-            station_for_hist_corr = st.selectbox(
-                "Select Station for Correlation Analysis",
-                station_filter_hist
-            )
-            
-            # Filter data for the selected station
-            station_hist_data = filtered_data[filtered_data['Station'] == station_for_hist_corr]
-            
-            # Create correlation plot for each parameter
-            param_options = ['Temperature', 'Solar_Radiation', 'Wind_Speed', 'Relative_Humidity']
-            selected_param = st.selectbox("Select Parameter", param_options)
-            
-            fig_param_corr = px.scatter(
-                station_hist_data,
-                x=selected_param,
-                y='PM2.5',
-                color='Season',
-                trendline='ols',
-                title=f'Correlation between {selected_param} and PM2.5',
-                labels={selected_param: selected_param, 'PM2.5': 'PM2.5 (μg/m³)'}
-            )
-            
-            st.plotly_chart(fig_param_corr, use_container_width=True)
-            
-            # Calculate and display correlation coefficient
-            corr_coef = station_hist_data[selected_param].corr(station_hist_data['PM2.5'])
-            st.write(f"**Correlation Coefficient:** {corr_coef:.4f}")
-            
-            # Interpret the correlation
-            if abs(corr_coef) < 0.3:
-                st.write("Weak correlation")
-            elif abs(corr_coef) < 0.7:
-                st.write("Moderate correlation")
-            else:
-                st.write("Strong correlation")
-            
-            # Boxplot for PM2.5 distribution
-            st.subheader("PM2.5 Distribution by Station")
-            
-            fig_box = px.box(
-                filtered_data,
-                x='Station',
-                y='PM2.5',
-                color='Station',
-                title='PM2.5 Distribution by Station',
-                labels={'PM2.5': 'PM2.5 (μg/m³)', 'Station': 'Station'}
-            )
-            
-            st.plotly_chart(fig_box, use_container_width=True)
-            
-            # Display air quality monitoring image
-            st.image("https://pixabay.com/get/g376032a20c7986a790f2472e6226aba2d4f8f4b9ecd2e1ddf045c15c61622fb2126687679fc72edd5e96bc46ce6396193f84df658f200321da90abf7cd9d7341_1280.jpg", 
-                     caption="Air Quality Monitoring Station")
-        
+                
         else:
-            if start_date > end_date:
-                st.error("Start date must be before or equal to end date.")
-            if not station_filter_hist:
-                st.error("Please select at least one station.")
+            st.warning("Please select a valid date range and at least one station.")
 
 # Download Data page
 elif page == "Download Data":
-    st.header("Download Data")
+    st.header("Download Historical Data")
     
     if data.empty:
         st.warning("No data available for download.")
     else:
-        st.subheader("Download Options")
+        st.write("Select the date range and stations for data download.")
         
-        # Date range selection for download
-        min_date = pd.to_datetime(data['Date']).min().date()
-        max_date = pd.to_datetime(data['Date']).max().date()
+        # Date range selection
+        dl_col1, dl_col2 = st.columns(2)
+        with dl_col1:
+            dl_start_date = st.date_input("Start Date", min(pd.to_datetime(data['Date'])).date())
+        with dl_col2:
+            dl_end_date = st.date_input("End Date", max(pd.to_datetime(data['Date'])).date())
         
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            dl_start_date = st.date_input("Start Date", min_date, min_value=min_date, max_value=max_date, key="dl_start")
-        
-        with col2:
-            dl_end_date = st.date_input("End Date", max_date, min_value=min_date, max_value=max_date, key="dl_end")
-        
-        # Station selection for download
+        # Station selection
         dl_station_filter = st.multiselect(
             "Select Stations",
             ["Fort William", "Bidhannagar"],
@@ -839,8 +786,18 @@ elif page == "Download Data":
             
             # Generate download link based on file format
             if st.button("Generate Download Link"):
+                # Create a timestamped filename
+                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                file_base_name = f"pm25_data_{timestamp}"
+                
                 if file_format == "CSV":
                     csv_data = dl_filtered_data.to_csv(index=False)
+                    # Save a copy to the historical data folder
+                    historical_path = os.path.join('data', 'historical', f"{file_base_name}.csv")
+                    with open(historical_path, "w") as f:
+                        f.write(csv_data)
+                    
+                    st.success(f"Data saved to {historical_path}")
                     download_link = get_download_link(csv_data, "pm25_data.csv", "text/csv")
                     st.markdown(download_link, unsafe_allow_html=True)
                 
@@ -848,24 +805,204 @@ elif page == "Download Data":
                     excel_buffer = BytesIO()
                     dl_filtered_data.to_excel(excel_buffer, index=False)
                     excel_data = excel_buffer.getvalue()
+                    
+                    # Save a copy to the historical data folder
+                    historical_path = os.path.join('data', 'historical', f"{file_base_name}.xlsx")
+                    with open(historical_path, "wb") as f:
+                        f.write(excel_data)
+                    
+                    st.success(f"Data saved to {historical_path}")
                     download_link = get_download_link(excel_data, "pm25_data.xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
                     st.markdown(download_link, unsafe_allow_html=True)
                 
                 elif file_format == "JSON":
                     json_data = dl_filtered_data.to_json(orient="records")
+                    
+                    # Save a copy to the historical data folder
+                    historical_path = os.path.join('data', 'historical', f"{file_base_name}.json")
+                    with open(historical_path, "w") as f:
+                        f.write(json_data)
+                    
+                    st.success(f"Data saved to {historical_path}")
                     download_link = get_download_link(json_data, "pm25_data.json", "application/json")
                     st.markdown(download_link, unsafe_allow_html=True)
-            
-            # Display data visualization graphics image
-            st.image("https://pixabay.com/get/ge17a111ad0bedc0ce521590a579161e835cc223ccf9639284ed96d2cfc9b1760a9fb39a4ab44b7b8a828adc8edfa752f8bbfb749c98690b22a23a6bce9ca9e71_1280.jpg", 
-                     caption="Data Visualization Graphics")
-        
         else:
-            if dl_start_date > dl_end_date:
-                st.error("Start date must be before or equal to end date.")
-            if not dl_station_filter:
-                st.error("Please select at least one station.")
+            st.warning("Please select a valid date range and at least one station.")
 
-# Footer
-st.markdown("---")
-st.caption("PM2.5 Prediction Application © 2023 | Powered by Streamlit and OpenWeatherMap")
+# Historical Data Storage page
+elif page == "Historical Data Storage":
+    st.header("Historical Data Storage")
+    
+    st.write("""
+    This page helps you manage your stored historical data. You can view, analyze, and manage the data 
+    files that you've saved from the application.
+    """)
+    
+    # Tabs for different types of data
+    data_tab = st.radio("Select Data Type", ["Historical Data", "Forecast Data"])
+    
+    if data_tab == "Historical Data":
+        # List historical data files
+        historical_path = os.path.join('data', 'historical')
+        historical_files = [f for f in os.listdir(historical_path) if os.path.isfile(os.path.join(historical_path, f))]
+        
+        if not historical_files:
+            st.info("No historical data files found. You can save historical data from the 'Download Data' page.")
+        else:
+            st.subheader("Available Historical Data Files")
+            
+            # Sort files by modification time (newest first)
+            historical_files.sort(key=lambda x: os.path.getmtime(os.path.join(historical_path, x)), reverse=True)
+            
+            # Create a dataframe for displaying file information
+            file_info = []
+            for file in historical_files:
+                file_path = os.path.join(historical_path, file)
+                file_size = os.path.getsize(file_path) / 1024  # Convert to KB
+                file_date = datetime.fromtimestamp(os.path.getmtime(file_path)).strftime("%Y-%m-%d %H:%M:%S")
+                file_info.append({
+                    "Filename": file,
+                    "Size (KB)": f"{file_size:.2f}",
+                    "Date Modified": file_date
+                })
+            
+            file_df = pd.DataFrame(file_info)
+            st.dataframe(file_df)
+            
+            # Select a file to view
+            selected_file = st.selectbox("Select a file to view", historical_files)
+            
+            if selected_file:
+                file_path = os.path.join(historical_path, selected_file)
+                
+                # Determine file format and load data
+                if selected_file.endswith('.csv'):
+                    hist_data = pd.read_csv(file_path)
+                elif selected_file.endswith('.xlsx'):
+                    hist_data = pd.read_excel(file_path)
+                elif selected_file.endswith('.json'):
+                    hist_data = pd.read_json(file_path)
+                else:
+                    st.error("Unsupported file format.")
+                    hist_data = None
+                
+                if hist_data is not None:
+                    # Display the data
+                    st.subheader(f"Data Preview: {selected_file}")
+                    st.dataframe(hist_data)
+                    
+                    # Visualize data if it has the correct format
+                    if all(col in hist_data.columns for col in ['Date', 'PM2.5']):
+                        st.subheader("Data Visualization")
+                        
+                        # Check if Station column exists
+                        if 'Station' in hist_data.columns:
+                            # Plot by station
+                            fig = px.line(
+                                hist_data,
+                                x='Date',
+                                y='PM2.5',
+                                color='Station',
+                                title='PM2.5 Levels by Station',
+                                labels={'PM2.5': 'PM2.5 (μg/m³)', 'Date': 'Date'}
+                            )
+                        else:
+                            # Plot without station differentiation
+                            fig = px.line(
+                                hist_data,
+                                x='Date',
+                                y='PM2.5',
+                                title='PM2.5 Levels',
+                                labels={'PM2.5': 'PM2.5 (μg/m³)', 'Date': 'Date'}
+                            )
+                        
+                        st.plotly_chart(fig, use_container_width=True)
+                    
+                    # Option to delete the file
+                    if st.button(f"Delete {selected_file}"):
+                        try:
+                            os.remove(file_path)
+                            st.success(f"File {selected_file} deleted successfully.")
+                            st.rerun()
+                        except Exception as e:
+                            st.error(f"Error deleting file: {e}")
+    
+    else:  # Forecast Data
+        # List forecast data files
+        forecasts_path = os.path.join('data', 'predictions')
+        forecast_files = [f for f in os.listdir(forecasts_path) if os.path.isfile(os.path.join(forecasts_path, f))]
+        
+        if not forecast_files:
+            st.info("No forecast data files found. You can save forecast data from the 'Predictions' page.")
+        else:
+            st.subheader("Available Forecast Data Files")
+            
+            # Sort files by modification time (newest first)
+            forecast_files.sort(key=lambda x: os.path.getmtime(os.path.join(forecasts_path, x)), reverse=True)
+            
+            # Create a dataframe for displaying file information
+            file_info = []
+            for file in forecast_files:
+                file_path = os.path.join(forecasts_path, file)
+                file_size = os.path.getsize(file_path) / 1024  # Convert to KB
+                file_date = datetime.fromtimestamp(os.path.getmtime(file_path)).strftime("%Y-%m-%d %H:%M:%S")
+                file_info.append({
+                    "Filename": file,
+                    "Size (KB)": f"{file_size:.2f}",
+                    "Date Modified": file_date
+                })
+            
+            file_df = pd.DataFrame(file_info)
+            st.dataframe(file_df)
+            
+            # Select a file to view
+            selected_file = st.selectbox("Select a file to view", forecast_files)
+            
+            if selected_file:
+                file_path = os.path.join(forecasts_path, selected_file)
+                
+                # Load data (assuming CSV format for forecast files)
+                if selected_file.endswith('.csv'):
+                    forecast_data = pd.read_csv(file_path)
+                    
+                    # Display the data
+                    st.subheader(f"Data Preview: {selected_file}")
+                    st.dataframe(forecast_data)
+                    
+                    # Check if we have the necessary columns for visualization
+                    pm25_cols = [col for col in forecast_data.columns if 'PM2.5' in col]
+                    
+                    if 'Date' in forecast_data.columns and pm25_cols:
+                        st.subheader("Forecast Visualization")
+                        
+                        # Create plot
+                        fig = go.Figure()
+                        
+                        for col in pm25_cols:
+                            fig.add_trace(go.Scatter(
+                                x=forecast_data['Date'],
+                                y=forecast_data[col],
+                                mode='lines+markers',
+                                name=col
+                            ))
+                        
+                        fig.update_layout(
+                            title='PM2.5 Forecast Comparison',
+                            xaxis_title='Date',
+                            yaxis_title='PM2.5 (μg/m³)',
+                            legend_title='Model',
+                            hovermode='x unified'
+                        )
+                        
+                        st.plotly_chart(fig, use_container_width=True)
+                    
+                    # Option to delete the file
+                    if st.button(f"Delete {selected_file}"):
+                        try:
+                            os.remove(file_path)
+                            st.success(f"File {selected_file} deleted successfully.")
+                            st.rerun()
+                        except Exception as e:
+                            st.error(f"Error deleting file: {e}")
+                else:
+                    st.error("Unsupported file format. Forecast files should be in CSV format.")
