@@ -33,9 +33,9 @@ def generate_synthetic_dataset():
     # Set a seed for reproducibility
     np.random.seed(42)
     
-    # Generate dates from 2021 to present day (daily data)
+    # Generate dates from 2021-01-01 to 2025-01-15 (daily data)
     start_date = pd.to_datetime('2021-01-01')
-    end_date = pd.to_datetime(datetime.now().strftime("%Y-%m-%d"))
+    end_date = pd.to_datetime('2025-01-15')
     dates = pd.date_range(start=start_date, end=end_date, freq='D')
     
     # Create dataframes for two stations
