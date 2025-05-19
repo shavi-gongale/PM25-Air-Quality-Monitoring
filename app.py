@@ -22,6 +22,7 @@ from visualizer import (
 )
 from weather_api import get_weather_forecast
 from utils import get_download_link
+from satellite_data import get_satellite_imagery, get_air_quality_map, get_historical_satellite_data
 
 # Set page configuration
 st.set_page_config(
@@ -148,12 +149,63 @@ def load_user_data(filename):
 st.sidebar.title("Navigation")
 page = st.sidebar.radio(
     "Go to",
-    ["Dashboard", "Data Analysis and Insights", "Model Training & Comparison", "PM2.5 Predictions", "Historical Analysis", "Data Download"]
+    ["Dashboard", "Data Analysis and Insights", "Model Training & Comparison", "PM2.5 Predictions", "Satellite Imagery", "Historical Analysis", "Data Download"]
 )
 
 # Station selection for predictions
 st.sidebar.title("Settings")
 selected_station = st.sidebar.selectbox("Select Station", ["Fort William", "Bidhannagar"])
+
+# Theme selection (dark/light mode)
+st.sidebar.title("Display Settings")
+theme_mode = st.sidebar.radio(
+    "Select Theme",
+    ["Light Mode", "Dark Mode"]
+)
+
+# Apply dark mode if selected
+if theme_mode == "Dark Mode":
+    st.markdown("""
+    <style>
+    :root {
+        --background-color: #0e1117;
+        --secondary-background-color: #262730;
+        --text-color: #fafafa;
+        --font: "sans serif";
+    }
+    
+    .stApp {
+        background-color: var(--background-color);
+        color: var(--text-color);
+    }
+    
+    .sidebar .sidebar-content {
+        background-color: var(--secondary-background-color);
+    }
+    
+    .Widget > label {
+        color: var(--text-color);
+    }
+    
+    .stTextInput > div > div > input {
+        background-color: var(--secondary-background-color);
+        color: var(--text-color);
+    }
+    
+    .stDataFrame {
+        background-color: var(--secondary-background-color);
+        color: var(--text-color);
+    }
+    
+    .weather-card {
+        background-color: var(--secondary-background-color) !important;
+    }
+    
+    .station-overview, .model-overview {
+        background-color: var(--secondary-background-color) !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
 
 # Prediction time horizon
 st.sidebar.subheader("Select Prediction Time Horizon")

@@ -3,6 +3,7 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 import os
+from datetime import datetime
 
 def load_data():
     """
@@ -32,9 +33,9 @@ def generate_synthetic_dataset():
     # Set a seed for reproducibility
     np.random.seed(42)
     
-    # Generate dates for 2 years (daily data)
+    # Generate dates from 2021 to present day (daily data)
     start_date = pd.to_datetime('2021-01-01')
-    end_date = pd.to_datetime('2022-12-31')
+    end_date = pd.to_datetime(datetime.now().strftime("%Y-%m-%d"))
     dates = pd.date_range(start=start_date, end=end_date, freq='D')
     
     # Create dataframes for two stations
