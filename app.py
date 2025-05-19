@@ -44,8 +44,14 @@ It provides predictions for the present day and forecasts for 1, 2, 4, and 7 day
 st.sidebar.title("Navigation")
 page = st.sidebar.radio(
     "Go to",
-    ["Overview", "Data Analysis", "Model Training & Comparison", "Predictions", "Historical Analysis", "Download Data"]
+    ["Overview", "Data Analysis", "Model Training & Comparison", "Predictions", "Historical Analysis", "Download Data", "Historical Data Storage"]
 )
+
+# Create necessary folders for storage
+if not os.path.exists('data/historical'):
+    os.makedirs('data/historical', exist_ok=True)
+if not os.path.exists('data/predictions'):
+    os.makedirs('data/predictions', exist_ok=True)
 
 # Load the dataset
 @st.cache_data

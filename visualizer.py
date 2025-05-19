@@ -74,14 +74,38 @@ def plot_parameter_comparison(data, param_x, param_y):
     Returns:
         plotly.graph_objects.Figure: Plotly figure object
     """
+    # Use scatter plot without trendline to avoid statsmodels dependency issues
     fig = px.scatter(
         data,
         x=param_x,
         y=param_y,
-        trendline='ols',
         title=f'{param_y} vs {param_x}',
         labels={param_x: param_x, param_y: param_y}
     )
+    
+    # Manually add a trend line using numpy's polyfit
+    x_values = data[param_x].values
+    y_values = data[param_y].values
+    
+    # Remove NaN values
+    mask = ~(np.isnan(x_values) | np.isnan(y_values))
+    x_clean = x_values[mask]
+    y_clean = y_values[mask]
+    
+    if len(x_clean) > 1:  # Need at least 2 points for a line
+        # Calculate trend line
+        coeffs = np.polyfit(x_clean, y_clean, 1)
+        line_x = np.array([min(x_clean), max(x_clean)])
+        line_y = coeffs[0] * line_x + coeffs[1]
+        
+        # Add trend line to figure
+        fig.add_trace(go.Scatter(
+            x=line_x,
+            y=line_y,
+            mode='lines',
+            name=f'Trend Line (y = {coeffs[0]:.4f}x + {coeffs[1]:.4f})',
+            line=dict(color='red', dash='dash')
+        ))
     
     fig.update_layout(
         xaxis_title=param_x,

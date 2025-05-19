@@ -60,7 +60,18 @@ def train_models(X_train, y_train):
             expected_values = np.zeros(X.shape[0])
             
             for i in range(X.shape[0]):
-                expected_values[i] = np.sum(proba[i] * bin_centers)
+                # Ensure the shapes are compatible for multiplication
+                if proba[i].shape[0] != bin_centers.shape[0]:
+                    # If shapes don't match, we need to adjust
+                    if proba[i].shape[0] < bin_centers.shape[0]:
+                        # If we have fewer probability values than bins, use only available bins
+                        expected_values[i] = np.sum(proba[i] * bin_centers[:proba[i].shape[0]])
+                    else:
+                        # If we have more probability values than bins, truncate probabilities
+                        expected_values[i] = np.sum(proba[i][:bin_centers.shape[0]] * bin_centers)
+                else:
+                    # Shapes match, proceed with normal calculation
+                    expected_values[i] = np.sum(proba[i] * bin_centers)
                 
             return expected_values
     
