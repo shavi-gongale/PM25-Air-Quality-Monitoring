@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
 import plotly.express as px
 import plotly.graph_objects as go
 from datetime import datetime, timedelta
@@ -25,27 +24,15 @@ from utils import get_download_link
 
 # Set page configuration
 st.set_page_config(
-    page_title="PM2.5 Prediction Application",
+    page_title="PM2.5 Air Quality Prediction",
     page_icon="🌬️",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# Application title
-st.title("Air Quality (PM2.5) Prediction Application")
-
-# Add a short description
-st.markdown("""
-This application predicts PM2.5 levels for two stations (Fort William and Bidhannagar) using multiple machine learning models. 
-It provides predictions for the present day and forecasts for 1, 2, 4, and 7 days ahead based on weather parameters.
-""")
-
-# Sidebar for navigation
-st.sidebar.title("Navigation")
-page = st.sidebar.radio(
-    "Go to",
-    ["Overview", "Data Analysis", "Model Training & Comparison", "Predictions", "Historical Analysis", "Download Data", "Historical Data Storage"]
-)
+# Load custom CSS
+with open('.streamlit/styles.css') as f:
+    st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
 
 # Create necessary folders for storage
 if not os.path.exists('data/historical'):
@@ -60,172 +47,321 @@ def get_data():
 
 data = get_data()
 
+# AQI level definitions
+def get_aqi_category(pm25):
+    if pm25 <= 50:
+        return "Good", "good"
+    elif pm25 <= 100:
+        return "Moderate", "moderate"
+    elif pm25 <= 150:
+        return "Unhealthy for Sensitive Groups", "unhealthy-for-sensitive-groups"
+    elif pm25 <= 200:
+        return "Unhealthy", "unhealthy"
+    elif pm25 <= 300:
+        return "Very Unhealthy", "very-unhealthy"
+    else:
+        return "Hazardous", "hazardous"
+
+# Sidebar for navigation
+st.sidebar.title("Navigation")
+page = st.sidebar.radio(
+    "Go to",
+    ["Dashboard", "Station Comparison", "Model Training & Comparison", "PM2.5 Predictions", "Historical Analysis", "Data Download"]
+)
+
 # Station selection for predictions
-st.sidebar.title("Prediction Settings")
+st.sidebar.title("Settings")
 selected_station = st.sidebar.selectbox("Select Station", ["Fort William", "Bidhannagar"])
 
-# Overview page
-if page == "Overview":
-    st.header("Air Quality Monitoring Overview")
+# Display AQI scale in sidebar
+st.sidebar.title("AQI Scale")
+aqi_levels = [
+    {"name": "Good", "range": "0-50", "color": "#00e400"},
+    {"name": "Moderate", "range": "51-100", "color": "#ffff00"},
+    {"name": "Unhealthy for Sensitive Groups", "range": "101-150", "color": "#ff7e00"},
+    {"name": "Unhealthy", "range": "151-200", "color": "#ff0000"},
+    {"name": "Very Unhealthy", "range": "201-300", "color": "#8f3f97"},
+    {"name": "Hazardous", "range": "301+", "color": "#7e0023"}
+]
+
+for level in aqi_levels:
+    st.sidebar.markdown(
+        f"""<div style="background-color:{level['color']}; color:{'black' if level['name'] in ['Good', 'Moderate'] else 'white'}; 
+        padding:5px; border-radius:5px; margin-bottom:5px; text-align:center;">
+        <strong>{level['name']} ({level['range']})</strong></div>""", 
+        unsafe_allow_html=True
+    )
+
+# Dashboard page
+if page == "Dashboard":
+    # Station-specific title
+    st.title(f"PM2.5 Air Quality Prediction for {selected_station}")
     
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.image("https://pixabay.com/get/ga8350ca0ed2512b727809d73188d40ef6145f833bc6ada38864631107c299ffd0d0c09f0a75364002dd99e310d10f85b_1280.jpg", 
-                 caption="Air Quality Monitoring Station")
-        st.markdown("""
-        ### About PM2.5
-        PM2.5 refers to atmospheric particulate matter that has a diameter less than 2.5 micrometers. 
-        These fine particles are a common air pollutant and can have significant health impacts when inhaled.
-        
-        ### Health Effects
-        - Respiratory issues
-        - Cardiovascular problems
-        - Decreased lung function
-        - Aggravated asthma
-        """)
-    
-    with col2:
-        st.image("https://pixabay.com/get/g899f6d89fc835ae5948a5875577f597badf04a1c094ff8ef03133d3891f6a7b3c14a956bcd54c83ef470c24f5ba234bc3bfa65afacaffe07ac5caa9c7f96e0aa_1280.jpg", 
-                 caption="Weather Monitoring Equipment")
-        st.markdown("""
-        ### Prediction Factors
-        Our model uses the following parameters to predict PM2.5 levels:
-        - Temperature
-        - Solar Radiation
-        - Wind Speed
-        - Relative Humidity
-        
-        ### Monitoring Stations
-        We provide predictions for two stations:
-        - Fort William
-        - Bidhannagar
-        """)
-    
-    st.subheader("Current Air Quality Status")
-    
-    # Display some basic stats from the dataset
+    # If data exists, get the latest PM2.5 reading for selected station
     if not data.empty:
-        last_date = data['Date'].max()
+        latest_data = data[data['Station'] == selected_station].iloc[-1]
+        latest_pm25 = latest_data['PM2.5']
+        latest_date = latest_data['Date']
+        
+        # Get AQI category
+        aqi_category, aqi_class = get_aqi_category(latest_pm25)
+        
+        # About PM2.5 section
+        st.header("About PM2.5 Air Quality Monitoring")
+        
+        col1, col2 = st.columns([1, 3])
+        
+        with col1:
+            # Display PM2.5 icon
+            st.image("https://cdn-icons-png.flaticon.com/512/4743/4743525.png", width=150)
+        
+        with col2:
+            st.markdown("""
+            PM2.5 refers to atmospheric particulate matter with a diameter less than 2.5 micrometers. These fine 
+            particles can penetrate deep into the lungs and bloodstream, causing significant health risks. This 
+            application predicts PM2.5 levels based on weather parameters using multiple machine learning models.
+            """)
+        
+        # Display current weather parameters
+        st.subheader("Current Weather Parameters")
+        
+        # Get weather forecast data
+        forecast_data = get_weather_forecast(selected_station)
+        
+        if forecast_data:
+            current_weather = forecast_data[0]
+            
+            # Create weather parameter cards
+            col1, col2, col3 = st.columns(3)
+            
+            with col1:
+                st.markdown(f"""
+                <div class="weather-card">
+                    <div class="weather-card-icon">🌡️</div>
+                    <div class="weather-card-value">{current_weather['Temperature']:.1f}<span class="weather-card-unit">°C</span></div>
+                    <div class="weather-card-label">Temperature</div>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            with col2:
+                st.markdown(f"""
+                <div class="weather-card">
+                    <div class="weather-card-icon">💨</div>
+                    <div class="weather-card-value">{current_weather['Wind_Speed']:.1f}<span class="weather-card-unit">km/h</span></div>
+                    <div class="weather-card-label">Wind Speed</div>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            with col3:
+                st.markdown(f"""
+                <div class="weather-card">
+                    <div class="weather-card-icon">💧</div>
+                    <div class="weather-card-value">{current_weather['Relative_Humidity']:.1f}<span class="weather-card-unit">%</span></div>
+                    <div class="weather-card-label">Humidity</div>
+                </div>
+                """, unsafe_allow_html=True)
+        
+        # Station Overview and Model Performance in two columns
         col1, col2 = st.columns(2)
         
         with col1:
-            st.metric(
-                label="Latest PM2.5 Reading - Fort William", 
-                value=f"{data[data['Station'] == 'Fort William'].iloc[-1]['PM2.5']:.2f} μg/m³",
-                delta=f"{data[data['Station'] == 'Fort William'].iloc[-1]['PM2.5'] - data[data['Station'] == 'Fort William'].iloc[-2]['PM2.5']:.2f} μg/m³"
-            )
+            st.subheader("Station Overview")
+            
+            # Get station-specific data
+            station_data = data[data['Station'] == selected_station]
+            
+            # Calculate date range and average PM2.5
+            first_date = pd.to_datetime(station_data['Date'].min()).strftime("%Y-%m-%d")
+            last_date = pd.to_datetime(station_data['Date'].max()).strftime("%Y-%m-%d")
+            avg_pm25 = station_data['PM2.5'].mean()
+            
+            st.markdown(f"""
+            <div class="station-overview">
+                <p><strong>Location:</strong> {selected_station}</p>
+                <p><strong>Data Range:</strong> {first_date} to {last_date}</p>
+                <p><strong>Average PM2.5:</strong> {avg_pm25:.2f} μg/m³</p>
+                <p><strong>Parameters:</strong> Temperature, Solar Radiation, Wind Speed, Relative Humidity</p>
+            </div>
+            """, unsafe_allow_html=True)
         
         with col2:
-            st.metric(
-                label="Latest PM2.5 Reading - Bidhannagar", 
-                value=f"{data[data['Station'] == 'Bidhannagar'].iloc[-1]['PM2.5']:.2f} μg/m³",
-                delta=f"{data[data['Station'] == 'Bidhannagar'].iloc[-1]['PM2.5'] - data[data['Station'] == 'Bidhannagar'].iloc[-2]['PM2.5']:.2f} μg/m³"
+            st.subheader("Model Performance Overview")
+            
+            # Train and evaluate models to find best model
+            processed_data = preprocess_data(station_data)
+            X_train, X_test, y_train, y_test = split_data(processed_data, test_size=0.2)
+            models = train_models(X_train, y_train)
+            evaluation_results = evaluate_models(models, X_test, y_test)
+            
+            # Find best model based on RMSE
+            best_model_name = min(evaluation_results, key=lambda x: evaluation_results[x]['rmse'])
+            best_rmse = evaluation_results[best_model_name]['rmse']
+            best_r2 = evaluation_results[best_model_name]['r2']
+            
+            st.markdown(f"""
+            <div class="model-overview">
+                <p><strong>Best Performing Model:</strong> {best_model_name}</p>
+                <p><strong>RMSE:</strong> {best_rmse:.2f}</p>
+                <p><strong>R² Score:</strong> {best_r2:.2f}</p>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            # Model comparison chart
+            st.subheader("Model Comparison")
+            
+            # Create a dataframe for display
+            results_df = pd.DataFrame({
+                'Model': list(evaluation_results.keys()),
+                'RMSE': [evaluation_results[model]['rmse'] for model in evaluation_results],
+                'R²': [evaluation_results[model]['r2'] for model in evaluation_results]
+            })
+            
+            # Plot model comparison
+            fig_models = px.bar(
+                results_df,
+                x='Model',
+                y='RMSE',
+                color='Model',
+                title='RMSE by Model (Lower is Better)',
+                labels={'RMSE': 'Root Mean Square Error'}
             )
+            
+            st.plotly_chart(fig_models, use_container_width=True)
         
-        st.subheader("What this application offers:")
-        st.markdown("""
-        - **Real-time Predictions**: Get PM2.5 forecasts for the present day using current weather data
-        - **Future Forecasts**: Predict PM2.5 levels for 1, 2, 4, and 7 days ahead
-        - **Multiple Models**: Utilizes Model Tree, NLR, Random Forest, and Logistic Regression
-        - **Model Comparison**: Compare different models' performance with metrics like RMSE and correlation
-        - **Data Analysis**: Explore historical trends and relationships between parameters
-        - **Data Download**: Export historical and prediction data in various formats
-        - **Historical Data Storage**: Store and manage your downloaded historical data
-        """)
+        # Historical trend
+        st.subheader("Historical PM2.5 Trend")
+        hist_fig = plot_historical_data(station_data)
+        st.plotly_chart(hist_fig, use_container_width=True)
         
-        st.image("https://pixabay.com/get/gd9254fa6c0fd331ab3029d83b28d4e5f966740bd31b6f33cd52e651956326f8a6ff241f438d94b25c947143be03007da94730d81e5ad2094fba1ff6772233819_1280.jpg", 
-                 caption="Data Visualization")
+        # Parameter correlations
+        st.subheader("Parameter Correlation with PM2.5")
+        
+        # Calculate correlation with PM2.5
+        corr_with_pm25 = {
+            'Temperature': station_data['Temperature'].corr(station_data['PM2.5']),
+            'Solar_Radiation': station_data['Solar_Radiation'].corr(station_data['PM2.5']),
+            'Wind_Speed': station_data['Wind_Speed'].corr(station_data['PM2.5']),
+            'Relative_Humidity': station_data['Relative_Humidity'].corr(station_data['PM2.5']),
+        }
+        
+        # Create bar chart
+        corr_df = pd.DataFrame({
+            'Parameter': list(corr_with_pm25.keys()),
+            'Correlation': list(corr_with_pm25.values())
+        })
+        
+        corr_fig = px.bar(
+            corr_df,
+            x='Parameter',
+            y='Correlation',
+            color='Correlation',
+            color_continuous_scale='RdBu_r',
+            title='Correlation with PM2.5',
+            labels={'Correlation': 'Correlation Coefficient'}
+        )
+        
+        st.plotly_chart(corr_fig, use_container_width=True)
 
-# Data Analysis page
-elif page == "Data Analysis":
-    st.header("Data Analysis")
+# Station Comparison page
+elif page == "Station Comparison":
+    st.header("Station Comparison")
     
     if data.empty:
         st.warning("No data available for analysis.")
     else:
-        st.subheader("Dataset Overview")
+        # Filter data for both stations
+        st.subheader("Compare Fort William and Bidhannagar")
         
-        # Basic dataset information
-        st.write(f"**Dataset Shape:** {data.shape}")
-        st.write(f"**Date Range:** {data['Date'].min()} to {data['Date'].max()}")
+        # Date range selection
+        st.write("Select date range for comparison:")
+        col1, col2 = st.columns(2)
+        with col1:
+            start_date = st.date_input("Start Date", min(pd.to_datetime(data['Date'])).date())
+        with col2:
+            end_date = st.date_input("End Date", max(pd.to_datetime(data['Date'])).date())
         
-        # Display a sample of the data
-        with st.expander("View Data Sample"):
-            st.dataframe(data.head(10))
-        
-        # Summary statistics
-        with st.expander("View Summary Statistics"):
-            st.dataframe(data.describe())
-        
-        # Historical PM2.5 levels
-        st.subheader("Historical PM2.5 Trends")
-        station_filter = st.multiselect("Select Stations", ["Fort William", "Bidhannagar"], default=["Fort William", "Bidhannagar"])
-        
-        if station_filter:
-            filtered_data = data[data['Station'].isin(station_filter)]
-            fig = plot_historical_data(filtered_data)
-            st.plotly_chart(fig, use_container_width=True)
-        
-        # Correlation analysis
-        st.subheader("Parameter Correlation Analysis")
-        station_for_corr = st.selectbox("Select Station for Correlation Analysis", ["Fort William", "Bidhannagar"])
-        
-        station_data = data[data['Station'] == station_for_corr]
-        fig_corr = plot_correlation_matrix(station_data)
-        st.plotly_chart(fig_corr, use_container_width=True)
-        
-        # Parameter comparison
-        st.subheader("Parameter Comparison")
-        param_x = st.selectbox("Select X Parameter", ["Temperature", "Solar_Radiation", "Wind_Speed", "Relative_Humidity"])
-        param_y = st.selectbox("Select Y Parameter", ["PM2.5", "Temperature", "Solar_Radiation", "Wind_Speed", "Relative_Humidity"], index=0)
-        
-        if param_x != param_y:
-            fig_params = plot_parameter_comparison(station_data, param_x, param_y)
-            st.plotly_chart(fig_params, use_container_width=True)
+        if start_date <= end_date:
+            # Filter data based on date range
+            filtered_data = data[
+                (pd.to_datetime(data['Date']).dt.date >= start_date) &
+                (pd.to_datetime(data['Date']).dt.date <= end_date)
+            ]
             
-            # Calculate and display correlation coefficient
-            correlation = station_data[param_x].corr(station_data[param_y])
-            st.write(f"**Correlation Coefficient between {param_x} and {param_y}:** {correlation:.4f}")
+            # Display PM2.5 comparison
+            st.subheader("PM2.5 Comparison")
             
-            if abs(correlation) > 0.7:
-                st.write("Strong correlation detected!")
-            elif abs(correlation) > 0.4:
-                st.write("Moderate correlation detected.")
-            else:
-                st.write("Weak correlation detected.")
+            # Time series comparison
+            fig_comparison = plot_historical_data(filtered_data)
+            st.plotly_chart(fig_comparison, use_container_width=True)
+            
+            # Calculate statistics
+            stats = filtered_data.groupby('Station')['PM2.5'].agg(['mean', 'median', 'min', 'max', 'std']).reset_index()
+            stats.columns = ['Station', 'Mean', 'Median', 'Minimum', 'Maximum', 'Std Dev']
+            stats = stats.round(2)
+            
+            # Display statistics
+            st.subheader("Statistical Comparison")
+            st.dataframe(stats, use_container_width=True)
+            
+            # Create bar chart for mean PM2.5
+            fig_stats = px.bar(
+                stats,
+                x='Station',
+                y='Mean',
+                color='Station',
+                title='Average PM2.5 by Station',
+                labels={'Mean': 'Average PM2.5 (μg/m³)'}
+            )
+            
+            st.plotly_chart(fig_stats, use_container_width=True)
+            
+            # Seasonal comparison
+            st.subheader("Seasonal Comparison")
+            
+            # Add month column for seasonal analysis
+            seasonal_data = filtered_data.copy()
+            seasonal_data['Month'] = pd.to_datetime(seasonal_data['Date']).dt.month
+            
+            # Group by month and station
+            monthly_avg = seasonal_data.groupby(['Month', 'Station'])['PM2.5'].mean().reset_index()
+            
+            # Create seasonal plot
+            fig_seasonal = px.line(
+                monthly_avg,
+                x='Month',
+                y='PM2.5',
+                color='Station',
+                markers=True,
+                title='Monthly Average PM2.5 by Station',
+                labels={'Month': 'Month', 'PM2.5': 'Average PM2.5 (μg/m³)'}
+            )
+            
+            # Update x-axis to show month names
+            month_names = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+            fig_seasonal.update_xaxes(tickvals=list(range(1, 13)), ticktext=month_names)
+            
+            st.plotly_chart(fig_seasonal, use_container_width=True)
+            
+            # Parameter comparison
+            st.subheader("Parameter Comparison")
+            
+            # Select parameter
+            param = st.selectbox("Select Parameter", ["Temperature", "Solar_Radiation", "Wind_Speed", "Relative_Humidity"])
+            
+            # Create parameter comparison
+            fig_param = px.box(
+                filtered_data,
+                x='Station',
+                y=param,
+                color='Station',
+                title=f'{param} Comparison',
+                labels={param: param}
+            )
+            
+            st.plotly_chart(fig_param, use_container_width=True)
+        
         else:
-            st.warning("Please select different parameters for X and Y axes.")
-        
-        # Seasonal analysis
-        st.subheader("Seasonal Analysis")
-        
-        # Add month column for seasonal analysis
-        analysis_data = data.copy()
-        analysis_data['Month'] = pd.to_datetime(analysis_data['Date']).dt.month
-        
-        # Group by month and station and calculate average PM2.5
-        monthly_avg = analysis_data.groupby(['Month', 'Station'])['PM2.5'].mean().reset_index()
-        
-        fig_seasonal = px.line(
-            monthly_avg, 
-            x='Month', 
-            y='PM2.5', 
-            color='Station',
-            markers=True,
-            title='Monthly Average PM2.5 Levels',
-            labels={'Month': 'Month', 'PM2.5': 'Average PM2.5 (μg/m³)'}
-        )
-        
-        # Update x-axis to show month names
-        month_names = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-        fig_seasonal.update_xaxes(tickvals=list(range(1, 13)), ticktext=month_names)
-        
-        st.plotly_chart(fig_seasonal, use_container_width=True)
-        
-        # Display weather monitoring equipment image
-        st.image("https://pixabay.com/get/gf3594d2070170cf15887285cf9260d1892d4c4dc771e4390d229210a34fecda047b588772b967e4e47dcb274c02b24e7e5d17bbe0f3410c323e4f5d63159522e_1280.jpg", 
-                 caption="Weather Monitoring Equipment")
+            st.warning("Please select a valid date range.")
 
 # Model Training & Comparison page
 elif page == "Model Training & Comparison":
@@ -234,8 +370,6 @@ elif page == "Model Training & Comparison":
     if data.empty:
         st.warning("No data available for model training.")
     else:
-        st.subheader("Train and Evaluate Models")
-        
         # Station selection for model training
         station_for_model = st.selectbox("Select Station for Model Training", ["Fort William", "Bidhannagar"])
         
@@ -360,13 +494,9 @@ elif page == "Model Training & Comparison":
                         labels={'Importance': 'Importance Score'}
                     )
                     st.plotly_chart(fig_importance, use_container_width=True)
-        
-        # Display data visualization image
-        st.image("https://pixabay.com/get/g0ccd2d803467a8cbb9eea38deeb5166dcc31f1d24f5d30c77157a5022ba4065b3612792d9437b2463f9724a1f454701b614bf600bbea160f41303b2ff217c528_1280.png", 
-                 caption="Data Visualization Graphics")
 
-# Predictions page
-elif page == "Predictions":
+# PM2.5 Predictions page
+elif page == "PM2.5 Predictions":
     st.header("PM2.5 Predictions")
     
     if data.empty:
@@ -421,7 +551,7 @@ elif page == "Predictions":
                     predictions_df[model_name] = predictions
                 
                 # Display predictions
-                st.subheader("PM2.5 Predictions")
+                st.subheader("PM2.5 Predictions by Model")
                 st.dataframe(predictions_df)
                 
                 # Plot predictions
@@ -433,16 +563,25 @@ elif page == "Predictions":
                     evaluation_results = evaluate_models(models, X_test, y_test)
                     best_model_name = min(evaluation_results, key=lambda x: evaluation_results[x]['rmse'])
                 
-                st.subheader("Best Model Prediction")
-                st.write(f"Based on historical performance, the **{best_model_name}** model is most accurate with an RMSE of {evaluation_results[best_model_name]['rmse']:.2f}.")
-                
                 # Display best model predictions
+                st.subheader(f"Best Model Prediction ({best_model_name})")
+                
                 best_pred_df = pd.DataFrame({
                     'Date': predictions_df['Date'],
                     'PM2.5': predictions_df[best_model_name]
                 })
                 
-                st.dataframe(best_pred_df)
+                # Create colored output based on AQI levels
+                for i, row in best_pred_df.iterrows():
+                    aqi_category, aqi_class = get_aqi_category(row['PM2.5'])
+                    st.markdown(f"""
+                    <div style="display:flex; align-items:center; margin-bottom:10px;">
+                        <div style="min-width:100px;"><strong>{row['Date']}</strong></div>
+                        <div class="{aqi_class}" style="margin-left:15px; padding:5px 15px;">
+                            PM2.5: {row['PM2.5']:.2f} μg/m³ - {aqi_category}
+                        </div>
+                    </div>
+                    """, unsafe_allow_html=True)
                 
                 # Save forecast data to historical storage
                 if st.button("Save Forecast Data"):
@@ -460,7 +599,7 @@ elif page == "Predictions":
                     })
                     
                     for model_name, predictions in prediction_results.items():
-                        save_df[f'PM2.5_{model_name}'] = predictions
+                        save_df[f'PM2.5_{model_name.replace(" ", "_")}'] = predictions
                     
                     save_df.to_csv(forecast_path, index=False)
                     st.success(f"Forecast data saved to {forecast_path}")
@@ -476,21 +615,29 @@ elif page == "Predictions":
         else:  # Manual parameter input
             st.subheader("Enter Weather Parameters")
             
-            # Create five columns for the five prediction days
-            cols = st.columns(5)
+            # Create columns for forecast days
             days = [0, 1, 2, 4, 7]  # Present, and 1, 2, 4, 7 days ahead
+            day_labels = ["Today", "Tomorrow", "In 2 days", "In 4 days", "In 7 days"]
+            
+            # Create tabs for each day
+            day_tabs = st.tabs(day_labels)
             
             manual_forecast_data = []
             
-            for i, day in enumerate(days):
-                with cols[i]:
+            for i, (tab, day) in enumerate(zip(day_tabs, days)):
+                with tab:
                     forecast_date = (datetime.now() + timedelta(days=day)).strftime("%Y-%m-%d")
-                    st.write(f"**{forecast_date}**")
+                    st.write(f"**Date: {forecast_date}**")
                     
-                    temp = st.number_input(f"Temperature (°C) - Day {day}", min_value=-20.0, max_value=50.0, value=25.0, key=f"temp_{i}")
-                    solar = st.number_input(f"Solar Radiation (W/m²) - Day {day}", min_value=0.0, max_value=1500.0, value=250.0, key=f"solar_{i}")
-                    wind = st.number_input(f"Wind Speed (m/s) - Day {day}", min_value=0.0, max_value=30.0, value=3.0, key=f"wind_{i}")
-                    humidity = st.number_input(f"Relative Humidity (%) - Day {day}", min_value=0.0, max_value=100.0, value=65.0, key=f"humidity_{i}")
+                    col1, col2 = st.columns(2)
+                    
+                    with col1:
+                        temp = st.slider(f"Temperature (°C)", min_value=-20.0, max_value=50.0, value=25.0, key=f"temp_{i}")
+                        wind = st.slider(f"Wind Speed (m/s)", min_value=0.0, max_value=30.0, value=3.0, key=f"wind_{i}")
+                    
+                    with col2:
+                        solar = st.slider(f"Solar Radiation (W/m²)", min_value=0.0, max_value=1500.0, value=250.0, key=f"solar_{i}")
+                        humidity = st.slider(f"Relative Humidity (%)", min_value=0.0, max_value=100.0, value=65.0, key=f"humidity_{i}")
                     
                     manual_forecast_data.append({
                         'Date': forecast_date,
@@ -525,7 +672,7 @@ elif page == "Predictions":
                     predictions_df[model_name] = predictions
                 
                 # Display predictions
-                st.subheader("PM2.5 Predictions")
+                st.subheader("PM2.5 Predictions by Model")
                 st.dataframe(predictions_df)
                 
                 # Plot predictions
@@ -537,16 +684,25 @@ elif page == "Predictions":
                     evaluation_results = evaluate_models(models, X_test, y_test)
                     best_model_name = min(evaluation_results, key=lambda x: evaluation_results[x]['rmse'])
                 
-                st.subheader("Best Model Prediction")
-                st.write(f"Based on historical performance, the **{best_model_name}** model is most accurate with an RMSE of {evaluation_results[best_model_name]['rmse']:.2f}.")
+                # Display best model predictions with AQI categories
+                st.subheader(f"Best Model Prediction ({best_model_name})")
                 
-                # Display best model predictions
                 best_pred_df = pd.DataFrame({
                     'Date': predictions_df['Date'],
                     'PM2.5': predictions_df[best_model_name]
                 })
                 
-                st.dataframe(best_pred_df)
+                # Create colored output based on AQI levels
+                for i, row in best_pred_df.iterrows():
+                    aqi_category, aqi_class = get_aqi_category(row['PM2.5'])
+                    st.markdown(f"""
+                    <div style="display:flex; align-items:center; margin-bottom:10px;">
+                        <div style="min-width:100px;"><strong>{row['Date']}</strong></div>
+                        <div class="{aqi_class}" style="margin-left:15px; padding:5px 15px;">
+                            PM2.5: {row['PM2.5']:.2f} μg/m³ - {aqi_category}
+                        </div>
+                    </div>
+                    """, unsafe_allow_html=True)
                 
                 # Save manual forecast data to historical storage
                 if st.button("Save Forecast Data"):
@@ -564,7 +720,7 @@ elif page == "Predictions":
                     })
                     
                     for model_name, predictions in prediction_results.items():
-                        save_df[f'PM2.5_{model_name}'] = predictions
+                        save_df[f'PM2.5_{model_name.replace(" ", "_")}'] = predictions
                     
                     save_df.to_csv(forecast_path, index=False)
                     st.success(f"Manual forecast data saved to {forecast_path}")
@@ -593,7 +749,7 @@ elif page == "Historical Analysis":
         ha_station_filter = st.multiselect(
             "Select Stations",
             ["Fort William", "Bidhannagar"],
-            default=["Fort William", "Bidhannagar"],
+            default=[selected_station],
             key="ha_stations"
         )
         
@@ -605,130 +761,111 @@ elif page == "Historical Analysis":
                 (data['Station'].isin(ha_station_filter))
             ].copy()
             
-            # Display filtered data
-            st.subheader("Filtered Data")
-            st.dataframe(ha_filtered_data)
+            # Overview of filtered data
+            st.subheader("Data Overview")
+            
+            # Display basic statistics
+            stats = ha_filtered_data.groupby('Station')['PM2.5'].agg(['count', 'mean', 'median', 'min', 'max']).reset_index()
+            stats.columns = ['Station', 'Count', 'Mean', 'Median', 'Min', 'Max']
+            stats = stats.round(2)
+            
+            st.dataframe(stats)
             
             # Plot historical trends
             st.subheader("Historical PM2.5 Trends")
             fig_hist = plot_historical_data(ha_filtered_data)
             st.plotly_chart(fig_hist, use_container_width=True)
             
-            # Calculate and display statistics
-            st.subheader("Statistical Summary")
+            # Monthly analysis
+            st.subheader("Monthly Analysis")
             
-            # Group by station and calculate statistics
-            stats = ha_filtered_data.groupby('Station')['PM2.5'].agg(['mean', 'median', 'min', 'max', 'std']).reset_index()
-            stats.columns = ['Station', 'Mean', 'Median', 'Minimum', 'Maximum', 'Std Dev']
-            stats = stats.round(2)
+            # Add month column for analysis
+            ha_filtered_data['Month'] = pd.to_datetime(ha_filtered_data['Date']).dt.month
             
-            st.dataframe(stats)
-            
-            # Bar chart for comparing statistics
-            fig_stats = px.bar(
-                stats,
-                x='Station',
-                y=['Mean', 'Median', 'Minimum', 'Maximum'],
-                barmode='group',
-                title='PM2.5 Statistics by Station',
-                labels={'value': 'PM2.5 (μg/m³)', 'variable': 'Statistic'}
-            )
-            st.plotly_chart(fig_stats, use_container_width=True)
-            
-            # Time series decomposition
-            st.subheader("Time Series Analysis")
-            
-            # Select station for time series analysis
-            ts_station = st.selectbox("Select Station for Time Series Analysis", ha_station_filter)
-            
-            # Filter data for the selected station
-            ts_data = ha_filtered_data[ha_filtered_data['Station'] == ts_station].copy()
-            
-            # Ensure data is sorted by date
-            ts_data = ts_data.sort_values('Date')
-            
-            # Plot the time series
-            fig_ts = px.line(
-                ts_data,
-                x='Date',
-                y='PM2.5',
-                title=f'PM2.5 Time Series for {ts_station}',
-                labels={'PM2.5': 'PM2.5 (μg/m³)', 'Date': 'Date'}
-            )
-            
-            # Add a trendline
-            ts_data['day_index'] = range(len(ts_data))
-            z = np.polyfit(ts_data['day_index'], ts_data['PM2.5'], 1)
-            trend = np.poly1d(z)
-            
-            fig_ts.add_trace(go.Scatter(
-                x=ts_data['Date'],
-                y=trend(ts_data['day_index']),
-                mode='lines',
-                name='Trend',
-                line=dict(color='red', dash='dash')
-            ))
-            
-            st.plotly_chart(fig_ts, use_container_width=True)
-            
-            # Display trend information
-            if z[0] > 0:
-                st.write(f"The PM2.5 levels in {ts_station} show an **increasing trend** of {z[0]:.4f} μg/m³ per day.")
-            elif z[0] < 0:
-                st.write(f"The PM2.5 levels in {ts_station} show a **decreasing trend** of {abs(z[0]):.4f} μg/m³ per day.")
-            else:
-                st.write(f"The PM2.5 levels in {ts_station} show **no significant trend**.")
-            
-            # Monthly average analysis
-            st.subheader("Monthly Average Analysis")
-            
-            # Extract month and year
-            ts_data['Month'] = pd.to_datetime(ts_data['Date']).dt.month
-            ts_data['Year'] = pd.to_datetime(ts_data['Date']).dt.year
-            
-            # Group by month and calculate average
-            monthly_avg = ts_data.groupby(['Year', 'Month'])['PM2.5'].mean().reset_index()
-            monthly_avg['Date'] = pd.to_datetime(monthly_avg[['Year', 'Month']].assign(day=1))
+            # Group by month and station
+            monthly_avg = ha_filtered_data.groupby(['Month', 'Station'])['PM2.5'].mean().reset_index()
             
             # Plot monthly averages
             fig_monthly = px.line(
                 monthly_avg,
-                x='Date',
-                y='PM2.5',
-                markers=True,
-                title=f'Monthly Average PM2.5 Levels for {ts_station}',
-                labels={'PM2.5': 'Average PM2.5 (μg/m³)', 'Date': 'Month'}
-            )
-            
-            st.plotly_chart(fig_monthly, use_container_width=True)
-            
-            # Seasonal patterns
-            st.subheader("Seasonal Patterns")
-            
-            # Group by month across all years
-            seasonal_avg = ts_data.groupby('Month')['PM2.5'].mean().reset_index()
-            
-            # Plot seasonal pattern
-            fig_seasonal = px.line(
-                seasonal_avg,
                 x='Month',
                 y='PM2.5',
+                color='Station',
                 markers=True,
-                title=f'Seasonal PM2.5 Pattern for {ts_station}',
-                labels={'PM2.5': 'Average PM2.5 (μg/m³)', 'Month': 'Month'}
+                title='Monthly Average PM2.5',
+                labels={'Month': 'Month', 'PM2.5': 'Average PM2.5 (μg/m³)'}
             )
             
             # Update x-axis to show month names
             month_names = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-            fig_seasonal.update_xaxes(tickvals=list(range(1, 13)), ticktext=month_names)
+            fig_monthly.update_xaxes(tickvals=list(range(1, 13)), ticktext=month_names)
             
-            st.plotly_chart(fig_seasonal, use_container_width=True)
+            st.plotly_chart(fig_monthly, use_container_width=True)
+            
+            # Add year column for trend analysis
+            ha_filtered_data['Year'] = pd.to_datetime(ha_filtered_data['Date']).dt.year
+            
+            # Yearly trend analysis if multiple years exist
+            years = ha_filtered_data['Year'].unique()
+            if len(years) > 1:
+                st.subheader("Yearly Trend Analysis")
                 
+                # Group by year and station
+                yearly_avg = ha_filtered_data.groupby(['Year', 'Station'])['PM2.5'].mean().reset_index()
+                
+                # Plot yearly averages
+                fig_yearly = px.line(
+                    yearly_avg,
+                    x='Year',
+                    y='PM2.5',
+                    color='Station',
+                    markers=True,
+                    title='Yearly Average PM2.5',
+                    labels={'Year': 'Year', 'PM2.5': 'Average PM2.5 (μg/m³)'}
+                )
+                
+                st.plotly_chart(fig_yearly, use_container_width=True)
+            
+            # Parameter correlation analysis
+            st.subheader("Parameter Correlation Analysis")
+            
+            # Select station for correlation analysis
+            corr_station = st.selectbox("Select Station for Correlation Analysis", ha_station_filter)
+            
+            # Filter data for selected station
+            corr_data = ha_filtered_data[ha_filtered_data['Station'] == corr_station]
+            
+            # Plot correlation matrix
+            fig_corr = plot_correlation_matrix(corr_data)
+            st.plotly_chart(fig_corr, use_container_width=True)
+            
+            # Parameter comparison
+            st.subheader("Parameter Comparison")
+            param_x = st.selectbox("Select X Parameter", ["Temperature", "Solar_Radiation", "Wind_Speed", "Relative_Humidity"])
+            param_y = st.selectbox("Select Y Parameter", ["PM2.5", "Temperature", "Solar_Radiation", "Wind_Speed", "Relative_Humidity"], index=0)
+            
+            if param_x != param_y:
+                fig_params = plot_parameter_comparison(corr_data, param_x, param_y)
+                st.plotly_chart(fig_params, use_container_width=True)
+                
+                # Calculate and display correlation coefficient
+                correlation = corr_data[param_x].corr(corr_data[param_y])
+                st.write(f"**Correlation Coefficient between {param_x} and {param_y}:** {correlation:.4f}")
+                
+                if abs(correlation) > 0.7:
+                    st.write("Strong correlation detected!")
+                elif abs(correlation) > 0.4:
+                    st.write("Moderate correlation detected.")
+                else:
+                    st.write("Weak correlation detected.")
+            else:
+                st.warning("Please select different parameters for X and Y axes.")
+        
         else:
             st.warning("Please select a valid date range and at least one station.")
 
-# Download Data page
-elif page == "Download Data":
+# Data Download page
+elif page == "Data Download":
     st.header("Download Historical Data")
     
     if data.empty:
@@ -747,7 +884,7 @@ elif page == "Download Data":
         dl_station_filter = st.multiselect(
             "Select Stations",
             ["Fort William", "Bidhannagar"],
-            default=["Fort William", "Bidhannagar"],
+            default=[selected_station],
             key="dl_stations"
         )
         
@@ -828,181 +965,3 @@ elif page == "Download Data":
                     st.markdown(download_link, unsafe_allow_html=True)
         else:
             st.warning("Please select a valid date range and at least one station.")
-
-# Historical Data Storage page
-elif page == "Historical Data Storage":
-    st.header("Historical Data Storage")
-    
-    st.write("""
-    This page helps you manage your stored historical data. You can view, analyze, and manage the data 
-    files that you've saved from the application.
-    """)
-    
-    # Tabs for different types of data
-    data_tab = st.radio("Select Data Type", ["Historical Data", "Forecast Data"])
-    
-    if data_tab == "Historical Data":
-        # List historical data files
-        historical_path = os.path.join('data', 'historical')
-        historical_files = [f for f in os.listdir(historical_path) if os.path.isfile(os.path.join(historical_path, f))]
-        
-        if not historical_files:
-            st.info("No historical data files found. You can save historical data from the 'Download Data' page.")
-        else:
-            st.subheader("Available Historical Data Files")
-            
-            # Sort files by modification time (newest first)
-            historical_files.sort(key=lambda x: os.path.getmtime(os.path.join(historical_path, x)), reverse=True)
-            
-            # Create a dataframe for displaying file information
-            file_info = []
-            for file in historical_files:
-                file_path = os.path.join(historical_path, file)
-                file_size = os.path.getsize(file_path) / 1024  # Convert to KB
-                file_date = datetime.fromtimestamp(os.path.getmtime(file_path)).strftime("%Y-%m-%d %H:%M:%S")
-                file_info.append({
-                    "Filename": file,
-                    "Size (KB)": f"{file_size:.2f}",
-                    "Date Modified": file_date
-                })
-            
-            file_df = pd.DataFrame(file_info)
-            st.dataframe(file_df)
-            
-            # Select a file to view
-            selected_file = st.selectbox("Select a file to view", historical_files)
-            
-            if selected_file:
-                file_path = os.path.join(historical_path, selected_file)
-                
-                # Determine file format and load data
-                if selected_file.endswith('.csv'):
-                    hist_data = pd.read_csv(file_path)
-                elif selected_file.endswith('.xlsx'):
-                    hist_data = pd.read_excel(file_path)
-                elif selected_file.endswith('.json'):
-                    hist_data = pd.read_json(file_path)
-                else:
-                    st.error("Unsupported file format.")
-                    hist_data = None
-                
-                if hist_data is not None:
-                    # Display the data
-                    st.subheader(f"Data Preview: {selected_file}")
-                    st.dataframe(hist_data)
-                    
-                    # Visualize data if it has the correct format
-                    if all(col in hist_data.columns for col in ['Date', 'PM2.5']):
-                        st.subheader("Data Visualization")
-                        
-                        # Check if Station column exists
-                        if 'Station' in hist_data.columns:
-                            # Plot by station
-                            fig = px.line(
-                                hist_data,
-                                x='Date',
-                                y='PM2.5',
-                                color='Station',
-                                title='PM2.5 Levels by Station',
-                                labels={'PM2.5': 'PM2.5 (μg/m³)', 'Date': 'Date'}
-                            )
-                        else:
-                            # Plot without station differentiation
-                            fig = px.line(
-                                hist_data,
-                                x='Date',
-                                y='PM2.5',
-                                title='PM2.5 Levels',
-                                labels={'PM2.5': 'PM2.5 (μg/m³)', 'Date': 'Date'}
-                            )
-                        
-                        st.plotly_chart(fig, use_container_width=True)
-                    
-                    # Option to delete the file
-                    if st.button(f"Delete {selected_file}"):
-                        try:
-                            os.remove(file_path)
-                            st.success(f"File {selected_file} deleted successfully.")
-                            st.rerun()
-                        except Exception as e:
-                            st.error(f"Error deleting file: {e}")
-    
-    else:  # Forecast Data
-        # List forecast data files
-        forecasts_path = os.path.join('data', 'predictions')
-        forecast_files = [f for f in os.listdir(forecasts_path) if os.path.isfile(os.path.join(forecasts_path, f))]
-        
-        if not forecast_files:
-            st.info("No forecast data files found. You can save forecast data from the 'Predictions' page.")
-        else:
-            st.subheader("Available Forecast Data Files")
-            
-            # Sort files by modification time (newest first)
-            forecast_files.sort(key=lambda x: os.path.getmtime(os.path.join(forecasts_path, x)), reverse=True)
-            
-            # Create a dataframe for displaying file information
-            file_info = []
-            for file in forecast_files:
-                file_path = os.path.join(forecasts_path, file)
-                file_size = os.path.getsize(file_path) / 1024  # Convert to KB
-                file_date = datetime.fromtimestamp(os.path.getmtime(file_path)).strftime("%Y-%m-%d %H:%M:%S")
-                file_info.append({
-                    "Filename": file,
-                    "Size (KB)": f"{file_size:.2f}",
-                    "Date Modified": file_date
-                })
-            
-            file_df = pd.DataFrame(file_info)
-            st.dataframe(file_df)
-            
-            # Select a file to view
-            selected_file = st.selectbox("Select a file to view", forecast_files)
-            
-            if selected_file:
-                file_path = os.path.join(forecasts_path, selected_file)
-                
-                # Load data (assuming CSV format for forecast files)
-                if selected_file.endswith('.csv'):
-                    forecast_data = pd.read_csv(file_path)
-                    
-                    # Display the data
-                    st.subheader(f"Data Preview: {selected_file}")
-                    st.dataframe(forecast_data)
-                    
-                    # Check if we have the necessary columns for visualization
-                    pm25_cols = [col for col in forecast_data.columns if 'PM2.5' in col]
-                    
-                    if 'Date' in forecast_data.columns and pm25_cols:
-                        st.subheader("Forecast Visualization")
-                        
-                        # Create plot
-                        fig = go.Figure()
-                        
-                        for col in pm25_cols:
-                            fig.add_trace(go.Scatter(
-                                x=forecast_data['Date'],
-                                y=forecast_data[col],
-                                mode='lines+markers',
-                                name=col
-                            ))
-                        
-                        fig.update_layout(
-                            title='PM2.5 Forecast Comparison',
-                            xaxis_title='Date',
-                            yaxis_title='PM2.5 (μg/m³)',
-                            legend_title='Model',
-                            hovermode='x unified'
-                        )
-                        
-                        st.plotly_chart(fig, use_container_width=True)
-                    
-                    # Option to delete the file
-                    if st.button(f"Delete {selected_file}"):
-                        try:
-                            os.remove(file_path)
-                            st.success(f"File {selected_file} deleted successfully.")
-                            st.rerun()
-                        except Exception as e:
-                            st.error(f"Error deleting file: {e}")
-                else:
-                    st.error("Unsupported file format. Forecast files should be in CSV format.")

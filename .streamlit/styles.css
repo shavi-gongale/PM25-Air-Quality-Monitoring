@@ -1,0 +1,160 @@
+/* AQI Level Colors */
+.good {
+    background-color: #00e400;
+    color: black;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-weight: bold;
+    text-align: center;
+}
+
+.moderate {
+    background-color: #ffff00;
+    color: black;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-weight: bold;
+    text-align: center;
+}
+
+.unhealthy-for-sensitive-groups {
+    background-color: #ff7e00;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-weight: bold;
+    text-align: center;
+}
+
+.unhealthy {
+    background-color: #ff0000;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-weight: bold;
+    text-align: center;
+}
+
+.very-unhealthy {
+    background-color: #8f3f97;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-weight: bold;
+    text-align: center;
+}
+
+.hazardous {
+    background-color: #7e0023;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-weight: bold;
+    text-align: center;
+}
+
+/* Weather Card Styles */
+.weather-card {
+    background-color: #f8f9fa;
+    border-radius: 10px;
+    padding: 15px;
+    text-align: center;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.weather-card-icon {
+    font-size: 2rem;
+    margin-bottom: 10px;
+}
+
+.weather-card-value {
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+.weather-card-unit {
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+
+.weather-card-label {
+    font-size: 0.9rem;
+    color: #6c757d;
+    margin-top: 5px;
+}
+
+/* Station Overview Styles */
+.station-overview {
+    background-color: white;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+/* Model Overview Styles */
+.model-overview {
+    background-color: white;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+/* AQI Scale */
+.aqi-scale {
+    margin-bottom: 20px;
+}
+
+.aqi-row {
+    margin-bottom: 5px;
+}
+
+/* Main containers */
+.main-container {
+    padding: 20px;
+    border-radius: 10px;
+    background-color: white;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+}
+
+.section-title {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-bottom: 15px;
+    border-bottom: 2px solid #f0f0f0;
+    padding-bottom: 10px;
+}
+
+/* Prediction Result Box */
+.prediction-result {
+    padding: 15px;
+    border-radius: 10px;
+    margin-top: 20px;
+    text-align: center;
+}
+
+.prediction-value {
+    font-size: 2rem;
+    font-weight: bold;
+}
+
+.prediction-unit {
+    font-size: 1rem;
+    color: #6c757d;
+}
+
+/* Table Styles */
+.styled-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.styled-table th {
+    background-color: #f8f9fa;
+    padding: 10px;
+}
+
+.styled-table td {
+    padding: 10px;
+    border-top: 1px solid #dee2e6;
+}
