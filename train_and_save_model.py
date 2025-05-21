@@ -5,6 +5,7 @@ import os
 from datetime import datetime
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
+from sklearn.impute import SimpleImputer
 from model_trainer import train_models
 from data_handler import preprocess_data, split_data
 
@@ -98,6 +99,43 @@ def load_excel_data(file_path, start_date=None, end_date=None):
     
     return data
 
+def clean_and_prepare_data(data):
+    """
+    Clean the dataset by handling missing values and outliers
+    
+    Args:
+        data (pandas.DataFrame): The original dataset
+        
+    Returns:
+        pandas.DataFrame: Cleaned dataset
+    """
+    # Make a copy to avoid modifying the original
+    cleaned_data = data.copy()
+    
+    # Check for missing values
+    missing_counts = cleaned_data.isnull().sum()
+    print("Missing value counts before cleaning:")
+    print(missing_counts)
+    
+    # Handle missing values
+    # For numeric columns, fill with the median value
+    numeric_cols = cleaned_data.select_dtypes(include=['float', 'int']).columns
+    for col in numeric_cols:
+        if cleaned_data[col].isnull().sum() > 0:
+            median_val = cleaned_data[col].median()
+            cleaned_data[col] = cleaned_data[col].fillna(median_val)
+            print(f"Filled {col} missing values with median: {median_val}")
+    
+    # Check if cleaning was successful
+    missing_counts_after = cleaned_data.isnull().sum()
+    print("Missing value counts after cleaning:")
+    print(missing_counts_after)
+    
+    # Handle outliers (optional)
+    # You can add outlier detection and handling here if needed
+    
+    return cleaned_data
+
 def main():
     # Define paths
     excel_file = 'attached_assets/edited dataset of kolkata.xlsx'
@@ -111,13 +149,36 @@ def main():
     # Load data from Excel file
     data = load_excel_data(excel_file, start_date, end_date)
     
+    print("Cleaning data...")
+    # Clean the data (handle missing values)
+    cleaned_data = clean_and_prepare_data(data)
+    
     print("Preprocessing data...")
     # Preprocess the data
-    processed_data = preprocess_data(data)
+    processed_data = preprocess_data(cleaned_data)
+    
+    # Manual imputation step for any remaining NaN values
+    # This ensures all features are complete before model training
+    imputer = SimpleImputer(strategy='median')
+    
+    # Get feature names (excluding target)
+    feature_names = [col for col in processed_data.columns if col != 'PM2.5']
+    
+    # Apply imputer to features
+    feature_data = processed_data[feature_names]
+    feature_data_imputed = pd.DataFrame(
+        imputer.fit_transform(feature_data),
+        columns=feature_names
+    )
+    
+    # Reconstruct the complete dataset
+    processed_data_imputed = pd.DataFrame()
+    processed_data_imputed[feature_names] = feature_data_imputed
+    processed_data_imputed['PM2.5'] = processed_data['PM2.5'].fillna(processed_data['PM2.5'].median())
     
     print("Splitting data for training...")
     # Split data for training
-    X_train, X_test, y_train, y_test = split_data(processed_data, test_size=0.2)
+    X_train, X_test, y_train, y_test = split_data(processed_data_imputed, test_size=0.2)
     
     print("Training models...")
     # Train models

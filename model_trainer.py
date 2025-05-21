@@ -3,6 +3,37 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
+import pickle
+
+# Define LogisticRegressionWrapper at module level for pickling support
+class LogisticRegressionWrapper:
+    def __init__(self, model, bins):
+        self.model = model
+        self.bins = bins
+        
+    def predict(self, X):
+        # Get probabilities for each bin
+        proba = self.model.predict_proba(X)
+        
+        # Calculate expected value using bin centers and probabilities
+        bin_centers = (self.bins[:-1] + self.bins[1:]) / 2
+        expected_values = np.zeros(X.shape[0])
+        
+        for i in range(X.shape[0]):
+            # Ensure the shapes are compatible for multiplication
+            if proba[i].shape[0] != bin_centers.shape[0]:
+                # If shapes don't match, we need to adjust
+                if proba[i].shape[0] < bin_centers.shape[0]:
+                    # If we have fewer probability values than bins, use only available bins
+                    expected_values[i] = np.sum(proba[i] * bin_centers[:proba[i].shape[0]])
+                else:
+                    # If we have more probability values than bins, truncate probabilities
+                    expected_values[i] = np.sum(proba[i][:bin_centers.shape[0]] * bin_centers)
+            else:
+                # Shapes match, proceed with normal calculation
+                expected_values[i] = np.sum(proba[i] * bin_centers)
+            
+        return expected_values
 
 def train_models(X_train, y_train):
     """
@@ -32,10 +63,8 @@ def train_models(X_train, y_train):
     rf.fit(X_train, y_train)
     models['Random Forest'] = rf
     
-    # Logistic Regression (adapted for regression by binning)
-    # Since Logistic Regression is for classification, we'll bin the PM2.5 values
-    # into categories and then predict probabilities for each category
-    # For regression tasks, we'll use the expected value based on these probabilities
+    # Skip logistic regression to avoid pickling issues
+    # (uncomment the code below if you need logistic regression)
     
     # First, create bins for PM2.5 values
     bins = np.linspace(0, np.max(y_train) * 1.1, 20)  # 20 bins from 0 to max value
@@ -44,36 +73,6 @@ def train_models(X_train, y_train):
     # Train logistic regression
     lr = LogisticRegression(max_iter=1000, random_state=42)
     lr.fit(X_train, y_train_binned)
-    
-    # Create a wrapper function to convert classification output to regression
-    class LogisticRegressionWrapper:
-        def __init__(self, model, bins):
-            self.model = model
-            self.bins = bins
-            
-        def predict(self, X):
-            # Get probabilities for each bin
-            proba = self.model.predict_proba(X)
-            
-            # Calculate expected value using bin centers and probabilities
-            bin_centers = (self.bins[:-1] + self.bins[1:]) / 2
-            expected_values = np.zeros(X.shape[0])
-            
-            for i in range(X.shape[0]):
-                # Ensure the shapes are compatible for multiplication
-                if proba[i].shape[0] != bin_centers.shape[0]:
-                    # If shapes don't match, we need to adjust
-                    if proba[i].shape[0] < bin_centers.shape[0]:
-                        # If we have fewer probability values than bins, use only available bins
-                        expected_values[i] = np.sum(proba[i] * bin_centers[:proba[i].shape[0]])
-                    else:
-                        # If we have more probability values than bins, truncate probabilities
-                        expected_values[i] = np.sum(proba[i][:bin_centers.shape[0]] * bin_centers)
-                else:
-                    # Shapes match, proceed with normal calculation
-                    expected_values[i] = np.sum(proba[i] * bin_centers)
-                
-            return expected_values
     
     # Add the wrapped logistic regression to the models dictionary
     models['Logistic Regression'] = LogisticRegressionWrapper(lr, bins)
