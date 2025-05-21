@@ -8,6 +8,7 @@ import os
 from io import BytesIO
 import base64
 import json
+import pickle
 
 # Import custom modules
 from data_handler import load_data, preprocess_data, split_data
@@ -23,6 +24,18 @@ from visualizer import (
 from weather_api import get_weather_forecast
 from utils import get_download_link
 from satellite_data import get_satellite_imagery, get_air_quality_map, get_historical_satellite_data
+
+# Function to load the pre-trained model
+@st.cache_resource  # Cache the model in memory
+def load_pretrained_model():
+    try:
+        with open('pm_model.pkl', 'rb') as f:
+            models = pickle.load(f)
+        st.success("Using pre-trained Kolkata PM2.5 model")
+        return models
+    except (FileNotFoundError, pickle.UnpicklingError):
+        st.warning("Pre-trained model not found or invalid. Will train a new model.")
+        return None
 
 # Set page configuration
 st.set_page_config(
@@ -356,11 +369,20 @@ if page == "Dashboard":
         with col2:
             st.subheader("Model Performance Overview")
             
-            # Train and evaluate models to find best model
-            processed_data = preprocess_data(station_data)
-            X_train, X_test, y_train, y_test = split_data(processed_data, test_size=0.2)
-            models = train_models(X_train, y_train)
-            evaluation_results = evaluate_models(models, X_test, y_test)
+            # Try to load pre-trained model first
+            models = load_pretrained_model()
+            
+            if models is None:
+                # If pre-trained model not available, train a new one
+                processed_data = preprocess_data(station_data)
+                X_train, X_test, y_train, y_test = split_data(processed_data, test_size=0.2)
+                models = train_models(X_train, y_train)
+                evaluation_results = evaluate_models(models, X_test, y_test)
+            else:
+                # If pre-trained model is loaded, evaluate it
+                processed_data = preprocess_data(station_data)
+                _, X_test, _, y_test = split_data(processed_data, test_size=0.2)
+                evaluation_results = evaluate_models(models, X_test, y_test)
             
             # Find best model based on RMSE
             best_model_name = min(evaluation_results, key=lambda x: evaluation_results[x]['rmse'])
@@ -402,10 +424,14 @@ if page == "Dashboard":
         
         # Make forecasts for selected days
         if forecast_data:
-            # Train the model for predictions
-            processed_data = preprocess_data(station_data)
-            X_train, X_test, y_train, y_test = split_data(processed_data, test_size=0.2)
-            models = train_models(X_train, y_train)
+            # Use pre-trained model for predictions if available
+            models = load_pretrained_model()
+            
+            if models is None:
+                # If pre-trained model not available, train a new one
+                processed_data = preprocess_data(station_data)
+                X_train, X_test, y_train, y_test = split_data(processed_data, test_size=0.2)
+                models = train_models(X_train, y_train)
             
             # Get predictions
             predictions = predict_pm25(models, forecast_data)
