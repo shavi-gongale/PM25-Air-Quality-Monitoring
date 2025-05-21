@@ -219,7 +219,7 @@ theme_mode = st.sidebar.radio(
     ["Light Mode", "Dark Mode"]
 )
 
-# Apply dark mode if selected
+# Apply selected theme
 if theme_mode == "Dark Mode":
     st.markdown("""
     <style>
@@ -592,12 +592,12 @@ elif page == "Data Analysis and Insights":
         with tabs[1]:
             st.subheader(f"Historical PM2.5 Trends for {selected_station}")
             
-            # Date range selection
+            # Date range selection with default values from full Kolkata dataset (2021-01-01 to 2025-01-15)
             col1, col2 = st.columns(2)
             with col1:
-                start_date = st.date_input("Start Date", min(pd.to_datetime(data['Date'])).date())
+                start_date = st.date_input("Start Date", pd.to_datetime("2021-01-01").date())
             with col2:
-                end_date = st.date_input("End Date", max(pd.to_datetime(data['Date'])).date())
+                end_date = st.date_input("End Date", pd.to_datetime("2025-01-15").date())
             
             if start_date <= end_date:
                 # Filter data based on date range
@@ -1592,8 +1592,8 @@ elif page == "Historical Analysis":
             # Station selection
             ha_station_filter = st.multiselect(
                 "Select Stations",
-                ["Fort William", "Bidhannagar"],
-                default=[selected_station],
+                ["Kolkata", "Fort William", "Bidhannagar"],
+                default=["Kolkata"],
                 key="ha_stations"
             )
             

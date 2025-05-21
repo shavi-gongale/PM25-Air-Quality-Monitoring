@@ -26,6 +26,7 @@ def get_weather_forecast(location):
     
     # Map location to city and country for API request
     location_mapping = {
+        'Kolkata': {'city': 'Kolkata', 'country': 'IN', 'lat': 22.5726, 'lon': 88.3639},  # Main Kolkata location
         'Fort William': {'city': 'Kolkata', 'country': 'IN', 'lat': 22.5726, 'lon': 88.3639},  # Fort William is in Kolkata
         'Bidhannagar': {'city': 'Bidhannagar', 'country': 'IN', 'lat': 22.5839, 'lon': 88.4403}
     }
