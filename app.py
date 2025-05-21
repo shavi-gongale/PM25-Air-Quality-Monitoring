@@ -65,16 +65,45 @@ if not os.path.exists('data/predictions'):
 if not os.path.exists('data/user_data'):
     os.makedirs('data/user_data', exist_ok=True)
 
-# Load the dataset
+# Load the Kolkata dataset from Excel file
 @st.cache_data(ttl=300)  # Cache expires after 5 minutes
 def get_data():
-    data = load_data()
-    # Ensure date range is from 2021-01-01 to 2025-01-15
-    data['Date'] = pd.to_datetime(data['Date'])
-    start_date = pd.to_datetime('2021-01-01')
-    end_date = pd.to_datetime('2025-01-15')
-    data = data[(data['Date'] >= start_date) & (data['Date'] <= end_date)]
-    return data
+    # First try to load the Kolkata Excel dataset
+    try:
+        # Read the Excel file, skipping the first row (header)
+        excel_path = 'attached_assets/edited dataset of kolkata.xlsx'
+        df = pd.read_excel(excel_path, header=1)
+        
+        # Create a properly formatted dataframe
+        data = pd.DataFrame()
+        data['Date'] = df['From Date']
+        data['PM2.5'] = df['PM2.5']
+        data['Temperature'] = df['Temp']
+        data['Relative_Humidity'] = df['RH']
+        data['Wind_Speed'] = df['WS']
+        data['Solar_Radiation'] = df['SR']
+        data['Station'] = 'Kolkata'
+        
+        # Convert date to datetime
+        data['Date'] = pd.to_datetime(data['Date'], format='%d-%m-%Y %H:%M', errors='coerce')
+        
+        # Filter to ensure date range is from 2021-01-01 to 2025-01-15
+        start_date = pd.to_datetime('2021-01-01')
+        end_date = pd.to_datetime('2025-01-15')
+        data = data[(data['Date'] >= start_date) & (data['Date'] <= end_date)]
+        
+        st.success("Using Kolkata dataset (2021-01-01 to 2025-01-15)")
+        return data
+    except Exception as e:
+        st.warning(f"Could not load Kolkata dataset: {e}. Using default dataset instead.")
+        # Fallback to default data
+        data = load_data()
+        # Ensure date range is from 2021-01-01 to 2025-01-15
+        data['Date'] = pd.to_datetime(data['Date'])
+        start_date = pd.to_datetime('2021-01-01')
+        end_date = pd.to_datetime('2025-01-15')
+        data = data[(data['Date'] >= start_date) & (data['Date'] <= end_date)]
+        return data
 
 data = get_data()
 
@@ -181,7 +210,7 @@ page = st.sidebar.radio(
 
 # Station selection for predictions
 st.sidebar.title("Settings")
-selected_station = st.sidebar.selectbox("Select Station", ["Fort William", "Bidhannagar"])
+selected_station = st.sidebar.selectbox("Select Station", ["Kolkata", "Fort William", "Bidhannagar"], index=0)
 
 # Theme selection (dark/light mode)
 st.sidebar.title("Display Settings")
@@ -262,7 +291,16 @@ if page == "Dashboard":
     
     # If data exists, get the latest PM2.5 reading for selected station
     if not data.empty:
-        latest_data = data[data['Station'] == selected_station].iloc[-1]
+        # Filter for selected station
+        station_data = data[data['Station'] == selected_station]
+        
+        # If no data for that station, use all data (Kolkata)
+        if station_data.empty:
+            station_data = data
+            st.info(f"Using Kolkata dataset (2021-01-01 to 2025-01-15)")
+        
+        # Get latest reading
+        latest_data = station_data.iloc[-1]
         latest_pm25 = latest_data['PM2.5']
         latest_date = latest_data['Date']
         
