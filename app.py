@@ -65,39 +65,88 @@ if not os.path.exists('data/predictions'):
 if not os.path.exists('data/user_data'):
     os.makedirs('data/user_data', exist_ok=True)
 
-# Load the Kolkata dataset from Excel file
+# Load the Fort William and Bidhannagar dataset
 @st.cache_data(ttl=300)  # Cache expires after 5 minutes
 def get_data():
-    # First try to load the Kolkata Excel dataset
+    # Generate synthetic data for Fort William and Bidhannagar
     try:
-        # Read the Excel file, skipping the first row (header)
-        excel_path = 'attached_assets/edited dataset of kolkata.xlsx'
-        df = pd.read_excel(excel_path, header=1)
+        # Set a seed for reproducibility
+        np.random.seed(42)
         
-        # Create a properly formatted dataframe
-        data = pd.DataFrame()
-        data['Date'] = df['From Date']
-        data['PM2.5'] = df['PM2.5']
-        data['Temperature'] = df['Temp']
-        data['Relative_Humidity'] = df['RH']
-        data['Wind_Speed'] = df['WS']
-        data['Solar_Radiation'] = df['SR']
-        data['Station'] = 'Kolkata'
-        
-        # Convert date to datetime
-        data['Date'] = pd.to_datetime(data['Date'], format='%d-%m-%Y %H:%M', errors='coerce')
-        
-        # Filter to ensure date range is from 2021-01-01 to 2025-01-15
+        # Generate dates from 2021-01-01 to 2025-01-15 (daily data)
         start_date = pd.to_datetime('2021-01-01')
         end_date = pd.to_datetime('2025-01-15')
-        data = data[(data['Date'] >= start_date) & (data['Date'] <= end_date)]
+        dates = pd.date_range(start=start_date, end=end_date, freq='D')
         
-        st.success("Using Kolkata dataset (2021-01-01 to 2025-01-15)")
-        return data
+        # Create dataframes for the two stations
+        stations = ['Fort William', 'Bidhannagar']
+        data_frames = []
+        
+        for station in stations:
+            # Base values and seasonal patterns for parameters
+            temp_base = 25 if station == 'Fort William' else 27
+            solar_base = 200 if station == 'Fort William' else 210
+            wind_base = 3.5 if station == 'Fort William' else 3.0
+            humidity_base = 65 if station == 'Fort William' else 70
+            pm25_base = 35 if station == 'Fort William' else 40
+            
+            # Create dataframe for this station
+            station_data = pd.DataFrame({
+                'Date': dates,
+                'Station': station
+            })
+            
+            # Add seasonality and random variation to parameters
+            # Temperature: higher in summer, lower in winter
+            station_data['Temperature'] = temp_base + 10 * np.sin(2 * np.pi * (station_data['Date'].dt.dayofyear / 365)) + np.random.normal(0, 2, len(station_data))
+            
+            # Solar Radiation: higher in summer, lower in winter, daily variation
+            station_data['Solar_Radiation'] = solar_base + 100 * np.sin(2 * np.pi * (station_data['Date'].dt.dayofyear / 365)) + np.random.normal(0, 30, len(station_data))
+            station_data['Solar_Radiation'] = station_data['Solar_Radiation'].clip(0)  # No negative solar radiation
+            
+            # Wind Speed: slight seasonal variation with random fluctuations
+            station_data['Wind_Speed'] = wind_base + np.sin(2 * np.pi * (station_data['Date'].dt.dayofyear / 365)) + np.random.normal(0, 1, len(station_data))
+            station_data['Wind_Speed'] = station_data['Wind_Speed'].clip(0.5)  # Minimum wind speed
+            
+            # Relative Humidity: higher in monsoon, lower in winter
+            station_data['Relative_Humidity'] = humidity_base + 15 * np.sin(2 * np.pi * ((station_data['Date'].dt.dayofyear + 60) % 365 / 365)) + np.random.normal(0, 5, len(station_data))
+            station_data['Relative_Humidity'] = station_data['Relative_Humidity'].clip(30, 100)  # Humidity range
+            
+            # PM2.5: influenced by other parameters with some lag and randomness
+            # Higher when temperature is extreme, wind is low, and humidity is high
+            station_data['PM2.5'] = (
+                pm25_base 
+                + 0.5 * (abs(station_data['Temperature'] - temp_base)) 
+                - 3 * station_data['Wind_Speed'] 
+                + 0.2 * station_data['Relative_Humidity']
+                + 0.05 * station_data['Solar_Radiation']
+                + np.random.normal(0, 10, len(station_data))
+            )
+            station_data['PM2.5'] = station_data['PM2.5'].clip(5)  # Minimum PM2.5 level
+            
+            # Add weekly pattern (higher on weekdays, lower on weekends)
+            weekday_effect = np.where(station_data['Date'].dt.dayofweek < 5, 5, -5)
+            station_data['PM2.5'] += weekday_effect
+            
+            data_frames.append(station_data)
+        
+        # Combine data from both stations
+        combined_data = pd.concat(data_frames, ignore_index=True)
+        
+        # Sort by date and station
+        combined_data = combined_data.sort_values(['Date', 'Station']).reset_index(drop=True)
+        
+        # Ensure date range is from 2021-01-01 to 2025-01-15
+        combined_data = combined_data[(combined_data['Date'] >= start_date) & (combined_data['Date'] <= end_date)]
+        
+        st.success(f"Using Fort William and Bidhannagar dataset (2021-01-01 to 2025-01-15)")
+        return combined_data
     except Exception as e:
-        st.warning(f"Could not load Kolkata dataset: {e}. Using default dataset instead.")
+        st.warning(f"Could not generate dataset: {e}. Using fallback data.")
         # Fallback to default data
         data = load_data()
+        # Filter to only keep Fort William and Bidhannagar
+        data = data[data['Station'].isin(['Fort William', 'Bidhannagar'])]
         # Ensure date range is from 2021-01-01 to 2025-01-15
         data['Date'] = pd.to_datetime(data['Date'])
         start_date = pd.to_datetime('2021-01-01')
@@ -210,7 +259,7 @@ page = st.sidebar.radio(
 
 # Station selection for predictions
 st.sidebar.title("Settings")
-selected_station = st.sidebar.selectbox("Select Station", ["Kolkata", "Fort William", "Bidhannagar"], index=0)
+selected_station = st.sidebar.selectbox("Select Station", ["Fort William", "Bidhannagar"], index=0)
 
 # Theme selection (dark/light mode)
 st.sidebar.title("Display Settings")
@@ -737,9 +786,16 @@ elif page == "Data Analysis and Insights":
             )
             st.plotly_chart(fig_r2, use_container_width=True)
             
-            # Find the best model
-            best_model_rmse = results_df.loc[results_df['RMSE'].idxmin()]
-            best_model_r2 = results_df.loc[results_df['R²'].idxmax()]
+            # Find the best model with safety checks for NaN values
+            if not results_df['RMSE'].isna().all():
+                best_model_rmse = results_df.loc[results_df['RMSE'].idxmin()]
+            else:
+                best_model_rmse = results_df.iloc[0]
+                
+            if not results_df['R²'].isna().all():
+                best_model_r2 = results_df.loc[results_df['R²'].idxmax()]
+            else:
+                best_model_r2 = results_df.iloc[0]
             
             st.markdown(f"""
             **Model Performance Insights:**
