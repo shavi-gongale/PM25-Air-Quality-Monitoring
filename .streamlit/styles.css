@@ -158,3 +158,37 @@
     padding: 10px;
     border-top: 1px solid #dee2e6;
 }
+
+/* Mobile Responsive Styles */
+@media (max-width: 768px) {
+    .weather-card {
+        margin-bottom: 15px;
+    }
+    
+    .weather-card-icon {
+        font-size: 1.5rem;
+    }
+    
+    .weather-card-value {
+        font-size: 1.2rem;
+    }
+    
+    .station-overview, .model-overview {
+        margin-bottom: 20px;
+    }
+    
+    .prediction-value {
+        font-size: 1.5rem;
+    }
+    
+    /* Improve sidebar experience on mobile */
+    .sidebar .sidebar-content {
+        padding: 10px;
+    }
+    
+    /* Make charts responsive */
+    .js-plotly-plot {
+        max-width: 100%;
+        overflow-x: auto;
+    }
+}
