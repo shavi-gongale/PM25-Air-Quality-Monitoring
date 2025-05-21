@@ -3,6 +3,7 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
+from sklearn.impute import SimpleImputer
 import pickle
 
 # Define LogisticRegressionWrapper at module level for pickling support
@@ -46,6 +47,18 @@ def train_models(X_train, y_train):
     Returns:
         dict: Trained models
     """
+    # Check for NaN values in the training data
+    if np.isnan(X_train).any() or np.isnan(y_train).any():
+        print("Warning: NaN values detected in the training data. Applying imputation.")
+        
+        # Create and apply an imputer for the features (X_train)
+        imputer = SimpleImputer(strategy='median')
+        X_train = imputer.fit_transform(X_train)
+        
+        # Handle NaNs in the target variable if present
+        if np.isnan(y_train).any():
+            y_train = np.nan_to_num(y_train, nan=np.nanmedian(y_train))
+    
     models = {}
     
     # Model Tree (Decision Tree Regressor)
@@ -62,9 +75,6 @@ def train_models(X_train, y_train):
     rf = RandomForestRegressor(n_estimators=100, random_state=42)
     rf.fit(X_train, y_train)
     models['Random Forest'] = rf
-    
-    # Skip logistic regression to avoid pickling issues
-    # (uncomment the code below if you need logistic regression)
     
     # First, create bins for PM2.5 values
     bins = np.linspace(0, np.max(y_train) * 1.1, 20)  # 20 bins from 0 to max value
@@ -91,6 +101,18 @@ def evaluate_models(models, X_test, y_test):
     Returns:
         dict: Evaluation metrics for each model
     """
+    # Check for NaN values in the test data
+    if np.isnan(X_test).any() or np.isnan(y_test).any():
+        print("Warning: NaN values detected in the test data. Applying imputation.")
+        
+        # Create and apply an imputer for the features (X_test)
+        imputer = SimpleImputer(strategy='median')
+        X_test = imputer.fit_transform(X_test)
+        
+        # Handle NaNs in the target variable if present
+        if np.isnan(y_test).any():
+            y_test = np.nan_to_num(y_test, nan=np.nanmedian(y_test))
+    
     results = {}
     
     for name, model in models.items():
