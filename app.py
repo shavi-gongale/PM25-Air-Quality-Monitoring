@@ -391,8 +391,13 @@ if page == "Dashboard":
             station_data = data[data['Station'] == selected_station]
             
             # Calculate date range and average PM2.5
-            first_date = pd.to_datetime(station_data['Date'].min()).strftime("%Y-%m-%d")
-            last_date = pd.to_datetime(station_data['Date'].max()).strftime("%Y-%m-%d")
+            # Check for empty data or NaT values
+            if station_data.empty or pd.isna(station_data['Date'].min()):
+                first_date = "No data"
+                last_date = "No data"
+            else:
+                first_date = pd.to_datetime(station_data['Date'].min()).strftime("%Y-%m-%d")
+                last_date = pd.to_datetime(station_data['Date'].max()).strftime("%Y-%m-%d")
             avg_pm25 = station_data['PM2.5'].mean()
             
             st.markdown(f"""
