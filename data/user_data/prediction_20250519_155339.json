@@ -1,0 +1,107 @@
+{
+    "station": "Bidhannagar",
+    "prediction_date": "2025-05-19",
+    "method": "api_forecast",
+    "weather_data": [
+        {
+            "Date": "2025-05-19",
+            "Temperature": 29.71,
+            "Solar_Radiation": 278.75,
+            "Wind_Speed": 3.65,
+            "Relative_Humidity": 71.5
+        },
+        {
+            "Date": "2025-05-20",
+            "Temperature": 32.7625,
+            "Solar_Radiation": 254.0625,
+            "Wind_Speed": 5.80875,
+            "Relative_Humidity": 60.125
+        },
+        {
+            "Date": "2025-05-21",
+            "Temperature": 31.57375,
+            "Solar_Radiation": 114.375,
+            "Wind_Speed": 4.798749999999999,
+            "Relative_Humidity": 65.375
+        },
+        {
+            "Date": "2025-05-22",
+            "Temperature": 30.7825,
+            "Solar_Radiation": 76.25,
+            "Wind_Speed": 3.61625,
+            "Relative_Humidity": 66.0
+        },
+        {
+            "Date": "2025-05-23",
+            "Temperature": 29.4375,
+            "Solar_Radiation": 129.6875,
+            "Wind_Speed": 3.2712499999999998,
+            "Relative_Humidity": 72.25
+        },
+        {
+            "Date": "2025-05-24",
+            "Temperature": 32.694614447415496,
+            "Solar_Radiation": 106.26701576511668,
+            "Wind_Speed": 4.162429209812739,
+            "Relative_Humidity": 72.19084208608463
+        },
+        {
+            "Date": "2025-05-25",
+            "Temperature": 29.396047047447865,
+            "Solar_Radiation": 100.77980019342671,
+            "Wind_Speed": 4.041275709339018,
+            "Relative_Humidity": 71.56172257548218
+        },
+        {
+            "Date": "2025-05-26",
+            "Temperature": 28.843175311917488,
+            "Solar_Radiation": 110.77032136612569,
+            "Wind_Speed": 3.6248165927361593,
+            "Relative_Humidity": 75.10252764928507
+        }
+    ],
+    "predictions": {
+        "Model Tree": [
+            56.21,
+            40.01,
+            64.42,
+            55.5,
+            62.06,
+            62.06,
+            62.06,
+            62.06
+        ],
+        "NLR": [
+            59.1246,
+            45.53420000000001,
+            56.03180000000003,
+            55.294000000000025,
+            58.38860000000002,
+            56.56440000000002,
+            56.99379999999999,
+            58.456799999999994
+        ],
+        "Random Forest": [
+            59.03320000000004,
+            46.49570000000008,
+            55.141600000000025,
+            55.40170000000003,
+            58.115800000000036,
+            55.932900000000025,
+            56.43720000000004,
+            58.160800000000066
+        ],
+        "Logistic Regression": [
+            16.594439898361237,
+            12.637414008825067,
+            11.989452427600147,
+            13.928919343495284,
+            16.897033934333933,
+            13.527573170638217,
+            14.786188852429564,
+            17.392454523119937
+        ]
+    },
+    "best_model": "Random Forest",
+    "best_model_rmse": 3.446660367176741
+}
