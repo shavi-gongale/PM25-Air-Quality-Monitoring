@@ -762,10 +762,14 @@ elif page == "Data Analysis and Insights":
                 forecast_df = pd.DataFrame(forecast_data)
                 st.dataframe(forecast_df)
                 
-                # Train models for prediction
-                processed_data = preprocess_data(station_data)
-                X_train, X_test, y_train, y_test = split_data(processed_data, test_size=0.2)
-                models = train_models(X_train, y_train)
+                # Use pre-trained model for prediction
+                models = load_pretrained_model()
+                
+                if models is None:
+                    # Only train a new model if pre-trained model isn't available
+                    processed_data = preprocess_data(station_data)
+                    X_train, X_test, y_train, y_test = split_data(processed_data, test_size=0.2)
+                    models = train_models(X_train, y_train)
                 
                 # Make predictions
                 predictions = predict_pm25(models, forecast_data)
