@@ -2343,8 +2343,8 @@ elif page == "Historical Analysis":
                     'analysis_date': datetime.now().strftime("%Y-%m-%d"),
                     'stations': list(analysis_data['Station'].unique()),
                     'date_range': [
-                        min(pd.to_datetime(analysis_data['Date'])).strftime("%Y-%m-%d"),
-                        max(pd.to_datetime(analysis_data['Date'])).strftime("%Y-%m-%d")
+                        pd.to_datetime(analysis_data['Date'].min()).strftime("%Y-%m-%d") if not pd.isna(analysis_data['Date'].min()) else "No data",
+                        pd.to_datetime(analysis_data['Date'].max()).strftime("%Y-%m-%d") if not pd.isna(analysis_data['Date'].max()) else "No data"
                     ],
                     'summary_statistics': {
                         station: {
@@ -2382,9 +2382,17 @@ elif page == "Data Download":
             # Date range selection
             dl_col1, dl_col2 = st.columns(2)
             with dl_col1:
-                dl_start_date = st.date_input("Start Date", min(pd.to_datetime(data['Date'])).date())
+                # Handle NaT values in start date
+                if pd.isna(data['Date'].min()):
+                    dl_start_date = st.date_input("Start Date", datetime(2021, 1, 1).date())
+                else:
+                    dl_start_date = st.date_input("Start Date", pd.to_datetime(data['Date'].min()).date())
             with dl_col2:
-                dl_end_date = st.date_input("End Date", max(pd.to_datetime(data['Date'])).date())
+                # Handle NaT values in end date
+                if pd.isna(data['Date'].max()):
+                    dl_end_date = st.date_input("End Date", datetime.now().date())
+                else:
+                    dl_end_date = st.date_input("End Date", pd.to_datetime(data['Date'].max()).date())
             
             # Station selection
             dl_station_filter = st.multiselect(
