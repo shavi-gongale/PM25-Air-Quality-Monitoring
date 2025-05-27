@@ -17,12 +17,11 @@ def get_weather_forecast(location):
     Returns:
         list: List of dictionaries containing forecast data for the next 7 days
     """
-    # Get API key from environment variable with fallback
-    api_key = os.getenv("WEATHER_API_KEY", "")
+    # Get API key from environment variable
+    api_key = os.getenv("OPENWEATHER_API_KEY", "")
     
     if not api_key:
-        logging.warning("No OpenWeatherMap API key found. Using mock weather data.")
-        return generate_mock_forecast(location)
+        raise Exception("OpenWeather API key not found. Please provide OPENWEATHER_API_KEY.")
     
     # Map location to city and country for API request
     location_mapping = {
