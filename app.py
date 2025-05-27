@@ -1527,7 +1527,7 @@ elif page == "Satellite Imagery":
         imagery = get_satellite_imagery(selected_station, sat_date_str)
         
         if imagery:
-            st.image(imagery, caption=f"Satellite imagery of {selected_station}", use_column_width=True)
+            st.image(imagery, caption=f"Satellite imagery of {selected_station}", use_container_width=True)
         else:
             st.error("Unable to retrieve satellite imagery. Please try another date.")
     
