@@ -17,7 +17,8 @@ def get_waqi_data(location):
     api_key = os.environ.get("WAQI_API_KEY")
     
     if not api_key:
-        raise Exception("WAQI API key not found. Please provide WAQI_API_KEY.")
+        print("Warning: WAQI API key not found. Using mock data for demonstration.")
+        return generate_mock_waqi_data(location)
     
     # Map locations to WAQI station names or coordinates
     location_mapping = {

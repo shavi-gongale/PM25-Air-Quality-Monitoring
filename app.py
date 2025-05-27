@@ -141,7 +141,7 @@ def get_data():
         # Ensure date range is from 2021-01-01 to 2025-01-15
         combined_data = combined_data[(combined_data['Date'] >= start_date) & (combined_data['Date'] <= end_date)]
         
-        st.success(f"Using Fort William and Bidhannagar dataset (2021-01-01 to 2025-01-15)")
+        # Dataset info moved to sidebar or bottom
         return combined_data
     except Exception as e:
         st.warning(f"Could not generate dataset: {e}. Using fallback data.")
@@ -335,6 +335,10 @@ aqi_table_data = {
 aqi_df = pd.DataFrame(aqi_table_data)
 st.sidebar.dataframe(aqi_df, hide_index=True)
 
+# Add dataset info at bottom of sidebar
+st.sidebar.markdown("---")
+st.sidebar.caption("📊 Dataset: Fort William & Bidhannagar (2021-2025)")
+
 # Dashboard page
 if page == "Dashboard":
     # Station-specific title
@@ -387,43 +391,26 @@ if page == "Dashboard":
         # Display current weather parameters
         st.subheader("Current Weather Parameters")
         
-        # Get real-time data from WAQI API
+        # Get weather forecast data
         try:
-            waqi_data = get_waqi_data(selected_station)
-            current_weather = {
-                'Temperature': waqi_data.get('temperature', 25),
-                'Solar_Radiation': 200,  # Estimated value
-                'Wind_Speed': waqi_data.get('wind_speed', 4.2),
-                'Relative_Humidity': waqi_data.get('humidity', 68)
-            }
-            
-            # Update latest PM2.5 with real data
-            if waqi_data.get('pm25') != 'N/A':
-                latest_pm25 = waqi_data.get('pm25', latest_pm25)
-                
-        except Exception as e:
-            st.warning(f"Could not fetch real-time data for {selected_station}. Using default values.")
-            # Get weather forecast data as fallback
-            try:
-                forecast_data = get_weather_forecast(selected_station)
-                if forecast_data:
-                    current_weather = forecast_data[0]
-                else:
-                    # Default weather values
-                    current_weather = {
-                        'Temperature': 25,
-                        'Solar_Radiation': 200,
-                        'Wind_Speed': 4.2,
-                        'Relative_Humidity': 68
-                    }
-            except Exception as weather_error:
-                st.error(f"Error fetching weather data: {weather_error}")
+            forecast_data = get_weather_forecast(selected_station)
+            if forecast_data:
+                current_weather = forecast_data[0]
+            else:
+                # Default weather values
                 current_weather = {
                     'Temperature': 25,
                     'Solar_Radiation': 200,
                     'Wind_Speed': 4.2,
                     'Relative_Humidity': 68
                 }
+        except Exception as weather_error:
+            current_weather = {
+                'Temperature': 25,
+                'Solar_Radiation': 200,
+                'Wind_Speed': 4.2,
+                'Relative_Humidity': 68
+            }
         
         if current_weather:
             
@@ -1547,11 +1534,9 @@ elif page == "Satellite Imagery":
     # Historical satellite data analysis
     st.header("Historical Satellite Data Analysis")
     
-    # Get real historical data from WAQI API
+    # Try to get real historical data from WAQI API
     try:
-        # Calculate days difference
-        days_back = min(90, (datetime.now().date() - timedelta(days=30)).toordinal() - datetime.now().date().toordinal() + 30)
-        historical_waqi_data = get_historical_waqi_data(selected_station, days=abs(days_back))
+        historical_waqi_data = get_historical_waqi_data(selected_station, days=30)
         
         if not historical_waqi_data.empty:
             st.subheader(f"Real-time Historical Air Quality Data for {selected_station}")
