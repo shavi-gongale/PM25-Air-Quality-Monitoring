@@ -24,6 +24,8 @@ from visualizer import (
 from weather_api import get_weather_forecast
 from utils import get_download_link
 from satellite_data import get_satellite_imagery, get_air_quality_map, get_historical_satellite_data
+from waqi_api import get_waqi_data, get_historical_waqi_data, get_waqi_forecast
+from openai_analysis import analyze_air_quality_trends, generate_health_recommendations, predict_air_quality_trends
 
 # Function to load the pre-trained model
 @st.cache_resource  # Cache the model in memory
@@ -385,11 +387,45 @@ if page == "Dashboard":
         # Display current weather parameters
         st.subheader("Current Weather Parameters")
         
-        # Get weather forecast data
-        forecast_data = get_weather_forecast(selected_station)
+        # Get real-time data from WAQI API
+        try:
+            waqi_data = get_waqi_data(selected_station)
+            current_weather = {
+                'Temperature': waqi_data.get('temperature', 25),
+                'Solar_Radiation': 200,  # Estimated value
+                'Wind_Speed': waqi_data.get('wind_speed', 4.2),
+                'Relative_Humidity': waqi_data.get('humidity', 68)
+            }
+            
+            # Update latest PM2.5 with real data
+            if waqi_data.get('pm25') != 'N/A':
+                latest_pm25 = waqi_data.get('pm25', latest_pm25)
+                
+        except Exception as e:
+            st.warning(f"Could not fetch real-time data for {selected_station}. Using default values.")
+            # Get weather forecast data as fallback
+            try:
+                forecast_data = get_weather_forecast(selected_station)
+                if forecast_data:
+                    current_weather = forecast_data[0]
+                else:
+                    # Default weather values
+                    current_weather = {
+                        'Temperature': 25,
+                        'Solar_Radiation': 200,
+                        'Wind_Speed': 4.2,
+                        'Relative_Humidity': 68
+                    }
+            except Exception as weather_error:
+                st.error(f"Error fetching weather data: {weather_error}")
+                current_weather = {
+                    'Temperature': 25,
+                    'Solar_Radiation': 200,
+                    'Wind_Speed': 4.2,
+                    'Relative_Humidity': 68
+                }
         
-        if forecast_data:
-            current_weather = forecast_data[0]
+        if current_weather:
             
             # Create weather parameter cards
             col1, col2, col3, col4 = st.columns(4)
@@ -488,6 +524,36 @@ if page == "Dashboard":
                 <p><strong>R² Score:</strong> {best_r2:.2f}</p>
             </div>
             """, unsafe_allow_html=True)
+        
+        # AI-Powered Health Recommendations Section
+        st.subheader("🤖 AI Health Recommendations")
+        
+        try:
+            # Get current air quality data for AI analysis
+            current_waqi = get_waqi_data(selected_station)
+            current_aqi = current_waqi.get('aqi', latest_pm25 * 2)  # Rough AQI calculation if not available
+            
+            # Generate AI health recommendations
+            health_recommendations = generate_health_recommendations(latest_pm25, current_aqi)
+            
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                st.markdown("**🏃 Activity Recommendations:**")
+                st.info(health_recommendations.get('activities', 'General outdoor activities should be limited during high pollution periods.'))
+                
+                st.markdown("**⚠️ Vulnerable Groups Advice:**")
+                st.warning(health_recommendations.get('vulnerable_groups', 'Children, elderly, and people with respiratory conditions should take extra precautions.'))
+            
+            with col2:
+                st.markdown("**🛡️ Protective Measures:**")
+                st.success(health_recommendations.get('protective_measures', 'Use N95 masks when outdoors and consider air purifiers indoors.'))
+                
+                st.markdown("**⏰ Best Times for Outdoor Activities:**")
+                st.info(health_recommendations.get('timing', 'Early morning and late evening typically have better air quality.'))
+                
+        except Exception as ai_error:
+            st.info("💡 **General Health Tips:** Use N95 masks during high pollution, limit outdoor exercise, and keep windows closed during peak pollution hours.")
             
             # Model comparison chart
             st.subheader("Model Comparison")
@@ -1481,22 +1547,120 @@ elif page == "Satellite Imagery":
     # Historical satellite data analysis
     st.header("Historical Satellite Data Analysis")
     
-    # Date range selection
-    hist_col1, hist_col2 = st.columns(2)
-    with hist_col1:
-        sat_start_date = st.date_input("Start Date", datetime.now().date() - timedelta(days=30), key="sat_start")
-    with hist_col2:
-        sat_end_date = st.date_input("End Date", datetime.now().date(), key="sat_end")
-    
-    if sat_start_date <= sat_end_date:
-        # Get historical satellite data
-        sat_data = get_historical_satellite_data(
-            selected_station, 
-            sat_start_date.strftime("%Y-%m-%d"), 
-            sat_end_date.strftime("%Y-%m-%d")
-        )
+    # Get real historical data from WAQI API
+    try:
+        # Calculate days difference
+        days_back = min(90, (datetime.now().date() - timedelta(days=30)).toordinal() - datetime.now().date().toordinal() + 30)
+        historical_waqi_data = get_historical_waqi_data(selected_station, days=abs(days_back))
         
-        if not sat_data.empty:
+        if not historical_waqi_data.empty:
+            st.subheader(f"Real-time Historical Air Quality Data for {selected_station}")
+            
+            # Display key metrics
+            col1, col2, col3, col4 = st.columns(4)
+            with col1:
+                avg_pm25 = historical_waqi_data['PM2.5'].mean()
+                st.metric("30-Day Average PM2.5", f"{avg_pm25:.1f} μg/m³")
+            
+            with col2:
+                max_pm25 = historical_waqi_data['PM2.5'].max()
+                st.metric("Peak PM2.5", f"{max_pm25:.1f} μg/m³")
+            
+            with col3:
+                avg_aqi = historical_waqi_data['AQI'].mean()
+                st.metric("Average AQI", f"{avg_aqi:.0f}")
+            
+            with col4:
+                recent_trend = "Improving ↓" if historical_waqi_data['PM2.5'].iloc[-7:].mean() < historical_waqi_data['PM2.5'].iloc[:7].mean() else "Worsening ↑"
+                st.metric("Recent Trend", recent_trend)
+            
+            # Plot historical trends
+            fig = px.line(
+                historical_waqi_data,
+                x='Date',
+                y='PM2.5',
+                title=f"PM2.5 Historical Trends for {selected_station}",
+                labels={'PM2.5': 'PM2.5 (μg/m³)', 'Date': 'Date'}
+            )
+            fig.update_layout(showlegend=False)
+            st.plotly_chart(fig, use_container_width=True)
+            
+            # Add AQI trend chart
+            fig_aqi = px.line(
+                historical_waqi_data,
+                x='Date',
+                y='AQI',
+                title=f"AQI Historical Trends for {selected_station}",
+                labels={'AQI': 'Air Quality Index', 'Date': 'Date'},
+                color_discrete_sequence=['orange']
+            )
+            fig_aqi.update_layout(showlegend=False)
+            st.plotly_chart(fig_aqi, use_container_width=True)
+            
+            # Display the raw data
+            with st.expander("View Raw Historical Data"):
+                st.dataframe(historical_waqi_data)
+            
+            # AI-powered trend analysis
+            try:
+                ai_insights = predict_air_quality_trends(historical_waqi_data.to_dict('records'), selected_station)
+                
+                st.subheader("🤖 AI-Powered Trend Analysis")
+                
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.markdown("**Short-term Prediction (Next 3 Days):**")
+                    st.info(ai_insights.get('short_term', 'Analysis not available'))
+                    
+                    st.markdown("**Weekly Trend Forecast:**")
+                    st.info(ai_insights.get('weekly_trend', 'Analysis not available'))
+                
+                with col2:
+                    st.markdown("**Seasonal Patterns Identified:**")
+                    st.write(ai_insights.get('seasonal_patterns', 'No clear patterns identified'))
+                    
+                    st.markdown("**Key Influencing Factors:**")
+                    st.write(ai_insights.get('influencing_factors', 'Factors analysis not available'))
+                    
+            except Exception as ai_error:
+                st.warning("AI analysis temporarily unavailable. Please ensure OpenAI API key is configured.")
+        
+        else:
+            st.warning(f"No historical data available for {selected_station} from WAQI API.")
+            
+    except Exception as e:
+        st.error(f"Could not fetch historical data for {selected_station}. Please ensure WAQI API key is properly configured.")
+        
+    # Satellite imagery section
+    st.subheader("Satellite Imagery Analysis")
+    sat_date = st.date_input("Select Date for Satellite Analysis", datetime.now().date())
+    
+    if st.button("Get Satellite Imagery"):
+        with st.spinner("Fetching satellite imagery..."):
+            satellite_image = get_satellite_imagery(selected_station, sat_date.strftime("%Y-%m-%d"))
+            air_quality_map = get_air_quality_map(selected_station, sat_date.strftime("%Y-%m-%d"))
+            
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                st.subheader("Satellite View")
+                if satellite_image:
+                    st.image(satellite_image, caption=f"Satellite view of {selected_station}")
+                else:
+                    st.info("Satellite imagery not available for this date.")
+            
+            with col2:
+                st.subheader("Air Quality Map")
+                if air_quality_map:
+                    st.image(air_quality_map, caption=f"Air quality overlay for {selected_station}")
+                else:
+                    st.info("Air quality map not available for this date.")
+    
+    # Skip the synthetic data section completely
+    if False:  # This section is disabled to avoid synthetic data
+        sat_data = None
+        
+        if sat_data and not sat_data.empty:
             # Display the data
             st.subheader("Satellite-Derived PM2.5 Estimates")
             st.dataframe(sat_data)
