@@ -25,7 +25,7 @@ from weather_api import get_weather_forecast
 from utils import get_download_link
 from satellite_data import get_satellite_imagery, get_air_quality_map, get_historical_satellite_data
 from waqi_api import get_waqi_data, get_historical_waqi_data, get_waqi_forecast
-from openai_analysis import analyze_air_quality_trends, generate_health_recommendations, predict_air_quality_trends
+# OpenAI analysis removed for better reliability
 
 # Function to load the pre-trained model
 @st.cache_resource  # Cache the model in memory
