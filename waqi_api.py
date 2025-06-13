@@ -3,6 +3,45 @@ import os
 import pandas as pd
 from datetime import datetime, timedelta
 import json
+import random
+
+def generate_mock_waqi_data(location):
+    """
+    Generate mock WAQI data for demonstration when API key is not available
+    
+    Args:
+        location (str): Location name
+        
+    Returns:
+        dict: Mock air quality data
+    """
+    # Generate realistic mock data based on location
+    base_values = {
+        'Fort William': {'pm25': 35, 'aqi': 70, 'temp': 28, 'humidity': 75},
+        'Bidhannagar': {'pm25': 42, 'aqi': 85, 'temp': 30, 'humidity': 70}
+    }
+    
+    base = base_values.get(location, base_values['Fort William'])
+    
+    # Add some random variation
+    variation = random.uniform(0.8, 1.2)
+    
+    return {
+        'station': location,
+        'aqi': int(base['aqi'] * variation),
+        'pm25': round(base['pm25'] * variation, 1),
+        'pm10': round(base['pm25'] * variation * 1.5, 1),
+        'no2': round(25 * variation, 1),
+        'so2': round(15 * variation, 1),
+        'co': round(8 * variation, 1),
+        'o3': round(35 * variation, 1),
+        'temperature': round(base['temp'] * random.uniform(0.9, 1.1), 1),
+        'humidity': round(base['humidity'] * random.uniform(0.9, 1.1), 1),
+        'pressure': round(1013 * random.uniform(0.98, 1.02), 1),
+        'wind_speed': round(5 * random.uniform(0.5, 1.5), 1),
+        'timestamp': datetime.now().isoformat(),
+        'city': location
+    }
 
 def get_waqi_data(location):
     """

@@ -5,6 +5,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 from datetime import datetime, timedelta
 import os
+import io
 from io import BytesIO
 import base64
 import json
@@ -27,6 +28,88 @@ from utils import get_download_link
 from satellite_data import get_satellite_imagery, get_air_quality_map, get_historical_satellite_data
 from waqi_api import get_waqi_data, get_historical_waqi_data, get_waqi_forecast
 # OpenAI analysis removed for better reliability
+
+def generate_health_recommendations(pm25_level, aqi_level):
+    """
+    Generate health recommendations based on PM2.5 and AQI levels
+    
+    Args:
+        pm25_level (float): PM2.5 concentration
+        aqi_level (float): Air Quality Index
+        
+    Returns:
+        dict: Health recommendations and activity suggestions
+    """
+    if pm25_level <= 12:
+        category = "Good"
+        activities = ["All outdoor activities recommended", "Perfect for jogging and cycling", "Windows can be kept open"]
+        health_advice = "Air quality is excellent. No health concerns for any group."
+    elif pm25_level <= 35.4:
+        category = "Moderate"
+        activities = ["Outdoor activities fine for most people", "Sensitive individuals should limit prolonged outdoor exertion"]
+        health_advice = "Air quality is acceptable for most people, though sensitive individuals may experience minor issues."
+    elif pm25_level <= 55.4:
+        category = "Unhealthy for Sensitive Groups"
+        activities = ["Reduce prolonged outdoor activities", "Keep windows closed", "Use air purifiers indoors"]
+        health_advice = "Sensitive groups should reduce outdoor activities. Others may experience minor symptoms."
+    elif pm25_level <= 150.4:
+        category = "Unhealthy"
+        activities = ["Avoid outdoor activities", "Stay indoors with air purification", "Wear N95 masks if going outside"]
+        health_advice = "Everyone should reduce outdoor activities. Health effects possible for all groups."
+    else:
+        category = "Hazardous"
+        activities = ["Stay indoors", "Use high-quality air purifiers", "Avoid all outdoor activities"]
+        health_advice = "Health alert: everyone may experience serious health effects. Stay indoors."
+    
+    return {
+        'category': category,
+        'activities': activities,
+        'health_advice': health_advice,
+        'pm25_level': pm25_level,
+        'aqi_level': aqi_level
+    }
+
+def predict_air_quality_trends(historical_data, station):
+    """
+    Analyze historical data and predict trends without external AI
+    
+    Args:
+        historical_data (list): List of historical air quality measurements
+        station (str): Station name
+        
+    Returns:
+        dict: Trend analysis and predictions
+    """
+    if not historical_data or len(historical_data) < 7:
+        return {
+            'trend': 'insufficient_data',
+            'prediction': 'Need more data for trend analysis',
+            'confidence': 'low'
+        }
+    
+    # Calculate basic trend from recent data
+    recent_values = [float(d.get('pm25', 0)) for d in historical_data[-7:]]
+    older_values = [float(d.get('pm25', 0)) for d in historical_data[-14:-7]] if len(historical_data) >= 14 else recent_values
+    
+    recent_avg = sum(recent_values) / len(recent_values)
+    older_avg = sum(older_values) / len(older_values)
+    
+    if recent_avg > older_avg * 1.1:
+        trend = 'increasing'
+        prediction = f'Air quality may continue to worsen. Recent average: {recent_avg:.1f} μg/m³'
+    elif recent_avg < older_avg * 0.9:
+        trend = 'improving'
+        prediction = f'Air quality is improving. Recent average: {recent_avg:.1f} μg/m³'
+    else:
+        trend = 'stable'
+        prediction = f'Air quality is stable. Recent average: {recent_avg:.1f} μg/m³'
+    
+    return {
+        'trend': trend,
+        'prediction': prediction,
+        'recent_average': recent_avg,
+        'confidence': 'medium'
+    }
 
 # Function to load the pre-trained model
 @st.cache_resource  # Cache the model in memory
@@ -131,7 +214,7 @@ def retrain_model_with_latest_data(station):
         
         if os.path.exists(daily_data_file):
             daily_data = pd.read_csv(daily_data_file)
-            daily_data['Date'] = pd.to_datetime(daily_data['Date'])
+            daily_data['Date'] = pd.to_datetime(daily_data['Date'], format='mixed', errors='coerce')
             
             # Filter base data to avoid duplicates
             station_base = base_data[base_data['Station'] == station].copy()
@@ -183,7 +266,7 @@ def display_recent_data_collection(station):
     
     if os.path.exists(daily_data_file):
         daily_data = pd.read_csv(daily_data_file)
-        daily_data['Date'] = pd.to_datetime(daily_data['Date'])
+        daily_data['Date'] = pd.to_datetime(daily_data['Date'], format='mixed', errors='coerce')
         
         # Show last 7 days of collected data
         recent_data = daily_data.tail(7)
@@ -311,7 +394,7 @@ def get_data():
         # Filter to only keep Fort William and Bidhannagar
         data = data[data['Station'].isin(['Fort William', 'Bidhannagar'])]
         # Ensure date range is from 2021-01-01 to 2025-01-15
-        data['Date'] = pd.to_datetime(data['Date'])
+        data['Date'] = pd.to_datetime(data['Date'], format='mixed', errors='coerce')
         start_date = pd.to_datetime('2021-01-01')
         end_date = pd.to_datetime('2025-01-15')
         data = data[(data['Date'] >= start_date) & (data['Date'] <= end_date)]
