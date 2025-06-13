@@ -1361,9 +1361,23 @@ elif page == "PM2.5 Predictions":
                 current_observed_data = get_current_observed_weather(selected_station)
             
             if current_observed_data:
-                # Display current observed weather conditions
-                st.subheader("Current Observed Weather Conditions")
+                # Display current observed conditions including PM2.5
+                st.subheader("Current Observed Conditions")
                 
+                # Show current PM2.5 prominently
+                current_pm25 = current_observed_data['PM2.5']
+                current_aqi_category, current_aqi_class = get_aqi_category(current_pm25)
+                
+                st.markdown(f"""
+                <div class="{current_aqi_class}" style="padding:20px; border-radius:10px; text-align:center; margin:20px 0;">
+                    <h2 style="margin:0;">Current PM2.5 Level: {current_pm25:.2f} μg/m³</h2>
+                    <h3 style="margin:10px 0 0 0;">Air Quality: {current_aqi_category}</h3>
+                    <p style="margin:5px 0 0 0;">Real-time observed data from monitoring station</p>
+                </div>
+                """, unsafe_allow_html=True)
+                
+                # Weather conditions
+                st.subheader("Current Weather Conditions")
                 col1, col2, col3, col4 = st.columns(4)
                 with col1:
                     st.metric("Temperature", f"{current_observed_data['Temperature']:.1f}°C")
@@ -1471,7 +1485,75 @@ elif page == "PM2.5 Predictions":
                 std_dev = np.std(all_predictions)
                 mean_pred = np.mean(all_predictions)
                 
-                st.subheader("📊 Prediction Confidence Analysis")
+                st.subheader("📊 Prediction vs Observed Comparison")
+                
+                # Create comparison graph
+                fig_comparison = go.Figure()
+                
+                # Add observed value as a horizontal line
+                fig_comparison.add_hline(
+                    y=current_pm25, 
+                    line_dash="dash", 
+                    line_color="red",
+                    annotation_text=f"Current Observed: {current_pm25:.2f} μg/m³"
+                )
+                
+                # Add model predictions as bars
+                model_names = list(prediction_results.keys())
+                model_predictions = [prediction_results[model][0] for model in model_names]
+                
+                # Color bars based on how close they are to observed value
+                colors = []
+                for pred in model_predictions:
+                    error = abs(pred - current_pm25)
+                    if error < 5:
+                        colors.append('green')  # Very close
+                    elif error < 10:
+                        colors.append('orange')  # Moderately close
+                    else:
+                        colors.append('red')  # Far off
+                
+                fig_comparison.add_trace(go.Bar(
+                    x=model_names,
+                    y=model_predictions,
+                    marker_color=colors,
+                    name='Model Predictions',
+                    text=[f"{pred:.2f}" for pred in model_predictions],
+                    textposition='auto'
+                ))
+                
+                fig_comparison.update_layout(
+                    title='Model Predictions vs Current Observed PM2.5',
+                    xaxis_title='ML Models',
+                    yaxis_title='PM2.5 (μg/m³)',
+                    showlegend=False,
+                    height=500
+                )
+                
+                st.plotly_chart(fig_comparison, use_container_width=True)
+                
+                # Calculate and display accuracy metrics
+                st.subheader("📈 Model Accuracy Analysis")
+                
+                accuracy_data = []
+                for model_name in model_names:
+                    pred_value = prediction_results[model_name][0]
+                    absolute_error = abs(pred_value - current_pm25)
+                    percentage_error = (absolute_error / current_pm25) * 100
+                    
+                    accuracy_data.append({
+                        'Model': model_name,
+                        'Prediction': f"{pred_value:.2f} μg/m³",
+                        'Absolute Error': f"{absolute_error:.2f} μg/m³",
+                        'Percentage Error': f"{percentage_error:.1f}%",
+                        'Training RMSE': f"{evaluation_results[model_name]['rmse']:.4f}",
+                        'Status': '✅ Excellent' if absolute_error < 5 else '⚠️ Good' if absolute_error < 10 else '❌ Needs Improvement'
+                    })
+                
+                accuracy_df = pd.DataFrame(accuracy_data)
+                st.dataframe(accuracy_df, use_container_width=True)
+                
+                # Prediction confidence analysis
                 col1, col2, col3 = st.columns(3)
                 with col1:
                     st.metric("Mean Prediction", f"{mean_pred:.2f} μg/m³")
@@ -1479,7 +1561,7 @@ elif page == "PM2.5 Predictions":
                     st.metric("Standard Deviation", f"{std_dev:.2f} μg/m³")
                 with col3:
                     confidence = max(0, 100 - (std_dev / mean_pred * 100))
-                    st.metric("Prediction Confidence", f"{confidence:.1f}%")
+                    st.metric("Model Agreement", f"{confidence:.1f}%")
                 
                 # Save prediction data to historical storage
                 if st.button("Save Current Prediction Data"):
