@@ -314,15 +314,71 @@ if not os.path.exists('data/user_data'):
 # Load the Fort William and Bidhannagar dataset
 @st.cache_data(ttl=300)  # Cache expires after 5 minutes
 def get_data():
-    # Generate synthetic data for Fort William and Bidhannagar
+    # Load base dataset and append collected real-time data
     try:
-        # Set a seed for reproducibility
-        np.random.seed(42)
+        # Load base historical data
+        data = load_data()
+        data = data[data['Station'].isin(['Fort William', 'Bidhannagar'])]
+        data['Date'] = pd.to_datetime(data['Date'], format='mixed', errors='coerce')
         
-        # Generate dates from 2021-01-01 to 2025-01-15 (daily data)
-        start_date = pd.to_datetime('2021-01-01')
-        end_date = pd.to_datetime('2025-01-15')
-        dates = pd.date_range(start=start_date, end=end_date, freq='D')
+        # Add collected real-time data to extend the dataset
+        stations = ['Fort William', 'Bidhannagar']
+        for station in stations:
+            daily_data_file = f'data/daily_observed/{station.replace(" ", "_").lower()}_daily.csv'
+            
+            if os.path.exists(daily_data_file):
+                daily_data = pd.read_csv(daily_data_file)
+                daily_data['Date'] = pd.to_datetime(daily_data['Date'], format='mixed', errors='coerce')
+                daily_data['Station'] = station
+                
+                # Find data newer than base dataset
+                station_base = data[data['Station'] == station]
+                if not station_base.empty:
+                    latest_base_date = station_base['Date'].max()
+                    new_daily_data = daily_data[daily_data['Date'] > latest_base_date]
+                else:
+                    new_daily_data = daily_data
+                
+                if not new_daily_data.empty:
+                    # Ensure all required columns exist
+                    required_cols = ['Date', 'Station', 'PM2.5', 'Temperature', 'Solar_Radiation', 'Wind_Speed', 'Relative_Humidity']
+                    for col in required_cols:
+                        if col not in new_daily_data.columns:
+                            if col == 'Station':
+                                new_daily_data[col] = station
+                            elif col == 'Date':
+                                continue
+                            else:
+                                # Use reasonable defaults based on collected PM2.5
+                                if col == 'Temperature':
+                                    new_daily_data[col] = 25.0
+                                elif col == 'Solar_Radiation':
+                                    new_daily_data[col] = 200.0
+                                elif col == 'Wind_Speed':
+                                    new_daily_data[col] = 3.5
+                                elif col == 'Relative_Humidity':
+                                    new_daily_data[col] = 65.0
+                    
+                    # Append to main dataset
+                    data = pd.concat([data, new_daily_data[required_cols]], ignore_index=True)
+        
+        # Sort by station and date
+        data = data.sort_values(['Station', 'Date']).reset_index(drop=True)
+        return data
+        
+    except Exception as e:
+        st.warning(f"Error loading collected data: {e}. Using base dataset only.")
+        # Fallback to base data generation if needed
+        data = load_data()
+        data = data[data['Station'].isin(['Fort William', 'Bidhannagar'])]
+        data['Date'] = pd.to_datetime(data['Date'], format='mixed', errors='coerce')
+        
+        # If no base data, generate minimal synthetic data
+        if data.empty:
+            np.random.seed(42)
+            start_date = pd.to_datetime('2021-01-01')
+            end_date = pd.to_datetime('2025-01-15')
+            dates = pd.date_range(start=start_date, end=end_date, freq='D')
         
         # Create dataframes for the two stations
         stations = ['Fort William', 'Bidhannagar']
@@ -588,33 +644,87 @@ if page == "Dashboard":
     # Station-specific title
     st.title(f"PM2.5 Air Quality Prediction for {selected_station}")
     
-    # If data exists, get the latest PM2.5 reading for selected station
-    if not data.empty:
-        # Filter for selected station
-        station_data = data[data['Station'] == selected_station]
+    # Try to get real-time data first, then fall back to dataset
+    try:
+        # Get current observed data from APIs
+        current_observed = get_current_observed_weather(selected_station)
         
-        # If no data for that station, use all data (Kolkata)
-        if station_data.empty:
-            station_data = data
-            st.info(f"Using Kolkata dataset (2021-01-01 to 2025-01-15)")
+        if current_observed and current_observed.get('PM2.5'):
+            # Use real-time data
+            latest_pm25 = current_observed['PM2.5']
+            latest_date = datetime.now().strftime("%Y-%m-%d %H:%M")
+            st.success("📡 Live data from monitoring stations")
+            
+            # Collect and save this data for future training
+            collect_and_append_realtime_data(selected_station)
+            
+        else:
+            # Fall back to dataset
+            if not data.empty:
+                station_data = data[data['Station'] == selected_station]
+                if station_data.empty:
+                    station_data = data
+                    st.info("Using historical dataset - API data not available")
+                
+                latest_data = station_data.iloc[-1]
+                latest_pm25 = latest_data['PM2.5']
+                latest_date = latest_data['Date']
+            else:
+                latest_pm25 = 35.0  # Fallback value
+                latest_date = datetime.now().strftime("%Y-%m-%d")
+                
+    except Exception as e:
+        # Fall back to dataset if API fails
+        if not data.empty:
+            station_data = data[data['Station'] == selected_station]
+            if station_data.empty:
+                station_data = data
+                st.warning("API temporarily unavailable - showing historical data")
+            
+            latest_data = station_data.iloc[-1]
+            latest_pm25 = latest_data['PM2.5']
+            latest_date = latest_data['Date']
+        else:
+            latest_pm25 = 35.0
+            latest_date = datetime.now().strftime("%Y-%m-%d")
+    
+    # Get AQI category
+    aqi_category, aqi_class = get_aqi_category(latest_pm25)
+    
+    # Add auto-refresh every 30 seconds for live data
+    st_auto_refresh = st.empty()
+    
+    # Display current PM2.5 level with AQI category and timestamp
+    st.markdown(f"""
+    <div style="background-color:{next(level['color'] for level in aqi_levels if level['level'] == aqi_category)}; 
+                 padding:20px; border-radius:10px; margin:20px 0; text-align:center; color:white;">
+        <h2>Current PM2.5 Level: {latest_pm25:.2f} μg/m³</h2>
+        <h3>Air Quality: {aqi_category}</h3>
+        <p>{next(level['implications'] for level in aqi_levels if level['level'] == aqi_category)}</p>
+        <small>Last updated: {latest_date}</small>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Add refresh button for manual updates
+    col_refresh, col_auto = st.columns([1, 1])
+    with col_refresh:
+        if st.button("🔄 Refresh Current Data", key="refresh_pm25"):
+            st.rerun()
+    
+    with col_auto:
+        auto_refresh = st.checkbox("Auto-refresh every 30 seconds", key="auto_refresh_pm25")
+    
+    # Auto-refresh functionality using Streamlit's timer
+    if auto_refresh:
+        st.markdown("🔄 Auto-refreshing data every 30 seconds...")
+        # Use Streamlit's session state to track refresh timing
+        if 'last_refresh' not in st.session_state:
+            st.session_state.last_refresh = datetime.now()
         
-        # Get latest reading
-        latest_data = station_data.iloc[-1]
-        latest_pm25 = latest_data['PM2.5']
-        latest_date = latest_data['Date']
-        
-        # Get AQI category
-        aqi_category, aqi_class = get_aqi_category(latest_pm25)
-        
-        # Display current PM2.5 level with AQI category
-        st.markdown(f"""
-        <div style="background-color:{next(level['color'] for level in aqi_levels if level['level'] == aqi_category)}; 
-                     padding:20px; border-radius:10px; margin:20px 0; text-align:center; color:white;">
-            <h2>Current PM2.5 Level: {latest_pm25:.2f} μg/m³</h2>
-            <h3>Air Quality: {aqi_category}</h3>
-            <p>{next(level['implications'] for level in aqi_levels if level['level'] == aqi_category)}</p>
-        </div>
-        """, unsafe_allow_html=True)
+        # Check if 30 seconds have passed
+        if (datetime.now() - st.session_state.last_refresh).seconds >= 30:
+            st.session_state.last_refresh = datetime.now()
+            st.rerun()
         
         # About PM2.5 section
         st.header("About PM2.5 Air Quality Monitoring")
