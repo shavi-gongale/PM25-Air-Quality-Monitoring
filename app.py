@@ -1349,88 +1349,148 @@ elif page == "PM2.5 Predictions":
         
         st.subheader(f"PM2.5 Prediction for {selected_station}")
         
-        # Option to use live weather data or manual input
+        # Option to use real-time observed data or manual input
         prediction_method = st.radio(
             "Select prediction method",
-            ["Use live weather forecast data", "Manual parameter input"]
+            ["Use real-time observed weather data", "Manual parameter input"]
         )
         
-        if prediction_method == "Use live weather forecast data":
-            # Get weather forecast data from API
-            with st.spinner("Fetching weather forecast data..."):
-                forecast_data = get_weather_forecast(selected_station)
+        if prediction_method == "Use real-time observed weather data":
+            # Get current observed weather data from APIs
+            with st.spinner("Fetching real-time observed weather data..."):
+                current_observed_data = get_current_observed_weather(selected_station)
             
-            if forecast_data:
-                # Display the forecast data
-                st.subheader("Weather Forecast Data")
-                forecast_df = pd.DataFrame(forecast_data).round(2)
-                st.dataframe(forecast_df)
+            if current_observed_data:
+                # Display current observed weather conditions
+                st.subheader("Current Observed Weather Conditions")
                 
-                # Train models using historical data
-                with st.spinner("Training prediction models..."):
+                col1, col2, col3, col4 = st.columns(4)
+                with col1:
+                    st.metric("Temperature", f"{current_observed_data['Temperature']:.1f}°C")
+                with col2:
+                    st.metric("Humidity", f"{current_observed_data['Relative_Humidity']:.1f}%")
+                with col3:
+                    st.metric("Wind Speed", f"{current_observed_data['Wind_Speed']:.1f} m/s")
+                with col4:
+                    st.metric("Solar Radiation", f"{current_observed_data['Solar_Radiation']:.0f} W/m²")
+                
+                # Train and evaluate all models using historical data
+                with st.spinner("Training and evaluating ML models..."):
                     # Preprocess the data
                     processed_data = preprocess_data(station_data)
                     
-                    # Split the data for training
+                    # Split the data for training and testing
                     X_train, X_test, y_train, y_test = split_data(processed_data, test_size=0.2)
                     
-                    # Train the models
+                    # Train all models
                     models = train_models(X_train, y_train)
                     
-                    # Evaluate to find best model
+                    # Evaluate all models and get detailed metrics
                     evaluation_results = evaluate_models(models, X_test, y_test)
+                    
+                    # Find the best performing model
                     best_model_name = min(evaluation_results, key=lambda x: evaluation_results[x]['rmse'])
                 
-                # Make predictions for the forecast days
-                with st.spinner("Making predictions..."):
-                    prediction_results = predict_pm25(models, forecast_data)
+                # Display comprehensive model comparison
+                st.subheader("🏆 Machine Learning Model Performance Comparison")
                 
-                # Create a dataframe for displaying predictions
-                predictions_df = pd.DataFrame({
-                    'Date': [item['Date'] for item in forecast_data]
-                })
+                # Create performance comparison dataframe
+                model_comparison_df = pd.DataFrame(evaluation_results).T
+                model_comparison_df = model_comparison_df.round(4)
+                model_comparison_df['Rank'] = model_comparison_df['rmse'].rank().astype(int)
+                model_comparison_df = model_comparison_df.sort_values('rmse')
                 
-                for model_name, predictions in prediction_results.items():
-                    predictions_df[model_name] = predictions
+                # Display ranking table
+                st.dataframe(
+                    model_comparison_df[['Rank', 'rmse', 'mae', 'r2']].style.highlight_min(subset=['rmse', 'mae']).highlight_max(subset=['r2']),
+                    use_container_width=True
+                )
+                
+                # Create visualization of model performance
+                fig_comparison = go.Figure()
+                fig_comparison.add_trace(go.Bar(
+                    x=model_comparison_df.index,
+                    y=model_comparison_df['rmse'],
+                    name='RMSE (Lower is Better)',
+                    marker_color=['gold' if model == best_model_name else 'lightblue' for model in model_comparison_df.index]
+                ))
+                fig_comparison.update_layout(
+                    title='Model Performance Comparison (RMSE)',
+                    xaxis_title='Models',
+                    yaxis_title='Root Mean Square Error',
+                    showlegend=False
+                )
+                st.plotly_chart(fig_comparison, use_container_width=True)
+                
+                # Prepare current weather data for prediction
+                current_weather_input = [{
+                    'Date': datetime.now().strftime("%Y-%m-%d"),
+                    'Temperature': current_observed_data['Temperature'],
+                    'Solar_Radiation': current_observed_data['Solar_Radiation'],
+                    'Wind_Speed': current_observed_data['Wind_Speed'],
+                    'Relative_Humidity': current_observed_data['Relative_Humidity']
+                }]
+                
+                # Make predictions using current observed weather
+                with st.spinner("Making PM2.5 predictions with current observed weather..."):
+                    prediction_results = predict_pm25(models, current_weather_input)
                 
                 # Display predictions from all models
-                st.subheader("PM2.5 Predictions by Model")
-                st.dataframe(predictions_df.round(2))
+                st.subheader("🔮 PM2.5 Predictions Using Current Observed Weather")
                 
-                # Plot predictions
-                fig = plot_forecast(predictions_df)
-                st.plotly_chart(fig, use_container_width=True)
+                predictions_comparison = []
+                for model_name, predictions in prediction_results.items():
+                    pred_value = predictions[0]
+                    aqi_category, _ = get_aqi_category(pred_value)
+                    predictions_comparison.append({
+                        'Model': model_name,
+                        'PM2.5 Prediction': f"{pred_value:.2f} μg/m³",
+                        'AQI Category': aqi_category,
+                        'Model RMSE': f"{evaluation_results[model_name]['rmse']:.4f}",
+                        'Is Best Model': '🏆' if model_name == best_model_name else ''
+                    })
                 
-                # Display best model predictions with AQI categories
-                st.subheader(f"Best Model Prediction ({best_model_name})")
+                predictions_df = pd.DataFrame(predictions_comparison)
+                st.dataframe(predictions_df, use_container_width=True)
                 
-                best_pred_df = pd.DataFrame({
-                    'Date': predictions_df['Date'],
-                    'PM2.5': predictions_df[best_model_name]
-                })
+                # Highlight the best model prediction
+                best_prediction = prediction_results[best_model_name][0]
+                best_aqi_category, best_aqi_class = get_aqi_category(best_prediction)
                 
-                # Create colored output based on AQI levels
-                for i, row in best_pred_df.iterrows():
-                    aqi_category, aqi_class = get_aqi_category(row['PM2.5'])
-                    st.markdown(f"""
-                    <div style="display:flex; align-items:center; margin-bottom:10px;">
-                        <div style="min-width:100px;"><strong>{row['Date']}</strong></div>
-                        <div class="{aqi_class}" style="margin-left:15px; padding:5px 15px;">
-                            PM2.5: {row['PM2.5']:.2f} μg/m³ - {aqi_category}
-                        </div>
-                    </div>
-                    """, unsafe_allow_html=True)
+                st.subheader(f"🎯 Best Model Prediction: {best_model_name}")
+                st.markdown(f"""
+                <div class="{best_aqi_class}" style="padding:20px; border-radius:10px; text-align:center; margin:20px 0;">
+                    <h2 style="margin:0;">PM2.5: {best_prediction:.2f} μg/m³</h2>
+                    <h3 style="margin:10px 0 0 0;">{best_aqi_category}</h3>
+                    <p style="margin:5px 0 0 0;">Based on current observed weather conditions</p>
+                </div>
+                """, unsafe_allow_html=True)
                 
-                # Save forecast data to historical storage
-                if st.button("Save Forecast Data"):
+                # Show model confidence and uncertainty
+                all_predictions = [prediction_results[model][0] for model in prediction_results.keys()]
+                std_dev = np.std(all_predictions)
+                mean_pred = np.mean(all_predictions)
+                
+                st.subheader("📊 Prediction Confidence Analysis")
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    st.metric("Mean Prediction", f"{mean_pred:.2f} μg/m³")
+                with col2:
+                    st.metric("Standard Deviation", f"{std_dev:.2f} μg/m³")
+                with col3:
+                    confidence = max(0, 100 - (std_dev / mean_pred * 100))
+                    st.metric("Prediction Confidence", f"{confidence:.1f}%")
+                
+                # Save prediction data to historical storage
+                if st.button("Save Current Prediction Data"):
                     # Prepare data to save
                     save_data = {
                         'station': selected_station,
                         'prediction_date': datetime.now().strftime("%Y-%m-%d"),
-                        'method': 'api_forecast',
-                        'weather_data': forecast_data,
+                        'method': 'observed_weather',
+                        'weather_data': current_observed_data,
                         'predictions': {
-                            model: list(map(float, preds)) for model, preds in prediction_results.items()
+                            model: [float(prediction_results[model][0])] for model in prediction_results.keys()
                         },
                         'best_model': best_model_name,
                         'best_model_rmse': float(evaluation_results[best_model_name]['rmse'])
@@ -1438,48 +1498,56 @@ elif page == "PM2.5 Predictions":
                     
                     # Save the data
                     saved_path = save_user_data('prediction', save_data)
-                    st.success(f"Prediction data saved to {saved_path}")
+                    st.success(f"Prediction data saved successfully")
                     
                     # Also save a CSV version for download
                     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-                    forecast_filename = f"pm25_forecast_{selected_station}_{timestamp}.csv"
-                    forecast_path = os.path.join('data', 'predictions', forecast_filename)
+                    prediction_filename = f"pm25_prediction_{selected_station}_{timestamp}.csv"
+                    prediction_path = os.path.join('data', 'predictions', prediction_filename)
                     
                     # Create a comprehensive dataframe
                     save_df = pd.DataFrame({
-                        'Date': [item['Date'] for item in forecast_data],
-                        'Temperature': [item['Temperature'] for item in forecast_data],
-                        'Solar_Radiation': [item['Solar_Radiation'] for item in forecast_data],
-                        'Wind_Speed': [item['Wind_Speed'] for item in forecast_data],
-                        'Relative_Humidity': [item['Relative_Humidity'] for item in forecast_data]
+                        'Date': [datetime.now().strftime("%Y-%m-%d")],
+                        'Temperature': [current_observed_data['Temperature']],
+                        'Solar_Radiation': [current_observed_data['Solar_Radiation']],
+                        'Wind_Speed': [current_observed_data['Wind_Speed']],
+                        'Relative_Humidity': [current_observed_data['Relative_Humidity']]
                     })
                     
-                    for model_name, predictions in prediction_results.items():
-                        save_df[f'PM2.5_{model_name.replace(" ", "_")}'] = predictions
+                    for model_name in prediction_results.keys():
+                        save_df[f'PM2.5_{model_name.replace(" ", "_")}'] = [prediction_results[model_name][0]]
                     
-                    save_df.to_csv(forecast_path, index=False)
-                    st.success(f"Forecast data also saved to CSV at {forecast_path}")
+                    save_df.to_csv(prediction_path, index=False)
                 
-                # Add a download link for the forecast data
+                # Add a download link for the prediction data
                 csv_data = predictions_df.to_csv(index=False)
-                download_link = get_download_link(csv_data, f"pm25_forecast_{selected_station}.csv", "text/csv")
+                download_link = get_download_link(csv_data, f"pm25_prediction_{selected_station}.csv", "text/csv")
                 st.markdown(download_link, unsafe_allow_html=True)
                 
-                # Explain prediction limitations
-                with st.expander("Understanding Prediction Limitations"):
+                # Explain prediction methodology
+                with st.expander("Understanding Real-time Prediction Methodology"):
                     st.markdown("""
-                    **Factors Affecting Prediction Accuracy:**
+                    **How These Predictions Work:**
                     
-                    1. **Weather Forecast Accuracy:** Our predictions rely on weather forecasts which have their own uncertainty
-                    2. **Historical Data Coverage:** The predictions are based on historical patterns in our dataset
-                    3. **Unusual Events:** Sudden pollution sources or extreme weather may not be captured in our model
-                    4. **Model Limitations:** Each model has its own strengths and weaknesses
+                    1. **Real-time Observed Data:** Uses current weather conditions from live monitoring stations
+                    2. **Multiple ML Models:** Compares performance of different algorithms to find the best predictor
+                    3. **Historical Training:** Models are trained on historical patterns to learn relationships
+                    4. **Confidence Assessment:** Standard deviation shows agreement between different models
                     
-                    For critical air quality decisions, always verify with official air quality monitoring stations.
+                    **Best Model Selection:** The model with the lowest Root Mean Square Error (RMSE) on test data is recommended.
                     """)
                 
             else:
-                st.error("Unable to retrieve weather forecast data. Please check your internet connection or API key.")
+                st.error("Unable to retrieve real-time observed weather data. Please check your API keys.")
+                
+                # Show what data would be needed
+                st.info("""
+                To use real-time observed weather data, the system needs:
+                - OpenWeather API key for current weather conditions
+                - WAQI API key for current air quality measurements
+                
+                Without these, you can still make predictions using manual parameter input below.
+                """)
         
         else:  # Manual parameter input
             st.subheader("Enter Weather Parameters")
