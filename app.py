@@ -3153,11 +3153,10 @@ elif page == "Data Download":
             )
             
             if dl_start_date <= dl_end_date and dl_station_filter:
-                # Filter data based on date range and stations
-                dl_filtered_data = data[
-                    (pd.to_datetime(data['Date']).dt.date >= dl_start_date) &
-                    (pd.to_datetime(data['Date']).dt.date <= dl_end_date) &
-                    (data['Station'].isin(dl_station_filter))
+                # Filter station data based on date range and stations
+                dl_filtered_data = station_data[
+                    (pd.to_datetime(station_data['Date']).dt.date >= dl_start_date) &
+                    (pd.to_datetime(station_data['Date']).dt.date <= dl_end_date)
                 ].copy()
                 
                 # Process data based on content selection
