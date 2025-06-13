@@ -22,6 +22,7 @@ from visualizer import (
     plot_forecast
 )
 from weather_api import get_weather_forecast
+from current_weather_api import get_current_weather_data
 from utils import get_download_link
 from satellite_data import get_satellite_imagery, get_air_quality_map, get_historical_satellite_data
 from waqi_api import get_waqi_data, get_historical_waqi_data, get_waqi_forecast
@@ -38,6 +39,166 @@ def load_pretrained_model():
     except (FileNotFoundError, pickle.UnpicklingError):
         st.warning("Pre-trained model not found or invalid. Will train a new model.")
         return None
+
+# Function to collect real-time observed weather data
+def collect_and_append_realtime_data(station):
+    """Collect current observed weather data and append to existing dataset"""
+    try:
+        # Get current observed weather data (not forecast)
+        current_data = get_current_observed_weather(station)
+        
+        if current_data:
+            # Load existing dataset
+            existing_data = get_data()
+            
+            # Check if today's data already exists
+            today = datetime.now().strftime("%Y-%m-%d")
+            station_data = existing_data[existing_data['Station'] == station]
+            
+            if not station_data[station_data['Date'].dt.strftime("%Y-%m-%d") == today].empty:
+                st.warning(f"Data for {today} already exists for {station}")
+                return
+            
+            # Append new observed data
+            new_row = {
+                'Date': pd.to_datetime(today),
+                'Station': station,
+                'Temperature': current_data['Temperature'],
+                'Solar_Radiation': current_data['Solar_Radiation'],
+                'Wind_Speed': current_data['Wind_Speed'],
+                'Relative_Humidity': current_data['Relative_Humidity'],
+                'PM2.5': current_data['PM2.5']  # Current observed PM2.5
+            }
+            
+            # Save to daily data file
+            daily_data_file = f'data/daily_observed/{station.replace(" ", "_").lower()}_daily.csv'
+            os.makedirs('data/daily_observed', exist_ok=True)
+            
+            if os.path.exists(daily_data_file):
+                daily_df = pd.read_csv(daily_data_file)
+                daily_df = pd.concat([daily_df, pd.DataFrame([new_row])], ignore_index=True)
+            else:
+                daily_df = pd.DataFrame([new_row])
+            
+            daily_df.to_csv(daily_data_file, index=False)
+            st.success(f"Successfully collected and saved today's observed data for {station}")
+            
+            # Display collected data
+            st.subheader("Today's Collected Data")
+            st.json(current_data)
+            
+        else:
+            st.error("Unable to collect current weather data. Please check API keys.")
+            
+    except Exception as e:
+        st.error(f"Error collecting real-time data: {str(e)}")
+
+# Function to get current observed weather data
+def get_current_observed_weather(station):
+    """Get current observed weather data from APIs"""
+    try:
+        # Try to get real-time air quality data
+        air_quality_data = get_waqi_data(station)
+        
+        # Try to get current weather data
+        weather_data = get_current_weather_data(station)
+        
+        if air_quality_data and weather_data:
+            return {
+                'Temperature': weather_data.get('temp', 25.0),
+                'Solar_Radiation': weather_data.get('solar_radiation', 200.0),
+                'Wind_Speed': weather_data.get('wind_speed', 3.0),
+                'Relative_Humidity': weather_data.get('humidity', 65.0),
+                'PM2.5': air_quality_data.get('pm25', 35.0)
+            }
+        else:
+            st.warning("API keys not available. Cannot collect real-time observed data.")
+            return None
+            
+    except Exception as e:
+        st.error(f"Error getting current observed weather: {str(e)}")
+        return None
+
+# Function to retrain model with latest data
+def retrain_model_with_latest_data(station):
+    """Retrain the model using all available data including latest observations"""
+    try:
+        # Load base dataset
+        base_data = get_data()
+        
+        # Load daily observed data if available
+        daily_data_file = f'data/daily_observed/{station.replace(" ", "_").lower()}_daily.csv'
+        
+        if os.path.exists(daily_data_file):
+            daily_data = pd.read_csv(daily_data_file)
+            daily_data['Date'] = pd.to_datetime(daily_data['Date'])
+            
+            # Filter base data to avoid duplicates
+            station_base = base_data[base_data['Station'] == station].copy()
+            latest_base_date = station_base['Date'].max()
+            
+            # Only use daily data that's newer than base data
+            new_daily_data = daily_data[daily_data['Date'] > latest_base_date]
+            
+            if not new_daily_data.empty:
+                # Combine datasets
+                combined_data = pd.concat([station_base, new_daily_data], ignore_index=True)
+                
+                with st.spinner("Retraining model with latest observed data..."):
+                    # Preprocess combined data
+                    processed_data = preprocess_data(combined_data)
+                    
+                    # Split data for training
+                    X_train, X_test, y_train, y_test = split_data(processed_data, test_size=0.2)
+                    
+                    # Train new models
+                    retrained_models = train_models(X_train, y_train)
+                    
+                    # Evaluate models
+                    evaluation_results = evaluate_models(retrained_models, X_test, y_test)
+                    
+                    # Save retrained model
+                    with open('pm_model_retrained.pkl', 'wb') as f:
+                        pickle.dump(retrained_models, f)
+                    
+                    st.success(f"Model successfully retrained with {len(new_daily_data)} new observations!")
+                    
+                    # Display improvement metrics
+                    st.subheader("Model Performance After Retraining")
+                    metrics_df = pd.DataFrame(evaluation_results).T
+                    st.dataframe(metrics_df.round(4))
+                    
+            else:
+                st.info("No new observations available for retraining.")
+        else:
+            st.info("No daily observed data found. Start collecting data first.")
+            
+    except Exception as e:
+        st.error(f"Error during model retraining: {str(e)}")
+
+# Function to display recent data collection history
+def display_recent_data_collection(station):
+    """Display recent data collection history"""
+    daily_data_file = f'data/daily_observed/{station.replace(" ", "_").lower()}_daily.csv'
+    
+    if os.path.exists(daily_data_file):
+        daily_data = pd.read_csv(daily_data_file)
+        daily_data['Date'] = pd.to_datetime(daily_data['Date'])
+        
+        # Show last 7 days of collected data
+        recent_data = daily_data.tail(7)
+        
+        if not recent_data.empty:
+            st.subheader("Recent Data Collection History")
+            st.dataframe(recent_data.round(2))
+            
+            # Show data collection frequency
+            total_days = len(daily_data)
+            st.metric("Total Days of Observed Data", total_days)
+        else:
+            st.info("No historical data collection found.")
+    else:
+        st.info("Start collecting daily observed data to see history here.")
 
 # Set page configuration
 st.set_page_config(
@@ -564,63 +725,24 @@ if page == "Dashboard":
             
             st.plotly_chart(fig_models, use_container_width=True)
         
-        # Forecasted PM2.5 Levels
-        st.header("Forecasted PM2.5 Levels")
+        # Real-time Data Collection and Daily Model Retraining
+        st.header("Real-time Observed Weather Data Collection")
         
-        # Make forecasts for selected days
-        if forecast_data:
-            # Use pre-trained model for predictions if available
-            models = load_pretrained_model()
-            
-            if models is None:
-                # If pre-trained model not available, train a new one
-                processed_data = preprocess_data(station_data)
-                X_train, X_test, y_train, y_test = split_data(processed_data, test_size=0.2)
-                models = train_models(X_train, y_train)
-            
-            # Get predictions
-            predictions = predict_pm25(models, forecast_data)
-            
-            # Create a dataframe for display
-            forecast_df = pd.DataFrame({
-                'Date': [item['Date'] for item in forecast_data]
-            })
-            
-            # Add predictions for best model
-            forecast_df[best_model_name] = predictions[best_model_name]
-            
-            # Create a card layout for forecast
-            st.subheader(f"PM2.5 Forecast using {best_model_name}")
-            
-            # Filter based on selected horizons
-            day_mapping = {
-                "Present Day": 0,
-                "1 Day Ahead": 1,
-                "2 Days Ahead": 2,
-                "4 Days Ahead": 4,
-                "7 Days Ahead": 7
-            }
-            
-            selected_days = [day_mapping[horizon] for horizon in prediction_horizons if horizon in day_mapping]
-            
-            # Create cards for selected days
-            if selected_days:
-                cols = st.columns(len(selected_days))
-                
-                for i, (col, day) in enumerate(zip(cols, selected_days)):
-                    if day < len(forecast_df):
-                        with col:
-                            pred_date = forecast_df.iloc[day]['Date']
-                            pred_value = forecast_df.iloc[day][best_model_name]
-                            aqi_cat, aqi_cls = get_aqi_category(pred_value)
-                            
-                            st.markdown(f"""
-                            <div class="{aqi_cls}" style="padding:15px; border-radius:10px; text-align:center; margin-bottom:10px;">
-                                <h4>{pred_date}</h4>
-                                <h2>{pred_value:.2f} μg/m³</h2>
-                                <p>{aqi_cat}</p>
-                            </div>
-                            """, unsafe_allow_html=True)
+        # Display current real-time data collection status
+        st.info("This system collects real-time observed weather data (not forecasts) to continuously improve predictions.")
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            if st.button("📊 Collect Today's Observed Data", use_container_width=True):
+                collect_and_append_realtime_data(selected_station)
+        
+        with col2:
+            if st.button("🔄 Retrain Model with Latest Data", use_container_width=True):
+                retrain_model_with_latest_data(selected_station)
+        
+        # Show recent data collection history
+        display_recent_data_collection(selected_station)
 
 # Data Analysis and Insights page
 elif page == "Data Analysis and Insights":
