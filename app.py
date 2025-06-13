@@ -691,37 +691,29 @@ if page == "Dashboard":
     # Get AQI category
     aqi_category, aqi_class = get_aqi_category(latest_pm25)
     
-    # Add auto-refresh every 30 seconds for live data
-    st_auto_refresh = st.empty()
-    
-    # Display current PM2.5 level with AQI category and timestamp
+    # Display current PM2.5 level with AQI category
     st.markdown(f"""
     <div style="background-color:{next(level['color'] for level in aqi_levels if level['level'] == aqi_category)}; 
                  padding:20px; border-radius:10px; margin:20px 0; text-align:center; color:white;">
         <h2>Current PM2.5 Level: {latest_pm25:.2f} μg/m³</h2>
         <h3>Air Quality: {aqi_category}</h3>
         <p>{next(level['implications'] for level in aqi_levels if level['level'] == aqi_category)}</p>
-        <small>Last updated: {latest_date}</small>
     </div>
     """, unsafe_allow_html=True)
     
-    # Add refresh button for manual updates
-    col_refresh, col_auto = st.columns([1, 1])
-    with col_refresh:
+    # Add refresh controls in a more compact layout
+    col1, col2 = st.columns([2, 1])
+    with col1:
         if st.button("🔄 Refresh Current Data", key="refresh_pm25"):
             st.rerun()
-    
-    with col_auto:
+    with col2:
         auto_refresh = st.checkbox("Auto-refresh every 30 seconds", key="auto_refresh_pm25")
     
-    # Auto-refresh functionality using Streamlit's timer
+    # Auto-refresh functionality
     if auto_refresh:
-        st.markdown("🔄 Auto-refreshing data every 30 seconds...")
-        # Use Streamlit's session state to track refresh timing
         if 'last_refresh' not in st.session_state:
             st.session_state.last_refresh = datetime.now()
         
-        # Check if 30 seconds have passed
         if (datetime.now() - st.session_state.last_refresh).seconds >= 30:
             st.session_state.last_refresh = datetime.now()
             st.rerun()
@@ -2267,10 +2259,13 @@ elif page == "Satellite Imagery":
         st.warning("Please select a valid date range.")
 
 elif page == "Historical Analysis":
-    st.header("Historical Data Analysis")
+    st.header(f"Historical Data Analysis - {selected_station}")
     
-    if data.empty:
-        st.warning("No data available for analysis.")
+    # Filter data for selected station
+    station_data = data[data['Station'] == selected_station].copy()
+    
+    if station_data.empty:
+        st.warning(f"No data available for {selected_station}. Please check the dataset or try another station.")
     else:
         # Option to upload custom data for analysis
         st.subheader("Analyze Data")
@@ -2311,8 +2306,11 @@ elif page == "Historical Analysis":
                     st.error(f"Error loading file: {e}")
                     analysis_data = None
         else:
+            # Use built-in dataset filtered by station
+            analysis_data = station_data.copy()
+            
             # Date range selection
-            st.subheader("Select Data Range")
+            st.subheader(f"Select Data Range for {selected_station}")
             ha_col1, ha_col2 = st.columns(2)
             
             # Fixed date range from 2021-01-01 to 2025-01-15 as requested
@@ -3102,10 +3100,13 @@ elif page == "Historical Analysis":
 
 # Data Download page
 elif page == "Data Download":
-    st.header("Download Air Quality Data")
+    st.header(f"Download Air Quality Data - {selected_station}")
     
-    if data.empty:
-        st.warning("No data available for download.")
+    # Filter data for selected station
+    station_data = data[data['Station'] == selected_station].copy()
+    
+    if station_data.empty:
+        st.warning(f"No data available for download for {selected_station}.")
     else:
         # Tabs for different data types
         download_tabs = st.tabs(["Historical Data", "Prediction Data", "User Analysis Data"])
@@ -3120,16 +3121,16 @@ elif page == "Data Download":
             dl_col1, dl_col2 = st.columns(2)
             with dl_col1:
                 # Handle NaT values in start date
-                if pd.isna(data['Date'].min()):
+                if pd.isna(station_data['Date'].min()):
                     dl_start_date = st.date_input("Start Date", datetime(2021, 1, 1).date())
                 else:
-                    dl_start_date = st.date_input("Start Date", pd.to_datetime(data['Date'].min()).date())
+                    dl_start_date = st.date_input("Start Date", pd.to_datetime(station_data['Date'].min()).date())
             with dl_col2:
                 # Handle NaT values in end date
-                if pd.isna(data['Date'].max()):
+                if pd.isna(station_data['Date'].max()):
                     dl_end_date = st.date_input("End Date", datetime.now().date())
                 else:
-                    dl_end_date = st.date_input("End Date", pd.to_datetime(data['Date'].max()).date())
+                    dl_end_date = st.date_input("End Date", pd.to_datetime(station_data['Date'].max()).date())
             
             # Station selection
             dl_station_filter = st.multiselect(
