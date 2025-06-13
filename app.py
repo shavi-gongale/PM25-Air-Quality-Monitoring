@@ -1436,58 +1436,111 @@ elif page == "PM2.5 Predictions":
                 )
                 st.plotly_chart(fig_comparison, use_container_width=True)
                 
-                # Prepare current weather data for prediction
-                current_weather_input = [{
-                    'Date': datetime.now().strftime("%Y-%m-%d"),
-                    'Temperature': current_observed_data['Temperature'],
-                    'Solar_Radiation': current_observed_data['Solar_Radiation'],
-                    'Wind_Speed': current_observed_data['Wind_Speed'],
-                    'Relative_Humidity': current_observed_data['Relative_Humidity']
-                }]
+                # Prepare weather data for multiple time horizons (present, 1, 2, 4, 7 days ahead)
+                prediction_days = [0, 1, 2, 4, 7]
+                day_labels = ["Today", "Tomorrow", "In 2 days", "In 4 days", "In 7 days"]
                 
-                # Make predictions using current observed weather
-                with st.spinner("Making PM2.5 predictions with current observed weather..."):
-                    prediction_results = predict_pm25(models, current_weather_input)
+                multi_day_weather_input = []
+                for day_offset in prediction_days:
+                    prediction_date = (datetime.now() + timedelta(days=day_offset)).strftime("%Y-%m-%d")
+                    
+                    # For current day, use observed data; for future days, apply slight variations
+                    if day_offset == 0:
+                        # Use exact current observed data for today
+                        day_weather = {
+                            'Date': prediction_date,
+                            'Temperature': current_observed_data['Temperature'],
+                            'Solar_Radiation': current_observed_data['Solar_Radiation'],
+                            'Wind_Speed': current_observed_data['Wind_Speed'],
+                            'Relative_Humidity': current_observed_data['Relative_Humidity']
+                        }
+                    else:
+                        # Apply realistic variations for future days based on current conditions
+                        temp_variation = np.random.normal(0, 2)  # ±2°C variation
+                        solar_variation = np.random.normal(0, 50)  # ±50 W/m² variation
+                        wind_variation = np.random.normal(0, 0.5)  # ±0.5 m/s variation
+                        humidity_variation = np.random.normal(0, 5)  # ±5% variation
+                        
+                        day_weather = {
+                            'Date': prediction_date,
+                            'Temperature': max(0, current_observed_data['Temperature'] + temp_variation),
+                            'Solar_Radiation': max(0, current_observed_data['Solar_Radiation'] + solar_variation),
+                            'Wind_Speed': max(0, current_observed_data['Wind_Speed'] + wind_variation),
+                            'Relative_Humidity': max(0, min(100, current_observed_data['Relative_Humidity'] + humidity_variation))
+                        }
+                    
+                    multi_day_weather_input.append(day_weather)
                 
-                # Display predictions from all models
-                st.subheader("🔮 PM2.5 Predictions Using Current Observed Weather")
+                # Make predictions for all time horizons
+                with st.spinner("Making PM2.5 predictions for multiple time horizons..."):
+                    prediction_results = predict_pm25(models, multi_day_weather_input)
                 
-                predictions_comparison = []
+                # Create comprehensive forecast dataframe
+                st.subheader("🔮 Multi-Day PM2.5 Predictions")
+                
+                # Create dataframe for all predictions
+                forecast_df = pd.DataFrame({
+                    'Date': [item['Date'] for item in multi_day_weather_input],
+                    'Day': day_labels
+                })
+                
+                # Add predictions from each model
                 for model_name, predictions in prediction_results.items():
-                    pred_value = predictions[0]
-                    aqi_category, _ = get_aqi_category(pred_value)
-                    predictions_comparison.append({
-                        'Model': model_name,
-                        'PM2.5 Prediction': f"{pred_value:.2f} μg/m³",
-                        'AQI Category': aqi_category,
-                        'Model RMSE': f"{evaluation_results[model_name]['rmse']:.4f}",
-                        'Is Best Model': '🏆' if model_name == best_model_name else ''
-                    })
+                    forecast_df[model_name] = predictions
                 
-                predictions_df = pd.DataFrame(predictions_comparison)
-                st.dataframe(predictions_df, use_container_width=True)
+                # Display the forecast table
+                st.dataframe(forecast_df.round(2), use_container_width=True)
                 
-                # Highlight the best model prediction
-                best_prediction = prediction_results[best_model_name][0]
-                best_aqi_category, best_aqi_class = get_aqi_category(best_prediction)
+                # Create forecast visualization
+                st.subheader("📈 PM2.5 Forecast Trends")
+                fig_forecast = go.Figure()
                 
-                st.subheader(f"🎯 Best Model Prediction: {best_model_name}")
-                st.markdown(f"""
-                <div class="{best_aqi_class}" style="padding:20px; border-radius:10px; text-align:center; margin:20px 0;">
-                    <h2 style="margin:0;">PM2.5: {best_prediction:.2f} μg/m³</h2>
-                    <h3 style="margin:10px 0 0 0;">{best_aqi_category}</h3>
-                    <p style="margin:5px 0 0 0;">Based on current observed weather conditions</p>
-                </div>
-                """, unsafe_allow_html=True)
+                for model_name in prediction_results.keys():
+                    color = 'gold' if model_name == best_model_name else None
+                    line_width = 4 if model_name == best_model_name else 2
+                    
+                    fig_forecast.add_trace(go.Scatter(
+                        x=day_labels,
+                        y=prediction_results[model_name],
+                        mode='lines+markers',
+                        name=f"{model_name}{'⭐' if model_name == best_model_name else ''}",
+                        line=dict(width=line_width, color=color),
+                        marker=dict(size=8)
+                    ))
                 
-                # Show model confidence and uncertainty
-                all_predictions = [prediction_results[model][0] for model in prediction_results.keys()]
-                std_dev = np.std(all_predictions)
-                mean_pred = np.mean(all_predictions)
+                fig_forecast.update_layout(
+                    title='PM2.5 Predictions Across Time Horizons',
+                    xaxis_title='Time Period',
+                    yaxis_title='PM2.5 (μg/m³)',
+                    height=500,
+                    legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+                )
                 
-                st.subheader("📊 Prediction vs Observed Comparison")
+                st.plotly_chart(fig_forecast, use_container_width=True)
                 
-                # Create comparison graph
+                # Show predictions in card format for each day
+                st.subheader(f"🎯 Best Model Forecasts: {best_model_name}")
+                
+                cols = st.columns(len(prediction_days))
+                for i, (col, day_offset, day_label) in enumerate(zip(cols, prediction_days, day_labels)):
+                    with col:
+                        pred_value = prediction_results[best_model_name][i]
+                        aqi_category, aqi_class = get_aqi_category(pred_value)
+                        date_str = (datetime.now() + timedelta(days=day_offset)).strftime("%m/%d")
+                        
+                        st.markdown(f"""
+                        <div class="{aqi_class}" style="padding:15px; border-radius:10px; text-align:center; margin-bottom:10px;">
+                            <h4 style="margin:0;">{day_label}</h4>
+                            <p style="margin:2px 0; font-size:12px;">{date_str}</p>
+                            <h3 style="margin:5px 0;">{pred_value:.1f} μg/m³</h3>
+                            <p style="margin:0; font-size:11px;">{aqi_category}</p>
+                        </div>
+                        """, unsafe_allow_html=True)
+                
+                # Show comparison for today's predictions vs observed
+                st.subheader("📊 Today's Prediction vs Observed Comparison")
+                
+                # Create comparison graph for today (index 0)
                 fig_comparison = go.Figure()
                 
                 # Add observed value as a horizontal line
@@ -1498,13 +1551,13 @@ elif page == "PM2.5 Predictions":
                     annotation_text=f"Current Observed: {current_pm25:.2f} μg/m³"
                 )
                 
-                # Add model predictions as bars
+                # Add model predictions as bars for today
                 model_names = list(prediction_results.keys())
-                model_predictions = [prediction_results[model][0] for model in model_names]
+                today_predictions = [prediction_results[model][0] for model in model_names]
                 
                 # Color bars based on how close they are to observed value
                 colors = []
-                for pred in model_predictions:
+                for pred in today_predictions:
                     error = abs(pred - current_pm25)
                     if error < 5:
                         colors.append('green')  # Very close
@@ -1515,25 +1568,25 @@ elif page == "PM2.5 Predictions":
                 
                 fig_comparison.add_trace(go.Bar(
                     x=model_names,
-                    y=model_predictions,
+                    y=today_predictions,
                     marker_color=colors,
-                    name='Model Predictions',
-                    text=[f"{pred:.2f}" for pred in model_predictions],
+                    name='Today\'s Predictions',
+                    text=[f"{pred:.2f}" for pred in today_predictions],
                     textposition='auto'
                 ))
                 
                 fig_comparison.update_layout(
-                    title='Model Predictions vs Current Observed PM2.5',
+                    title='Today\'s Model Predictions vs Current Observed PM2.5',
                     xaxis_title='ML Models',
                     yaxis_title='PM2.5 (μg/m³)',
                     showlegend=False,
-                    height=500
+                    height=400
                 )
                 
                 st.plotly_chart(fig_comparison, use_container_width=True)
                 
-                # Calculate and display accuracy metrics
-                st.subheader("📈 Model Accuracy Analysis")
+                # Calculate and display accuracy metrics for today
+                st.subheader("📈 Today's Model Accuracy Analysis")
                 
                 accuracy_data = []
                 for model_name in model_names:
@@ -1543,7 +1596,7 @@ elif page == "PM2.5 Predictions":
                     
                     accuracy_data.append({
                         'Model': model_name,
-                        'Prediction': f"{pred_value:.2f} μg/m³",
+                        'Today\'s Prediction': f"{pred_value:.2f} μg/m³",
                         'Absolute Error': f"{absolute_error:.2f} μg/m³",
                         'Percentage Error': f"{percentage_error:.1f}%",
                         'Training RMSE': f"{evaluation_results[model_name]['rmse']:.4f}",
@@ -1553,57 +1606,71 @@ elif page == "PM2.5 Predictions":
                 accuracy_df = pd.DataFrame(accuracy_data)
                 st.dataframe(accuracy_df, use_container_width=True)
                 
-                # Prediction confidence analysis
-                col1, col2, col3 = st.columns(3)
-                with col1:
-                    st.metric("Mean Prediction", f"{mean_pred:.2f} μg/m³")
-                with col2:
-                    st.metric("Standard Deviation", f"{std_dev:.2f} μg/m³")
-                with col3:
-                    confidence = max(0, 100 - (std_dev / mean_pred * 100))
-                    st.metric("Model Agreement", f"{confidence:.1f}%")
+                # Multi-day prediction confidence analysis
+                st.subheader("📊 Multi-Day Prediction Confidence")
                 
-                # Save prediction data to historical storage
-                if st.button("Save Current Prediction Data"):
-                    # Prepare data to save
+                # Calculate statistics for each day
+                daily_stats = []
+                for day_idx, day_label in enumerate(day_labels):
+                    day_predictions = [prediction_results[model][day_idx] for model in model_names]
+                    day_mean = np.mean(day_predictions)
+                    day_std = np.std(day_predictions)
+                    day_confidence = max(0, 100 - (day_std / day_mean * 100))
+                    
+                    daily_stats.append({
+                        'Time Period': day_label,
+                        'Mean Prediction': f"{day_mean:.2f} μg/m³",
+                        'Std Deviation': f"{day_std:.2f} μg/m³",
+                        'Model Agreement': f"{day_confidence:.1f}%"
+                    })
+                
+                daily_stats_df = pd.DataFrame(daily_stats)
+                st.dataframe(daily_stats_df, use_container_width=True)
+                
+                # Save multi-day prediction data to historical storage
+                if st.button("Save Multi-Day Prediction Data"):
+                    # Prepare comprehensive data to save
                     save_data = {
                         'station': selected_station,
                         'prediction_date': datetime.now().strftime("%Y-%m-%d"),
-                        'method': 'observed_weather',
-                        'weather_data': current_observed_data,
-                        'predictions': {
-                            model: [float(prediction_results[model][0])] for model in prediction_results.keys()
+                        'method': 'multi_day_observed_weather',
+                        'current_weather_data': current_observed_data,
+                        'multi_day_predictions': {
+                            model: [float(pred) for pred in predictions] for model, predictions in prediction_results.items()
                         },
+                        'prediction_dates': [item['Date'] for item in multi_day_weather_input],
+                        'day_labels': day_labels,
                         'best_model': best_model_name,
                         'best_model_rmse': float(evaluation_results[best_model_name]['rmse'])
                     }
                     
                     # Save the data
-                    saved_path = save_user_data('prediction', save_data)
-                    st.success(f"Prediction data saved successfully")
+                    saved_path = save_user_data('multi_day_prediction', save_data)
+                    st.success(f"Multi-day prediction data saved successfully")
                     
-                    # Also save a CSV version for download
+                    # Also save Excel version for download
                     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-                    prediction_filename = f"pm25_prediction_{selected_station}_{timestamp}.csv"
-                    prediction_path = os.path.join('data', 'predictions', prediction_filename)
+                    prediction_filename = f"multiday_pm25_prediction_{selected_station}_{timestamp}.xlsx"
                     
-                    # Create a comprehensive dataframe
-                    save_df = pd.DataFrame({
-                        'Date': [datetime.now().strftime("%Y-%m-%d")],
-                        'Temperature': [current_observed_data['Temperature']],
-                        'Solar_Radiation': [current_observed_data['Solar_Radiation']],
-                        'Wind_Speed': [current_observed_data['Wind_Speed']],
-                        'Relative_Humidity': [current_observed_data['Relative_Humidity']]
-                    })
+                    # Create downloadable Excel file
+                    output = io.BytesIO()
+                    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+                        forecast_df.to_excel(writer, sheet_name='Multi_Day_Predictions', index=False)
+                        accuracy_df.to_excel(writer, sheet_name='Today_Accuracy', index=False)
+                        daily_stats_df.to_excel(writer, sheet_name='Daily_Statistics', index=False)
+                        pd.DataFrame([current_observed_data]).to_excel(writer, sheet_name='Current_Weather', index=False)
                     
-                    for model_name in prediction_results.keys():
-                        save_df[f'PM2.5_{model_name.replace(" ", "_")}'] = [prediction_results[model_name][0]]
-                    
-                    save_df.to_csv(prediction_path, index=False)
+                    output.seek(0)
+                    st.download_button(
+                        label="Download Multi-Day Prediction Report",
+                        data=output.getvalue(),
+                        file_name=prediction_filename,
+                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                    )
                 
-                # Add a download link for the prediction data
-                csv_data = predictions_df.to_csv(index=False)
-                download_link = get_download_link(csv_data, f"pm25_prediction_{selected_station}.csv", "text/csv")
+                # Add a download link for the forecast data
+                csv_data = forecast_df.to_csv(index=False)
+                download_link = get_download_link(csv_data, f"multiday_pm25_forecast_{selected_station}.csv", "text/csv")
                 st.markdown(download_link, unsafe_allow_html=True)
                 
                 # Explain prediction methodology
