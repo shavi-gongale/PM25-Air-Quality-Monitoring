@@ -61,8 +61,8 @@ def get_waqi_data(location):
     
     # Map locations to specific WAQI station names for exact data
     location_mapping = {
-        'Fort William': 'fort-william',  # Specific Fort William monitoring station
-        'Bidhannagar': 'bidhannagar'    # Specific Bidhannagar/Salt Lake monitoring station
+        'Fort William': 'india/kolkata/fort-william',  # Specific Fort William monitoring station
+        'Bidhannagar': 'india/kolkata/bidhannagar'    # Specific Bidhannagar/Salt Lake monitoring station
     }
     
     station = location_mapping.get(location, 'kolkata')
