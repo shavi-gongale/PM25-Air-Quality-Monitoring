@@ -59,10 +59,10 @@ def get_waqi_data(location):
         print("Warning: WAQI API key not found. Using mock data for demonstration.")
         return generate_mock_waqi_data(location)
     
-    # Map locations to WAQI station names or coordinates
+    # Map locations to specific WAQI station names for exact data
     location_mapping = {
-        'Fort William': 'kolkata',  # Use main Kolkata station for Fort William area
-        'Bidhannagar': 'kolkata'   # Use main Kolkata station for Bidhannagar area
+        'Fort William': 'fort-william',  # Specific Fort William monitoring station
+        'Bidhannagar': 'bidhannagar'    # Specific Bidhannagar/Salt Lake monitoring station
     }
     
     station = location_mapping.get(location, 'kolkata')

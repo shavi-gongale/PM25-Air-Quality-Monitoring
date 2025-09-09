@@ -24,11 +24,11 @@ def get_weather_forecast(location):
         logging.warning("OpenWeather API key not found. Using mock data for demonstration.")
         return generate_mock_forecast(location)
     
-    # Map location to city and country for API request
+    # Map location to exact coordinates for precise weather data
     location_mapping = {
         'Kolkata': {'city': 'Kolkata', 'country': 'IN', 'lat': 22.5726, 'lon': 88.3639},  # Main Kolkata location
-        'Fort William': {'city': 'Kolkata', 'country': 'IN', 'lat': 22.5726, 'lon': 88.3639},  # Fort William is in Kolkata
-        'Bidhannagar': {'city': 'Bidhannagar', 'country': 'IN', 'lat': 22.5839, 'lon': 88.4403}
+        'Fort William': {'city': 'Fort William', 'country': 'IN', 'lat': 22.5726, 'lon': 88.3639},  # Fort William area coordinates
+        'Bidhannagar': {'city': 'Bidhannagar', 'country': 'IN', 'lat': 22.5800, 'lon': 88.4200}  # Exact Bidhannagar coordinates
     }
     
     if location not in location_mapping:
@@ -139,6 +139,73 @@ def process_forecast_data(forecast_data):
             })
     
     return processed_data
+
+def get_current_weather_data(location):
+    """
+    Fetch current weather conditions from OpenWeatherMap API.
+    
+    Args:
+        location (str): Location name
+        
+    Returns:
+        dict: Current weather data including temperature, humidity, wind speed
+    """
+    # Get API key from environment variable
+    api_key = os.getenv("OPENWEATHER_API_KEY", "")
+    
+    if not api_key:
+        logging.warning("OpenWeather API key not found for current weather. Using mock data.")
+        return None
+    
+    # Map location to coordinates
+    location_mapping = {
+        'Kolkata': {'city': 'Kolkata', 'country': 'IN', 'lat': 22.5726, 'lon': 88.3639},
+        'Fort William': {'city': 'Fort William', 'country': 'IN', 'lat': 22.5726, 'lon': 88.3639},
+        'Bidhannagar': {'city': 'Bidhannagar', 'country': 'IN', 'lat': 22.5800, 'lon': 88.4200}
+    }
+    
+    if location not in location_mapping:
+        logging.error(f"Location '{location}' not found in location mapping for current weather.")
+        return None
+    
+    location_info = location_mapping[location]
+    
+    # Construct API URL for current weather
+    url = f"https://api.openweathermap.org/data/2.5/weather?lat={location_info['lat']}&lon={location_info['lon']}&appid={api_key}&units=metric"
+    
+    try:
+        response = requests.get(url, timeout=10)
+        response.raise_for_status()
+        
+        weather_data = response.json()
+        
+        # Extract relevant current weather data
+        current_weather = {
+            'temp': weather_data['main']['temp'],
+            'humidity': weather_data['main']['humidity'],
+            'pressure': weather_data['main']['pressure'],
+            'wind_speed': weather_data.get('wind', {}).get('speed', 0),
+            'wind_direction': weather_data.get('wind', {}).get('deg', 0),
+            'visibility': weather_data.get('visibility', 0) / 1000,  # Convert to km
+            'description': weather_data['weather'][0]['description'],
+            'cloud_cover': weather_data['clouds']['all'],
+            'feels_like': weather_data['main']['feels_like'],
+            'timestamp': datetime.now().isoformat(),
+            'location': location
+        }
+        
+        # Estimate solar radiation from cloud cover and time of day
+        current_hour = datetime.now().hour
+        hour_factor = max(0, 1 - abs(current_hour - 12) / 12)  # Peak at noon
+        cloud_factor = 1 - weather_data['clouds']['all'] / 100  # Clear sky = 1
+        solar_estimate = 1000 * hour_factor * cloud_factor
+        current_weather['solar_radiation'] = solar_estimate
+        
+        return current_weather
+        
+    except requests.exceptions.RequestException as e:
+        logging.error(f"Error fetching current weather: {e}")
+        return None
 
 def generate_mock_forecast(location):
     """
