@@ -7,3 +7,11 @@ port = 5000
 [browser]
 serverAddress = "0.0.0.0"
 gatherUsageStats = false
+
+[theme]
+base = "light"
+primaryColor = "#4f8ef7"
+backgroundColor = "#f0f4ff"
+secondaryBackgroundColor = "#ffffff"
+textColor = "#1a2744"
+font = "sans serif"

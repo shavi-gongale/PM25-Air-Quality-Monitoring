@@ -572,248 +572,287 @@ theme_mode = st.sidebar.radio(
 if theme_mode == "Dark Mode":
     st.markdown("""
     <style>
-    /* ── Dark Mode: Streamlit root & body ── */
-    .stApp {
-        background-color: #0e1117 !important;
-        color: #e8eaf0 !important;
+    /* ═══════════════════════════════════════════════════
+       DARK MODE — Full override for modern Streamlit
+       ═══════════════════════════════════════════════════ */
+
+    /* Root backgrounds */
+    .stApp,
+    [data-testid="stAppViewContainer"],
+    [data-testid="stAppViewBlockContainer"],
+    .main,
+    .main .block-container {
+        background: linear-gradient(135deg, #050a14 0%, #080d1a 50%, #060a18 100%) !important;
+        background-attachment: fixed !important;
+        color: #e2e8f8 !important;
     }
 
-    /* Main content area */
-    .main .block-container,
-    [data-testid="stAppViewContainer"] > section:first-child,
-    [data-testid="stAppViewBlockContainer"] {
-        background-color: #0e1117 !important;
-        color: #e8eaf0 !important;
-    }
-
-    /* Sidebar */
-    [data-testid="stSidebar"],
-    [data-testid="stSidebar"] > div,
-    section[data-testid="stSidebar"] {
-        background-color: #161b27 !important;
-        border-right: 1px solid rgba(255,255,255,0.07) !important;
-    }
-
-    /* Sidebar text */
-    [data-testid="stSidebar"] label,
-    [data-testid="stSidebar"] p,
-    [data-testid="stSidebar"] span,
-    [data-testid="stSidebar"] div {
-        color: #c8cfe0 !important;
-    }
-
-    /* All text */
-    p, h1, h2, h3, h4, h5, h6, span, div, label {
-        color: #e8eaf0;
+    /* ALL text elements */
+    .stApp p, .stApp span, .stApp div, .stApp label,
+    .stApp li, .stApp td, .stApp th,
+    .stMarkdown p, .stMarkdown span, .stMarkdown li,
+    [data-testid="stMarkdownContainer"] p,
+    [data-testid="stMarkdownContainer"] span,
+    [data-testid="stMarkdownContainer"] li {
+        color: #c8d8f0 !important;
     }
 
     /* Headings */
+    .stApp h1, .stApp h2, .stApp h3,
+    .stApp h4, .stApp h5, .stApp h6,
     .stMarkdown h1, .stMarkdown h2, .stMarkdown h3,
-    .stMarkdown h4, .stMarkdown h5, .stMarkdown h6 {
-        color: #f0f2fa !important;
+    [data-testid="stMarkdownContainer"] h1,
+    [data-testid="stMarkdownContainer"] h2,
+    [data-testid="stMarkdownContainer"] h3 {
+        color: #f0f4ff !important;
     }
 
-    /* Paragraphs */
-    .stMarkdown p, .stMarkdown li {
-        color: #c8cfe0 !important;
+    /* Section headers (st.header / st.subheader) */
+    [data-testid="stHeadingWithActionElements"] *,
+    .stHeadingContainer * {
+        color: #f0f4ff !important;
+    }
+
+    /* Tabs */
+    .stTabs [data-baseweb="tab-list"] {
+        background: rgba(255,255,255,.04) !important;
+        border-bottom: 2px solid rgba(126,184,255,.15) !important;
+    }
+    .stTabs [data-baseweb="tab"] {
+        color: #7890b8 !important;
+    }
+    .stTabs [aria-selected="true"] {
+        color: #7eb8ff !important;
+        border-bottom: 2px solid #7eb8ff !important;
+        background: rgba(126,184,255,.08) !important;
+    }
+    .stTabs [data-baseweb="tab-panel"] {
+        background: transparent !important;
     }
 
     /* Inputs */
     .stTextInput input,
     .stNumberInput input,
     .stTextArea textarea {
-        background-color: #1e2130 !important;
-        color: #e8eaf0 !important;
-        border: 1px solid rgba(255,255,255,0.12) !important;
-        border-radius: 10px !important;
+        background: #0d1424 !important;
+        color: #e2e8f8 !important;
+        border: 1.5px solid rgba(126,184,255,.2) !important;
+        border-radius: 12px !important;
+    }
+    .stTextInput input:focus,
+    .stNumberInput input:focus,
+    .stTextArea textarea:focus {
+        border-color: #7eb8ff !important;
+        box-shadow: 0 0 0 3px rgba(126,184,255,.15) !important;
     }
 
-    /* Selectbox */
+    /* Selectbox & multiselect */
     .stSelectbox [data-baseweb="select"] > div,
     .stMultiSelect [data-baseweb="select"] > div {
-        background-color: #1e2130 !important;
-        color: #e8eaf0 !important;
-        border: 1px solid rgba(255,255,255,0.12) !important;
+        background: #0d1424 !important;
+        color: #e2e8f8 !important;
+        border: 1.5px solid rgba(126,184,255,.2) !important;
+        border-radius: 12px !important;
     }
-
-    /* Dropdown menu */
     [data-baseweb="popover"],
     [data-baseweb="menu"],
-    [role="listbox"] {
-        background-color: #1e2130 !important;
-        border: 1px solid rgba(255,255,255,0.1) !important;
+    [role="listbox"],
+    [data-baseweb="select"] ul {
+        background: #0d1424 !important;
+        border: 1px solid rgba(126,184,255,.2) !important;
+        border-radius: 12px !important;
     }
-
     [role="option"] {
-        background-color: #1e2130 !important;
-        color: #e8eaf0 !important;
+        background: #0d1424 !important;
+        color: #c8d8f0 !important;
     }
-
-    [role="option"]:hover {
-        background-color: #2a2f45 !important;
-    }
-
-    /* Tabs */
-    .stTabs [data-baseweb="tab-list"] {
-        background-color: transparent !important;
-        border-bottom: 1px solid rgba(255,255,255,0.1) !important;
-    }
-
-    .stTabs [data-baseweb="tab"] {
-        color: #aab0c8 !important;
-    }
-
-    .stTabs [aria-selected="true"] {
+    [role="option"]:hover,
+    [role="option"][aria-selected="true"] {
+        background: rgba(126,184,255,.12) !important;
         color: #7eb8ff !important;
-        border-bottom: 2px solid #7eb8ff !important;
-        background: rgba(126,184,255,0.1) !important;
-    }
-
-    .stTabs [data-baseweb="tab-panel"] {
-        background-color: transparent !important;
     }
 
     /* Buttons */
     .stButton > button {
-        background-color: #2a3352 !important;
-        color: #c8d8ff !important;
-        border: 1px solid rgba(126,184,255,0.25) !important;
+        background: linear-gradient(135deg, #1a2f5a, #1e3870) !important;
+        color: #90c4ff !important;
+        border: 1px solid rgba(126,184,255,.25) !important;
+        box-shadow: 0 4px 15px rgba(0,0,0,.4) !important;
     }
-
     .stButton > button:hover {
-        background-color: #344070 !important;
-        border-color: rgba(126,184,255,0.5) !important;
+        background: linear-gradient(135deg, #7eb8ff, #4f8ef7) !important;
         color: #fff !important;
-    }
-
-    /* Dataframe / table */
-    .stDataFrame, iframe[title="st_aggrid.agGrid"] {
-        background-color: #1a1e2e !important;
-        color: #e8eaf0 !important;
-    }
-
-    [data-testid="stDataFrame"] table {
-        background-color: #1a1e2e !important;
-        color: #e8eaf0 !important;
-    }
-
-    [data-testid="stDataFrame"] th {
-        background-color: #22263a !important;
-        color: #c0c8e0 !important;
-        border-color: rgba(255,255,255,0.08) !important;
-    }
-
-    [data-testid="stDataFrame"] td {
-        border-color: rgba(255,255,255,0.06) !important;
-        color: #e0e4f0 !important;
+        border-color: transparent !important;
+        box-shadow: 0 6px 20px rgba(126,184,255,.35) !important;
+        transform: translateY(-2px) scale(1.02) !important;
     }
 
     /* Metrics */
     [data-testid="stMetric"] {
-        background-color: #1a1e2e !important;
-        border-radius: 12px !important;
-        padding: 14px !important;
+        background: rgba(13,20,36,.9) !important;
+        border: 1px solid rgba(126,184,255,.15) !important;
+        border-radius: 14px !important;
+        padding: 16px !important;
+        box-shadow: 0 4px 20px rgba(0,0,0,.4) !important;
     }
-
-    [data-testid="stMetricLabel"] {
-        color: #aab0c8 !important;
+    [data-testid="stMetricLabel"] > div {
+        color: #7890b8 !important;
     }
-
-    [data-testid="stMetricValue"] {
-        color: #f0f2ff !important;
+    [data-testid="stMetricValue"] > div {
+        color: #e8f0ff !important;
     }
-
-    [data-testid="stMetricDelta"] {
-        color: #7bc67e !important;
+    [data-testid="stMetricDelta"] > div {
+        color: #4cde80 !important;
     }
 
     /* Alert boxes */
+    [data-testid="stAlert"],
     .stAlert {
-        background-color: #1e2130 !important;
-        color: #e0e4f0 !important;
+        background: rgba(13,20,36,.9) !important;
+        border-radius: 12px !important;
+        border-left-color: #7eb8ff !important;
+    }
+    [data-testid="stAlert"] * {
+        color: #c8d8f0 !important;
     }
 
-    [data-testid="stAlert"] {
-        background-color: #1e2130 !important;
-        color: #c8cfe0 !important;
+    /* Success / Info / Warning / Error */
+    [data-testid="stAlert"][data-type="success"] {
+        border-left-color: #4cde80 !important;
+    }
+    [data-testid="stAlert"][data-type="warning"] {
+        border-left-color: #fbbf24 !important;
+    }
+    [data-testid="stAlert"][data-type="error"] {
+        border-left-color: #f87171 !important;
     }
 
     /* Expander */
-    .streamlit-expanderHeader {
-        background-color: #1e2130 !important;
-        color: #e0e4f0 !important;
-        border-radius: 10px !important;
+    .streamlit-expanderHeader,
+    [data-testid="stExpander"] summary {
+        background: rgba(13,20,36,.85) !important;
+        color: #c8d8f0 !important;
+        border: 1px solid rgba(126,184,255,.12) !important;
+        border-radius: 12px !important;
+    }
+    .streamlit-expanderContent,
+    [data-testid="stExpander"] [data-testid="stExpanderDetails"] {
+        background: rgba(8,14,26,.6) !important;
+        border: 1px solid rgba(126,184,255,.08) !important;
+        border-top: none !important;
     }
 
-    .streamlit-expanderContent {
-        background-color: #161b27 !important;
-        border: 1px solid rgba(255,255,255,0.06) !important;
-    }
-
-    /* Checkbox and radio */
-    .stCheckbox label,
-    .stRadio label {
-        color: #c8cfe0 !important;
+    /* Checkbox & Radio */
+    .stCheckbox label span:last-child,
+    .stRadio label span:last-child {
+        color: #c8d8f0 !important;
     }
 
     /* Slider */
-    .stSlider [data-baseweb="slider"] div {
-        background-color: #344070 !important;
+    .stSlider [data-baseweb="slider"] [role="slider"] {
+        background: #7eb8ff !important;
+    }
+    .stSlider [data-baseweb="slider"] div[class*="track"] {
+        background: rgba(126,184,255,.2) !important;
     }
 
-    /* Caption text */
-    .stCaption, caption {
-        color: #8890a8 !important;
+    /* Captions */
+    .stCaption, [data-testid="stCaptionContainer"] * {
+        color: #4a6090 !important;
     }
 
-    /* Divider */
-    hr {
-        border-color: rgba(255,255,255,0.08) !important;
+    /* Dividers */
+    hr, [data-testid="stDivider"] {
+        border-color: rgba(126,184,255,.1) !important;
     }
 
-    /* Weather cards — dark */
-    .weather-card {
-        background: rgba(30, 33, 48, 0.95) !important;
-        border: 1px solid rgba(255,255,255,0.08) !important;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.5) !important;
+    /* Dataframe */
+    .stDataFrame,
+    [data-testid="stDataFrame"],
+    [data-testid="stDataFrame"] * {
+        background-color: #0a1020 !important;
+        color: #c8d8f0 !important;
+        border-color: rgba(126,184,255,.1) !important;
     }
-
-    .weather-card-value {
-        color: #f0f2ff !important;
-    }
-
-    .weather-card-unit, .weather-card-label {
-        color: #8890a8 !important;
-    }
-
-    /* Station / model cards — dark */
-    .station-overview, .model-overview, .main-container {
-        background: rgba(30, 33, 48, 0.95) !important;
-        border: 1px solid rgba(255,255,255,0.08) !important;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.5) !important;
-    }
-
-    /* Section title border */
-    .section-title {
-        border-color: rgba(255,255,255,0.1) !important;
-    }
-
-    /* Code blocks */
-    code, pre {
-        background-color: #1e2130 !important;
-        color: #c8d8ff !important;
-    }
-
-    /* Tooltip */
-    [data-baseweb="tooltip"] {
-        background-color: #2a3352 !important;
-        color: #e8eaf0 !important;
+    [data-testid="stDataFrame"] th {
+        background: #0d1830 !important;
+        color: #90afd8 !important;
+        font-weight: 700 !important;
     }
 
     /* Progress bar */
-    .stProgress > div > div {
-        background-color: #7eb8ff !important;
+    .stProgress > div > div > div {
+        background: linear-gradient(90deg,#7eb8ff,#4f8ef7) !important;
     }
+
+    /* Code */
+    code, pre {
+        background: #0d1424 !important;
+        color: #90c4ff !important;
+        border: 1px solid rgba(126,184,255,.1) !important;
+    }
+
+    /* Spinners */
+    .stSpinner > div {
+        border-top-color: #7eb8ff !important;
+    }
+
+    /* --- Custom card components in dark mode --- */
+    .weather-card {
+        background: rgba(13,20,36,.92) !important;
+        border: 1px solid rgba(126,184,255,.18) !important;
+        box-shadow: 0 4px 24px rgba(0,0,0,.5) !important;
+    }
+    .weather-card-value { color: #e8f0ff !important; }
+    .weather-card-unit, .weather-card-label { color: #4a6090 !important; }
+
+    .station-overview, .model-overview, .main-container {
+        background: rgba(13,20,36,.92) !important;
+        border: 1px solid rgba(126,184,255,.15) !important;
+        box-shadow: 0 4px 24px rgba(0,0,0,.5) !important;
+    }
+    .section-title {
+        color: #e8f0ff !important;
+        border-color: rgba(126,184,255,.15) !important;
+    }
+
+    /* Styled tables dark */
+    .styled-table th {
+        background: rgba(13,20,36,.9) !important;
+        color: #7890b8 !important;
+    }
+    .styled-table td { color: #c8d8f0 !important; }
+    .styled-table tr:hover { background: rgba(126,184,255,.05) !important; }
+
+    /* Tooltip */
+    [data-baseweb="tooltip"] {
+        background: #0d1424 !important;
+        color: #e2e8f8 !important;
+    }
+
+    /* Hide the Streamlit top bar in dark mode */
+    [data-testid="stHeader"] {
+        background: rgba(5,10,20,.95) !important;
+        border-bottom: 1px solid rgba(126,184,255,.08) !important;
+    }
+
+    /* Hero banner dark */
+    .page-hero {
+        background: linear-gradient(135deg, #0d1f4a 0%, #1a3a8f 50%, #3b1f72 100%) !important;
+        box-shadow: 0 20px 60px rgba(0,0,0,.6) !important;
+    }
+
+    /* AQI hero card dark */
+    .aqi-hero-card {
+        background: rgba(10,18,34,.95) !important;
+        border-color: rgba(126,184,255,.15) !important;
+        box-shadow: 0 8px 40px rgba(0,0,0,.5) !important;
+    }
+    .aqi-number { color: #e8f0ff !important; }
+    .aqi-unit   { color: #4a6090 !important; }
+    .aqi-impl   { color: #7890b8 !important; }
+    .aqi-scale-track { background: rgba(255,255,255,.06) !important; }
+    .aqi-scale-labels span { color: #3a5070 !important; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -845,7 +884,17 @@ st.sidebar.caption("📊 Dataset: Fort William & Bidhannagar (2021-2025)")
 # Dashboard page
 if page == "Dashboard":
     # Station-specific title
-    st.title(f"PM2.5 Air Quality Prediction for {selected_station}")
+    st.markdown(f"""
+    <div class="page-hero">
+        <div class="hero-eyebrow">🌬️ Real-time Monitoring &nbsp;•&nbsp; Kolkata, India</div>
+        <h1 class="hero-title">PM2.5 Air Quality</h1>
+        <p class="hero-subtitle">{selected_station} Station</p>
+        <div class="hero-live-badge">
+            <span class="hero-live-dot"></span>
+            Live &amp; Forecasting
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
     
     # Try to get real-time data first, then fall back to dataset
     try:
@@ -895,12 +944,30 @@ if page == "Dashboard":
     aqi_category, aqi_class = get_aqi_category(latest_pm25)
     
     # Display current PM2.5 level with AQI category
+    _aqi_color = next(level['color'] for level in aqi_levels if level['level'] == aqi_category)
+    _aqi_impl  = next(level['implications'] for level in aqi_levels if level['level'] == aqi_category)
+    _pct = min(latest_pm25 / 300 * 100, 100)
     st.markdown(f"""
-    <div style="background-color:{next(level['color'] for level in aqi_levels if level['level'] == aqi_category)}; 
-                 padding:20px; border-radius:10px; margin:20px 0; text-align:center; color:white;">
-        <h2>Current PM2.5 Level: {latest_pm25:.2f} μg/m³</h2>
-        <h3>Air Quality: {aqi_category}</h3>
-        <p>{next(level['implications'] for level in aqi_levels if level['level'] == aqi_category)}</p>
+    <div class="aqi-hero-card" style="--aqi-color:{_aqi_color};">
+        <div class="aqi-live-pill">
+            <span class="aqi-live-dot-anim"></span> LIVE
+        </div>
+        <div class="aqi-body">
+            <div class="aqi-left">
+                <div class="aqi-number">{latest_pm25:.1f}</div>
+                <div class="aqi-unit">μg/m³ &nbsp;<span class="aqi-param">PM2.5</span></div>
+                <div class="aqi-scale-wrap">
+                    <div class="aqi-scale-track">
+                        <div class="aqi-scale-fill" style="width:{_pct:.1f}%;background:{_aqi_color};"></div>
+                    </div>
+                    <div class="aqi-scale-labels"><span>0</span><span>150</span><span>300+</span></div>
+                </div>
+            </div>
+            <div class="aqi-right">
+                <div class="aqi-badge-pill" style="background:{_aqi_color};">{aqi_category}</div>
+                <p class="aqi-impl">{_aqi_impl}</p>
+            </div>
+        </div>
     </div>
     """, unsafe_allow_html=True)
     
