@@ -301,59 +301,71 @@ st.markdown(
 with open('.streamlit/styles.css') as f:
     st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
 
-# ── Global premium CSS enhancements ────────────────────────────────
+# ── Global premium CSS + 3D JS engine ──────────────────────────────
 st.markdown("""
 <style>
-/* Ambient background glow blobs (light mode) */
-.stApp::before {
-    content:'';
-    position:fixed;
-    top:-15vh; left:-10vw;
-    width:50vw; height:50vh;
-    border-radius:50%;
-    background:radial-gradient(circle,rgba(59,130,246,.07) 0%,transparent 70%);
-    pointer-events:none;
-    z-index:0;
-}
-.stApp::after {
-    content:'';
-    position:fixed;
-    bottom:-10vh; right:-10vw;
-    width:40vw; height:40vh;
-    border-radius:50%;
-    background:radial-gradient(circle,rgba(139,92,246,.06) 0%,transparent 70%);
-    pointer-events:none;
-    z-index:0;
-}
-/* Sidebar active nav glow */
-[data-testid="stSidebar"] [data-baseweb="radio"] [aria-checked="true"],
-[data-testid="stSidebar"] input[type="radio"]:checked + div {
-    background:rgba(59,130,246,.14) !important;
-    border-radius:8px !important;
-}
+/* Ambient glow blobs */
+.stApp::before{content:'';position:fixed;top:-15vh;left:-10vw;width:50vw;height:50vh;border-radius:50%;background:radial-gradient(circle,rgba(59,130,246,.07) 0%,transparent 70%);pointer-events:none;z-index:0;}
+.stApp::after{content:'';position:fixed;bottom:-10vh;right:-10vw;width:40vw;height:40vh;border-radius:50%;background:radial-gradient(circle,rgba(139,92,246,.06) 0%,transparent 70%);pointer-events:none;z-index:0;}
 /* Premium scrollbar */
-::-webkit-scrollbar { width:6px; height:6px; }
-::-webkit-scrollbar-track { background:transparent; }
-::-webkit-scrollbar-thumb {
-    background:rgba(59,130,246,.3);
-    border-radius:100px;
-}
-::-webkit-scrollbar-thumb:hover { background:rgba(59,130,246,.6); }
-/* Remove streamlit default footer */
-footer { display:none !important; }
-/* Remove red top bar */
-[data-testid="stStatusWidget"] { display:none !important; }
-/* Smooth page transitions */
-.main .block-container { transition:opacity .3s ease; }
-/* Premium tooltip */
-[data-baseweb="tooltip"] {
-    background:rgba(15,23,42,.95) !important;
-    border:1px solid rgba(59,130,246,.25) !important;
-    border-radius:8px !important;
-    backdrop-filter:blur(12px) !important;
-    color:#e2e8f0 !important;
-}
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:rgba(59,130,246,.35);border-radius:100px;}
+::-webkit-scrollbar-thumb:hover{background:rgba(59,130,246,.65);}
+footer,[data-testid="stStatusWidget"]{display:none!important;}
+[data-baseweb="tooltip"]{background:rgba(15,23,42,.95)!important;border:1px solid rgba(59,130,246,.25)!important;border-radius:8px!important;backdrop-filter:blur(12px)!important;color:#e2e8f0!important;}
 </style>
+<canvas id="aq-particles" style="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;opacity:.3;"></canvas>
+<script>
+(function(){
+  'use strict';
+  var TILT=13,LIFT=13;
+  function bindTilt(el){
+    if(el._aqT)return; el._aqT=true;
+    el.classList.add('tilt-card');
+    el.addEventListener('mousemove',function(e){
+      var r=el.getBoundingClientRect();
+      var x=(e.clientX-r.left)/r.width-.5;
+      var y=(e.clientY-r.top)/r.height-.5;
+      el.style.transition='none';
+      el.style.transform='perspective(900px) rotateX('+(-y*TILT)+'deg) rotateY('+(x*TILT)+'deg) translateZ('+LIFT+'px)';
+      el.style.boxShadow=(-x*16)+'px '+(y*16)+'px 48px rgba(59,130,246,.22),0 28px 56px rgba(0,0,0,.15)';
+    });
+    el.addEventListener('mouseleave',function(){
+      el.style.transition='transform .65s cubic-bezier(.34,1.56,.64,1),box-shadow .65s ease';
+      el.style.transform='perspective(900px) rotateX(0) rotateY(0) translateZ(0)';
+      el.style.boxShadow='';
+    });
+  }
+  function initTilt(){
+    ['.weather-card','[data-testid="stMetric"]','.aqi-hero-card','.station-overview','.model-overview','.main-container','.page-banner-3d'].forEach(function(sel){
+      document.querySelectorAll(sel).forEach(bindTilt);
+    });
+  }
+  function initParticles(){
+    var c=document.getElementById('aq-particles'); if(!c)return;
+    var ctx=c.getContext('2d');
+    function resize(){c.width=window.innerWidth;c.height=window.innerHeight;}
+    resize(); window.addEventListener('resize',resize);
+    var ps=Array.from({length:40},function(){return{x:Math.random()*window.innerWidth,y:Math.random()*window.innerHeight,r:Math.random()*1.8+.4,speed:Math.random()*.45+.12,dx:(Math.random()-.5)*.25,op:Math.random()*.35+.08};});
+    function draw(){
+      ctx.clearRect(0,0,c.width,c.height);
+      ps.forEach(function(p){
+        ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+        ctx.fillStyle='rgba(59,130,246,'+p.op+')';ctx.fill();
+        p.y-=p.speed;p.x+=p.dx;
+        if(p.y<-10){p.y=c.height+10;p.x=Math.random()*c.width;}
+        if(p.x<0)p.x=c.width;if(p.x>c.width)p.x=0;
+      });
+      requestAnimationFrame(draw);
+    }
+    draw();
+  }
+  function init(){initTilt();initParticles();}
+  if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',init);}else{setTimeout(init,120);}
+  new MutationObserver(function(){initTilt();}).observe(document.body,{childList:true,subtree:true});
+})();
+</script>
 """, unsafe_allow_html=True)
 
 # Create necessary folders for storage
@@ -1229,7 +1241,21 @@ if page == "Dashboard":
         st.plotly_chart(fig_models, use_container_width=True)
     
     # Real-time Data Collection and Daily Model Retraining
-    st.header("Real-time Observed Weather Data Collection")
+    st.markdown(f"""
+    <div class="page-banner-3d" style="background:linear-gradient(135deg,#0c2a52 0%,#1e3a8a 50%,#1e1b4b 100%);background-size:300%;animation:gradientShift 8s ease infinite;margin-top:8px;">
+      <div class="b3d-bubble bb1"></div>
+      <div class="b3d-scene">
+        <div class="b3d-ring r1"></div><div class="b3d-ring r2"></div>
+        <div class="b3d-orb b3d-orb-blue"></div>
+        <div class="b3d-node n1"></div><div class="b3d-node n2"></div><div class="b3d-node n3"></div>
+      </div>
+      <div class="b3d-content">
+        <div class="b3d-eyebrow">📡 Live Monitoring Network &nbsp;·&nbsp; {selected_station}</div>
+        <h1 class="b3d-title" style="font-size:1.9rem!important;">Real-time Data<br><span>Collection</span></h1>
+        <p class="b3d-sub">Observed weather data collection · Continuous model improvement</p>
+      </div>
+    </div>
+    """, unsafe_allow_html=True)
     
     # Display current real-time data collection status
     st.info("This system collects real-time observed weather data (not forecasts) to continuously improve predictions.")
@@ -1249,7 +1275,22 @@ if page == "Dashboard":
 
 # Data Analysis and Insights page
 elif page == "Data Analysis and Insights":
-    st.header("Data Analysis and Insights")
+    st.markdown(f"""
+    <div class="page-banner-3d" style="background:linear-gradient(135deg,#0c4451 0%,#0e6e8e 30%,#1e3a8a 70%,#3730a3 100%);background-size:300%;animation:gradientShift 8s ease infinite;">
+      <div class="b3d-bubble bb1"></div><div class="b3d-bubble bb2"></div>
+      <div class="b3d-scene">
+        <div class="b3d-ring r1"></div><div class="b3d-ring r2"></div><div class="b3d-ring r3"></div>
+        <div class="b3d-orb b3d-orb-teal"></div>
+        <div class="b3d-node n1"></div><div class="b3d-node n2"></div><div class="b3d-node n3"></div><div class="b3d-node n4"></div>
+      </div>
+      <div class="b3d-content">
+        <div class="b3d-eyebrow">📊 AI Analytics Engine &nbsp;·&nbsp; {selected_station}</div>
+        <h1 class="b3d-title">Data Analysis<br><span>&amp; Insights</span></h1>
+        <p class="b3d-sub">Parameter correlations · Historical trends · Model performance · Forecasting</p>
+        <div class="b3d-tags"><span class="b3d-tag">Correlations</span><span class="b3d-tag">Trends</span><span class="b3d-tag">Models</span><span class="b3d-tag">Forecasting</span></div>
+      </div>
+    </div>
+    """, unsafe_allow_html=True)
     
     if data.empty:
         st.warning("No data available for analysis.")
@@ -1607,7 +1648,26 @@ elif page == "Data Analysis and Insights":
 
 # Model Training & Comparison page
 elif page == "Model Training & Comparison":
-    st.header("Model Training & Comparison")
+    st.markdown("""
+    <div class="page-banner-3d" style="background:linear-gradient(135deg,#2e1065 0%,#6d28d9 40%,#9333ea 65%,#c026d3 100%);background-size:300%;animation:gradientShift 8s ease infinite;">
+      <div class="b3d-bubble bb1"></div><div class="b3d-bubble bb2"></div>
+      <div class="b3d-scene" style="perspective:600px;">
+        <div class="b3d-ring r1"></div><div class="b3d-ring r2"></div>
+        <div class="b3d-cube-wrap"><div class="b3d-cube">
+          <div class="cube-face cube-front"></div><div class="cube-face cube-back"></div>
+          <div class="cube-face cube-left"></div><div class="cube-face cube-right"></div>
+          <div class="cube-face cube-top"></div><div class="cube-face cube-bottom"></div>
+        </div></div>
+        <div class="b3d-node n1"></div><div class="b3d-node n2"></div><div class="b3d-node n3"></div>
+      </div>
+      <div class="b3d-content">
+        <div class="b3d-eyebrow">🤖 Machine Learning Pipeline</div>
+        <h1 class="b3d-title">Model Training<br><span>&amp; Comparison</span></h1>
+        <p class="b3d-sub">Train, evaluate and compare 4 ML algorithms side-by-side</p>
+        <div class="b3d-tags"><span class="b3d-tag">Random Forest</span><span class="b3d-tag">Decision Tree</span><span class="b3d-tag">Linear Reg.</span><span class="b3d-tag">Logistic Reg.</span></div>
+      </div>
+    </div>
+    """, unsafe_allow_html=True)
     
     if data.empty:
         st.warning("No data available for model training.")
@@ -1839,7 +1899,22 @@ elif page == "Model Training & Comparison":
 
 # PM2.5 Predictions page
 elif page == "PM2.5 Predictions":
-    st.header("PM2.5 Predictions")
+    st.markdown(f"""
+    <div class="page-banner-3d" style="background:linear-gradient(135deg,#0c2a52 0%,#1d4ed8 40%,#0891b2 75%,#06b6d4 100%);background-size:300%;animation:gradientShift 8s ease infinite;">
+      <div class="b3d-bubble bb1"></div><div class="b3d-bubble bb2"></div>
+      <div class="b3d-scene">
+        <div class="b3d-ring r4"></div><div class="b3d-ring r1"></div><div class="b3d-ring r2"></div><div class="b3d-ring r3"></div>
+        <div class="b3d-orb b3d-orb-blue"></div>
+        <div class="b3d-node n1"></div><div class="b3d-node n2"></div><div class="b3d-node n3"></div>
+      </div>
+      <div class="b3d-content">
+        <div class="b3d-eyebrow">🔮 AI Prediction Engine &nbsp;·&nbsp; {selected_station}</div>
+        <h1 class="b3d-title">PM2.5<br><span>Predictions</span></h1>
+        <p class="b3d-sub">Real-time forecasting · 1–7 day predictions · Best model auto-selection</p>
+        <div class="b3d-tags"><span class="b3d-tag">Present Day</span><span class="b3d-tag">1-Day Ahead</span><span class="b3d-tag">7-Day Ahead</span><span class="b3d-tag">AI-Powered</span></div>
+      </div>
+    </div>
+    """, unsafe_allow_html=True)
     
     if data.empty:
         st.warning("No data available for making predictions.")
@@ -2338,7 +2413,22 @@ elif page == "PM2.5 Predictions":
 
 # Historical Analysis page
 elif page == "Satellite Imagery":
-    st.header("Satellite Imagery & Air Quality Maps")
+    st.markdown(f"""
+    <div class="page-banner-3d" style="background:linear-gradient(135deg,#0c1445 0%,#1e3a8a 30%,#0c4a6e 65%,#0d9488 100%);background-size:300%;animation:gradientShift 8s ease infinite;">
+      <div class="b3d-bubble bb1"></div><div class="b3d-bubble bb2"></div>
+      <div class="b3d-scene">
+        <div class="b3d-ring r2"></div><div class="b3d-ring r3"></div>
+        <div class="b3d-orb b3d-orb-earth"></div>
+        <div class="b3d-node n1"></div><div class="b3d-node n2"></div><div class="b3d-node n3"></div><div class="b3d-node n4"></div>
+      </div>
+      <div class="b3d-content">
+        <div class="b3d-eyebrow">🛰️ NASA Earth Observation &nbsp;·&nbsp; {selected_station}</div>
+        <h1 class="b3d-title">Satellite Imagery<br><span>&amp; Air Quality Maps</span></h1>
+        <p class="b3d-sub">Live satellite views · Aerosol optical depth · Pollution plume tracking</p>
+        <div class="b3d-tags"><span class="b3d-tag">NASA EOSDIS</span><span class="b3d-tag">Aerosol Maps</span><span class="b3d-tag">Live Imagery</span><span class="b3d-tag">PM2.5 Plumes</span></div>
+      </div>
+    </div>
+    """, unsafe_allow_html=True)
     
     # Date selection for satellite imagery
     sat_date = st.date_input("Select Date for Satellite Data", datetime.now().date())
@@ -2577,7 +2667,25 @@ elif page == "Satellite Imagery":
         st.warning("Please select a valid date range.")
 
 elif page == "Historical Analysis":
-    st.header(f"Historical Data Analysis - {selected_station}")
+    st.markdown(f"""
+    <div class="page-banner-3d" style="background:linear-gradient(135deg,#431407 0%,#9a3412 35%,#b45309 65%,#a16207 100%);background-size:300%;animation:gradientShift 8s ease infinite;">
+      <div class="b3d-bubble bb1"></div><div class="b3d-bubble bb2"></div>
+      <div class="b3d-scene">
+        <div class="b3d-ring r2"></div>
+        <div class="b3d-layers">
+          <div class="b3d-layer ll1"></div><div class="b3d-layer ll2"></div>
+          <div class="b3d-layer ll3"></div><div class="b3d-layer ll4"></div>
+        </div>
+        <div class="b3d-node n1"></div><div class="b3d-node n2"></div><div class="b3d-node n3"></div>
+      </div>
+      <div class="b3d-content">
+        <div class="b3d-eyebrow">📈 Historical Data Archive &nbsp;·&nbsp; {selected_station}</div>
+        <h1 class="b3d-title">Historical<br><span>Analysis</span></h1>
+        <p class="b3d-sub">2021–2025 air quality records · Seasonal patterns · Long-term trend analysis</p>
+        <div class="b3d-tags"><span class="b3d-tag">2021–2025</span><span class="b3d-tag">Seasonal</span><span class="b3d-tag">Trends</span><span class="b3d-tag">Heatmaps</span></div>
+      </div>
+    </div>
+    """, unsafe_allow_html=True)
     
     # Filter data for selected station
     station_data = data[data['Station'] == selected_station].copy()
@@ -3418,7 +3526,22 @@ elif page == "Historical Analysis":
 
 # Data Download page
 elif page == "Data Download":
-    st.header(f"Download Air Quality Data - {selected_station}")
+    st.markdown(f"""
+    <div class="page-banner-3d" style="background:linear-gradient(135deg,#052e16 0%,#15803d 40%,#0d9488 70%,#0891b2 100%);background-size:300%;animation:gradientShift 8s ease infinite;">
+      <div class="b3d-bubble bb1"></div><div class="b3d-bubble bb2"></div>
+      <div class="b3d-scene">
+        <div class="b3d-ring r1"></div><div class="b3d-ring r2"></div><div class="b3d-ring r3"></div>
+        <div class="b3d-orb b3d-orb-green"></div>
+        <div class="b3d-node n1"></div><div class="b3d-node n2"></div><div class="b3d-node n3"></div><div class="b3d-node n4"></div>
+      </div>
+      <div class="b3d-content">
+        <div class="b3d-eyebrow">📥 Data Export Portal &nbsp;·&nbsp; {selected_station}</div>
+        <h1 class="b3d-title">Download<br><span>Air Quality Data</span></h1>
+        <p class="b3d-sub">Export CSV · Excel · Filter by date range · Fort William &amp; Bidhannagar</p>
+        <div class="b3d-tags"><span class="b3d-tag">CSV</span><span class="b3d-tag">Excel</span><span class="b3d-tag">Date Filter</span><span class="b3d-tag">Both Stations</span></div>
+      </div>
+    </div>
+    """, unsafe_allow_html=True)
     
     # Filter data for selected station
     station_data = data[data['Station'] == selected_station].copy()

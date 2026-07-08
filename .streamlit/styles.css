@@ -614,3 +614,229 @@
   .weather-card{ padding:16px 12px; }
   .weather-card-value{ font-size:1.4rem; }
 }
+
+/* ══════════════════════════════════════════════════════════════════
+   3D UI SYSTEM — Keyframes, Scenes, Banners, Card Tilt
+   ══════════════════════════════════════════════════════════════════ */
+
+/* ── 3D Keyframes ────────────────────────────────────────────────── */
+@keyframes orbit-ring {
+  from { transform: rotateX(70deg) rotateZ(0deg);   }
+  to   { transform: rotateX(70deg) rotateZ(360deg); }
+}
+@keyframes orbit-ring-rev {
+  from { transform: rotateX(70deg) rotateZ(360deg); }
+  to   { transform: rotateX(70deg) rotateZ(0deg);   }
+}
+@keyframes orb-float {
+  0%,100%{ transform:translateY(0) scale(1);    }
+  50%    { transform:translateY(-10px) scale(1.06); }
+}
+@keyframes neon-pulse {
+  0%,100%{ opacity:.6; box-shadow:0 0 8px  currentColor; }
+  50%    { opacity:1;  box-shadow:0 0 20px currentColor; }
+}
+@keyframes cube-spin {
+  from { transform:perspective(300px) rotateX(-25deg) rotateY(0deg);   }
+  to   { transform:perspective(300px) rotateX(-25deg) rotateY(360deg); }
+}
+@keyframes layers-rise {
+  0%,100%{ transform:perspective(400px) rotateX(30deg) rotateZ(-8deg) translateY(0);   }
+  50%    { transform:perspective(400px) rotateX(30deg) rotateZ(-8deg) translateY(-8px); }
+}
+@keyframes particle-float {
+  0%  { transform:translateY(100vh) translateX(0);   opacity:0; }
+  10% { opacity:.6; }
+  90% { opacity:.4; }
+  100%{ transform:translateY(-20px) translateX(30px); opacity:0; }
+}
+@keyframes tilt-ready {
+  from{ transform:perspective(800px) rotateX(0) rotateY(0) translateZ(0); }
+  to  { transform:perspective(800px) rotateX(0) rotateY(0) translateZ(0); }
+}
+
+/* ── Page Banner 3D (shared) ─────────────────────────────────────── */
+.page-banner-3d {
+  position: relative;
+  border-radius: 22px;
+  padding: 38px 36px 32px;
+  margin-bottom: 28px;
+  overflow: hidden;
+  box-shadow: 0 24px 80px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.08);
+  animation: scaleIn .55s ease both;
+}
+.b3d-bubble {
+  position:absolute; border-radius:50%;
+  background:rgba(255,255,255,.04); backdrop-filter:blur(6px);
+  pointer-events:none;
+}
+.b3d-bubble.bb1{ width:220px;height:220px;top:-70px;right:28%; }
+.b3d-bubble.bb2{ width:140px;height:140px;bottom:-50px;right:12%; }
+
+/* 3D Scene container */
+.b3d-scene {
+  position:absolute; top:50%; right:4%; transform:translateY(-50%);
+  width:190px; height:190px;
+  transform-style:preserve-3d;
+  pointer-events:none;
+}
+
+/* Orbital rings */
+.b3d-ring {
+  position:absolute; top:50%; left:50%;
+  border-radius:50%; border:1.5px solid;
+  transform-origin:center center;
+}
+.b3d-ring.r1{
+  width:80px;height:80px; margin:-40px 0 0 -40px;
+  border-color:rgba(255,255,255,.55);
+  animation:orbit-ring 3.5s linear infinite;
+}
+.b3d-ring.r2{
+  width:120px;height:120px; margin:-60px 0 0 -60px;
+  border-color:rgba(255,255,255,.3);
+  animation:orbit-ring-rev 5.5s linear infinite;
+}
+.b3d-ring.r3{
+  width:165px;height:165px; margin:-82px 0 0 -82px;
+  border-color:rgba(255,255,255,.15);
+  animation:orbit-ring 8s linear infinite;
+}
+.b3d-ring.r4{
+  width:52px;height:52px; margin:-26px 0 0 -26px;
+  border-color:rgba(255,255,255,.7);
+  animation:orbit-ring-rev 2s linear infinite;
+}
+
+/* Central orb / sphere */
+.b3d-orb {
+  position:absolute; top:50%; left:50%;
+  width:52px; height:52px; margin:-26px 0 0 -26px;
+  border-radius:50%;
+  animation:orb-float 4s ease infinite;
+}
+.b3d-orb-blue  { background:radial-gradient(circle at 35% 35%,#93c5fd,#2563eb,#1e1b4b); box-shadow:0 0 36px rgba(59,130,246,.65),inset -10px -10px 20px rgba(0,0,0,.45); }
+.b3d-orb-teal  { background:radial-gradient(circle at 35% 35%,#5eead4,#0d9488,#042f2e); box-shadow:0 0 36px rgba(13,148,136,.65),inset -10px -10px 20px rgba(0,0,0,.45); }
+.b3d-orb-purple{ background:radial-gradient(circle at 35% 35%,#c4b5fd,#7c3aed,#2e1065); box-shadow:0 0 36px rgba(124,58,237,.65),inset -10px -10px 20px rgba(0,0,0,.45); }
+.b3d-orb-amber { background:radial-gradient(circle at 35% 35%,#fcd34d,#d97706,#451a03); box-shadow:0 0 36px rgba(217,119,6,.65),inset -10px -10px 20px rgba(0,0,0,.45); }
+.b3d-orb-green { background:radial-gradient(circle at 35% 35%,#86efac,#16a34a,#052e16); box-shadow:0 0 36px rgba(22,163,74,.65),inset -10px -10px 20px rgba(0,0,0,.45); }
+.b3d-orb-earth {
+  width:72px;height:72px;margin:-36px 0 0 -36px;
+  background:radial-gradient(circle at 32% 32%,#60a5fa,#1d4ed8,#0c4a6e);
+  box-shadow:0 0 50px rgba(29,78,216,.75),inset -14px -14px 28px rgba(0,0,0,.5);
+}
+
+/* Data nodes */
+.b3d-node {
+  position:absolute; width:8px; height:8px; border-radius:50%;
+  background:rgba(255,255,255,.85); color:rgba(255,255,255,.85);
+  box-shadow:0 0 10px rgba(255,255,255,.7);
+  animation:neon-pulse 2s ease infinite;
+}
+.b3d-node.n1{top:18%;left:18%;animation-delay:.0s}
+.b3d-node.n2{top:72%;left:78%;animation-delay:.6s}
+.b3d-node.n3{top:25%;left:82%;animation-delay:1.2s}
+.b3d-node.n4{top:68%;left:22%;animation-delay:1.8s}
+
+/* 3D CSS Cube */
+.b3d-cube-wrap {
+  position:absolute; top:50%; left:50%; margin:-30px 0 0 -30px;
+  width:60px; height:60px;
+  transform-style:preserve-3d;
+  animation:cube-spin 6s linear infinite;
+}
+.cube-face {
+  position:absolute; width:60px; height:60px;
+  border:1.5px solid rgba(255,255,255,.35);
+  background:rgba(255,255,255,.04);
+}
+.cube-front { transform:translateZ(30px); }
+.cube-back  { transform:translateZ(-30px) rotateY(180deg); }
+.cube-left  { transform:rotateY(-90deg) translateZ(30px); }
+.cube-right { transform:rotateY(90deg)  translateZ(30px); }
+.cube-top   { transform:rotateX(90deg)  translateZ(30px); }
+.cube-bottom{ transform:rotateX(-90deg) translateZ(30px); }
+
+/* 3D Stacked timeline layers */
+.b3d-layers {
+  position:absolute; top:50%; left:50%;
+  width:130px; height:80px; margin:-40px 0 0 -65px;
+  transform-style:preserve-3d;
+  animation:layers-rise 5s ease infinite;
+  transform:perspective(400px) rotateX(28deg) rotateZ(-8deg);
+}
+.b3d-layer {
+  position:absolute;
+  width:130px; height:80px;
+  border-radius:8px;
+  border:1.5px solid;
+  background:rgba(255,255,255,.05);
+}
+.b3d-layer.ll1{transform:translateZ(0px); border-color:rgba(255,255,255,.5);}
+.b3d-layer.ll2{transform:translateZ(18px);border-color:rgba(255,255,255,.35);}
+.b3d-layer.ll3{transform:translateZ(36px);border-color:rgba(255,255,255,.2);}
+.b3d-layer.ll4{transform:translateZ(54px);border-color:rgba(255,255,255,.1);}
+
+/* Banner content */
+.b3d-content { position:relative; z-index:2; max-width:calc(100% - 210px); }
+.b3d-eyebrow {
+  font-size:.68rem; font-weight:700;
+  color:rgba(255,255,255,.5);
+  letter-spacing:2.5px; text-transform:uppercase;
+  margin-bottom:12px;
+}
+.b3d-title {
+  font-size:2.4rem !important; font-weight:900 !important;
+  color:#fff !important; line-height:1.05 !important;
+  letter-spacing:-1.5px !important; margin:0 0 10px 0 !important;
+}
+.b3d-title span {
+  background:linear-gradient(135deg,rgba(255,255,255,.95),rgba(255,255,255,.55));
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+}
+.b3d-sub {
+  font-size:.875rem;
+  color:rgba(255,255,255,.6) !important;
+  margin:0 !important; font-weight:400; line-height:1.5;
+}
+.b3d-tags {
+  display:flex; gap:8px; flex-wrap:wrap; margin-top:16px;
+}
+.b3d-tag {
+  background:rgba(255,255,255,.1);
+  border:1px solid rgba(255,255,255,.18);
+  border-radius:100px;
+  padding:4px 14px;
+  font-size:.7rem; font-weight:600;
+  color:rgba(255,255,255,.8);
+  letter-spacing:.5px;
+  backdrop-filter:blur(8px);
+}
+
+/* ── Card Tilt (applied via JS) ──────────────────────────────────── */
+.tilt-card { transform-style:preserve-3d; will-change:transform; }
+.tilt-card::after {
+  content:'';
+  position:absolute; inset:0;
+  border-radius:inherit;
+  background:linear-gradient(130deg,transparent 30%,rgba(255,255,255,.18) 50%,transparent 70%);
+  opacity:0; pointer-events:none; z-index:3;
+  transition:opacity .35s ease;
+}
+.tilt-card:hover::after { opacity:1; }
+
+/* ── Particle canvas ─────────────────────────────────────────────── */
+#aq-particles {
+  position:fixed; top:0; left:0; width:100%; height:100%;
+  pointer-events:none; z-index:0;
+  opacity:.35;
+}
+
+/* ── Mobile ─────────────────────────────────────────────────────── */
+@media(max-width:768px){
+  .b3d-scene    { display:none; }
+  .b3d-content  { max-width:100%; }
+  .b3d-title    { font-size:1.8rem !important; letter-spacing:-.5px !important; }
+  .page-banner-3d { padding:26px 18px 22px; }
+  .b3d-tags     { margin-top:12px; }
+}
