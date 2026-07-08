@@ -195,11 +195,9 @@ def get_current_observed_weather(station):
                 'PM2.5': air_quality_data.get('pm25', 35.0)
             }
         else:
-            st.warning("API keys not available. Cannot collect real-time observed data.")
             return None
             
     except Exception as e:
-        st.error(f"Error getting current observed weather: {str(e)}")
         return None
 
 # Function to retrain model with latest data
@@ -574,42 +572,247 @@ theme_mode = st.sidebar.radio(
 if theme_mode == "Dark Mode":
     st.markdown("""
     <style>
-    :root {
-        --background-color: #0e1117;
-        --secondary-background-color: #262730;
-        --text-color: #fafafa;
-        --font: "sans serif";
-    }
-    
+    /* ── Dark Mode: Streamlit root & body ── */
     .stApp {
-        background-color: var(--background-color);
-        color: var(--text-color);
+        background-color: #0e1117 !important;
+        color: #e8eaf0 !important;
     }
-    
-    .sidebar .sidebar-content {
-        background-color: var(--secondary-background-color);
+
+    /* Main content area */
+    .main .block-container,
+    [data-testid="stAppViewContainer"] > section:first-child,
+    [data-testid="stAppViewBlockContainer"] {
+        background-color: #0e1117 !important;
+        color: #e8eaf0 !important;
     }
-    
-    .Widget > label {
-        color: var(--text-color);
+
+    /* Sidebar */
+    [data-testid="stSidebar"],
+    [data-testid="stSidebar"] > div,
+    section[data-testid="stSidebar"] {
+        background-color: #161b27 !important;
+        border-right: 1px solid rgba(255,255,255,0.07) !important;
     }
-    
-    .stTextInput > div > div > input {
-        background-color: var(--secondary-background-color);
-        color: var(--text-color);
+
+    /* Sidebar text */
+    [data-testid="stSidebar"] label,
+    [data-testid="stSidebar"] p,
+    [data-testid="stSidebar"] span,
+    [data-testid="stSidebar"] div {
+        color: #c8cfe0 !important;
     }
-    
-    .stDataFrame {
-        background-color: var(--secondary-background-color);
-        color: var(--text-color);
+
+    /* All text */
+    p, h1, h2, h3, h4, h5, h6, span, div, label {
+        color: #e8eaf0;
     }
-    
+
+    /* Headings */
+    .stMarkdown h1, .stMarkdown h2, .stMarkdown h3,
+    .stMarkdown h4, .stMarkdown h5, .stMarkdown h6 {
+        color: #f0f2fa !important;
+    }
+
+    /* Paragraphs */
+    .stMarkdown p, .stMarkdown li {
+        color: #c8cfe0 !important;
+    }
+
+    /* Inputs */
+    .stTextInput input,
+    .stNumberInput input,
+    .stTextArea textarea {
+        background-color: #1e2130 !important;
+        color: #e8eaf0 !important;
+        border: 1px solid rgba(255,255,255,0.12) !important;
+        border-radius: 10px !important;
+    }
+
+    /* Selectbox */
+    .stSelectbox [data-baseweb="select"] > div,
+    .stMultiSelect [data-baseweb="select"] > div {
+        background-color: #1e2130 !important;
+        color: #e8eaf0 !important;
+        border: 1px solid rgba(255,255,255,0.12) !important;
+    }
+
+    /* Dropdown menu */
+    [data-baseweb="popover"],
+    [data-baseweb="menu"],
+    [role="listbox"] {
+        background-color: #1e2130 !important;
+        border: 1px solid rgba(255,255,255,0.1) !important;
+    }
+
+    [role="option"] {
+        background-color: #1e2130 !important;
+        color: #e8eaf0 !important;
+    }
+
+    [role="option"]:hover {
+        background-color: #2a2f45 !important;
+    }
+
+    /* Tabs */
+    .stTabs [data-baseweb="tab-list"] {
+        background-color: transparent !important;
+        border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+    }
+
+    .stTabs [data-baseweb="tab"] {
+        color: #aab0c8 !important;
+    }
+
+    .stTabs [aria-selected="true"] {
+        color: #7eb8ff !important;
+        border-bottom: 2px solid #7eb8ff !important;
+        background: rgba(126,184,255,0.1) !important;
+    }
+
+    .stTabs [data-baseweb="tab-panel"] {
+        background-color: transparent !important;
+    }
+
+    /* Buttons */
+    .stButton > button {
+        background-color: #2a3352 !important;
+        color: #c8d8ff !important;
+        border: 1px solid rgba(126,184,255,0.25) !important;
+    }
+
+    .stButton > button:hover {
+        background-color: #344070 !important;
+        border-color: rgba(126,184,255,0.5) !important;
+        color: #fff !important;
+    }
+
+    /* Dataframe / table */
+    .stDataFrame, iframe[title="st_aggrid.agGrid"] {
+        background-color: #1a1e2e !important;
+        color: #e8eaf0 !important;
+    }
+
+    [data-testid="stDataFrame"] table {
+        background-color: #1a1e2e !important;
+        color: #e8eaf0 !important;
+    }
+
+    [data-testid="stDataFrame"] th {
+        background-color: #22263a !important;
+        color: #c0c8e0 !important;
+        border-color: rgba(255,255,255,0.08) !important;
+    }
+
+    [data-testid="stDataFrame"] td {
+        border-color: rgba(255,255,255,0.06) !important;
+        color: #e0e4f0 !important;
+    }
+
+    /* Metrics */
+    [data-testid="stMetric"] {
+        background-color: #1a1e2e !important;
+        border-radius: 12px !important;
+        padding: 14px !important;
+    }
+
+    [data-testid="stMetricLabel"] {
+        color: #aab0c8 !important;
+    }
+
+    [data-testid="stMetricValue"] {
+        color: #f0f2ff !important;
+    }
+
+    [data-testid="stMetricDelta"] {
+        color: #7bc67e !important;
+    }
+
+    /* Alert boxes */
+    .stAlert {
+        background-color: #1e2130 !important;
+        color: #e0e4f0 !important;
+    }
+
+    [data-testid="stAlert"] {
+        background-color: #1e2130 !important;
+        color: #c8cfe0 !important;
+    }
+
+    /* Expander */
+    .streamlit-expanderHeader {
+        background-color: #1e2130 !important;
+        color: #e0e4f0 !important;
+        border-radius: 10px !important;
+    }
+
+    .streamlit-expanderContent {
+        background-color: #161b27 !important;
+        border: 1px solid rgba(255,255,255,0.06) !important;
+    }
+
+    /* Checkbox and radio */
+    .stCheckbox label,
+    .stRadio label {
+        color: #c8cfe0 !important;
+    }
+
+    /* Slider */
+    .stSlider [data-baseweb="slider"] div {
+        background-color: #344070 !important;
+    }
+
+    /* Caption text */
+    .stCaption, caption {
+        color: #8890a8 !important;
+    }
+
+    /* Divider */
+    hr {
+        border-color: rgba(255,255,255,0.08) !important;
+    }
+
+    /* Weather cards — dark */
     .weather-card {
-        background-color: var(--secondary-background-color) !important;
+        background: rgba(30, 33, 48, 0.95) !important;
+        border: 1px solid rgba(255,255,255,0.08) !important;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.5) !important;
     }
-    
-    .station-overview, .model-overview {
-        background-color: var(--secondary-background-color) !important;
+
+    .weather-card-value {
+        color: #f0f2ff !important;
+    }
+
+    .weather-card-unit, .weather-card-label {
+        color: #8890a8 !important;
+    }
+
+    /* Station / model cards — dark */
+    .station-overview, .model-overview, .main-container {
+        background: rgba(30, 33, 48, 0.95) !important;
+        border: 1px solid rgba(255,255,255,0.08) !important;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.5) !important;
+    }
+
+    /* Section title border */
+    .section-title {
+        border-color: rgba(255,255,255,0.1) !important;
+    }
+
+    /* Code blocks */
+    code, pre {
+        background-color: #1e2130 !important;
+        color: #c8d8ff !important;
+    }
+
+    /* Tooltip */
+    [data-baseweb="tooltip"] {
+        background-color: #2a3352 !important;
+        color: #e8eaf0 !important;
+    }
+
+    /* Progress bar */
+    .stProgress > div > div {
+        background-color: #7eb8ff !important;
     }
     </style>
     """, unsafe_allow_html=True)
@@ -717,243 +920,243 @@ if page == "Dashboard":
         if (datetime.now() - st.session_state.last_refresh).seconds >= 30:
             st.session_state.last_refresh = datetime.now()
             st.rerun()
-        
-        # About PM2.5 section
-        st.header("About PM2.5 Air Quality Monitoring")
-        
-        col1, col2 = st.columns([1, 3])
-        
-        with col1:
-            # Display PM2.5 icon
-            st.image("static/icons/pm25_icon.svg", width=150)
-        
-        with col2:
-            st.markdown("""
-            PM2.5 refers to atmospheric particulate matter with a diameter less than 2.5 micrometers. These fine 
-            particles can penetrate deep into the lungs and bloodstream, causing significant health risks. This 
-            application predicts PM2.5 levels based on weather parameters using multiple machine learning models.
-            """)
-        
-        # Display current weather parameters
-        st.subheader("Current Weather Parameters")
-        
-        # Get weather forecast data
-        try:
-            forecast_data = get_weather_forecast(selected_station)
-            if forecast_data:
-                current_weather = forecast_data[0]
-            else:
-                # Default weather values
-                current_weather = {
-                    'Temperature': 25,
-                    'Solar_Radiation': 200,
-                    'Wind_Speed': 4.2,
-                    'Relative_Humidity': 68
-                }
-        except Exception as weather_error:
+    
+    # About PM2.5 section
+    st.header("About PM2.5 Air Quality Monitoring")
+    
+    col1, col2 = st.columns([1, 3])
+    
+    with col1:
+        # Display PM2.5 icon
+        st.image("static/icons/pm25_icon.svg", width=150)
+    
+    with col2:
+        st.markdown("""
+        PM2.5 refers to atmospheric particulate matter with a diameter less than 2.5 micrometers. These fine 
+        particles can penetrate deep into the lungs and bloodstream, causing significant health risks. This 
+        application predicts PM2.5 levels based on weather parameters using multiple machine learning models.
+        """)
+    
+    # Display current weather parameters
+    st.subheader("Current Weather Parameters")
+    
+    # Get weather forecast data
+    try:
+        forecast_data = get_weather_forecast(selected_station)
+        if forecast_data:
+            current_weather = forecast_data[0]
+        else:
+            # Default weather values
             current_weather = {
                 'Temperature': 25,
                 'Solar_Radiation': 200,
                 'Wind_Speed': 4.2,
                 'Relative_Humidity': 68
             }
+    except Exception as weather_error:
+        current_weather = {
+            'Temperature': 25,
+            'Solar_Radiation': 200,
+            'Wind_Speed': 4.2,
+            'Relative_Humidity': 68
+        }
+    
+    if current_weather:
         
-        if current_weather:
-            
-            # Create weather parameter cards
-            col1, col2, col3, col4 = st.columns(4)
-            
-            with col1:
-                st.markdown(f"""
-                <div class="weather-card">
-                    <div class="weather-card-icon">🌡️</div>
-                    <div class="weather-card-value">{current_weather['Temperature']:.1f}<span class="weather-card-unit">°C</span></div>
-                    <div class="weather-card-label">Temperature</div>
-                </div>
-                """, unsafe_allow_html=True)
-            
-            with col2:
-                st.markdown(f"""
-                <div class="weather-card">
-                    <div class="weather-card-icon">☀️</div>
-                    <div class="weather-card-value">{current_weather['Solar_Radiation']:.1f}<span class="weather-card-unit">W/m²</span></div>
-                    <div class="weather-card-label">Solar Radiation</div>
-                </div>
-                """, unsafe_allow_html=True)
-            
-            with col3:
-                st.markdown(f"""
-                <div class="weather-card">
-                    <div class="weather-card-icon">💨</div>
-                    <div class="weather-card-value">{current_weather['Wind_Speed']:.1f}<span class="weather-card-unit">km/h</span></div>
-                    <div class="weather-card-label">Wind Speed</div>
-                </div>
-                """, unsafe_allow_html=True)
-            
-            with col4:
-                st.markdown(f"""
-                <div class="weather-card">
-                    <div class="weather-card-icon">💧</div>
-                    <div class="weather-card-value">{current_weather['Relative_Humidity']:.1f}<span class="weather-card-unit">%</span></div>
-                    <div class="weather-card-label">Humidity</div>
-                </div>
-                """, unsafe_allow_html=True)
+        # Create weather parameter cards
+        col1, col2, col3, col4 = st.columns(4)
         
-        # Station Overview and Model Performance in two columns
+        with col1:
+            st.markdown(f"""
+            <div class="weather-card">
+                <div class="weather-card-icon">🌡️</div>
+                <div class="weather-card-value">{current_weather['Temperature']:.1f}<span class="weather-card-unit">°C</span></div>
+                <div class="weather-card-label">Temperature</div>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with col2:
+            st.markdown(f"""
+            <div class="weather-card">
+                <div class="weather-card-icon">☀️</div>
+                <div class="weather-card-value">{current_weather['Solar_Radiation']:.1f}<span class="weather-card-unit">W/m²</span></div>
+                <div class="weather-card-label">Solar Radiation</div>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with col3:
+            st.markdown(f"""
+            <div class="weather-card">
+                <div class="weather-card-icon">💨</div>
+                <div class="weather-card-value">{current_weather['Wind_Speed']:.1f}<span class="weather-card-unit">km/h</span></div>
+                <div class="weather-card-label">Wind Speed</div>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with col4:
+            st.markdown(f"""
+            <div class="weather-card">
+                <div class="weather-card-icon">💧</div>
+                <div class="weather-card-value">{current_weather['Relative_Humidity']:.1f}<span class="weather-card-unit">%</span></div>
+                <div class="weather-card-label">Humidity</div>
+            </div>
+            """, unsafe_allow_html=True)
+    
+    # Station Overview and Model Performance in two columns
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.subheader("Station Overview")
+        
+        # Filter data for selected station
+        station_data = data[data['Station'] == selected_station].copy()
+        
+        if not station_data.empty:
+            # Calculate station statistics
+            avg_pm25 = station_data['PM2.5'].mean()
+            data_range_start = station_data['Date'].min()
+            data_range_end = station_data['Date'].max()
+            
+            # Format dates
+            start_str = pd.to_datetime(data_range_start).strftime("%Y-%m-%d")
+            end_str = pd.to_datetime(data_range_end).strftime("%Y-%m-%d")
+            
+            st.markdown(f"**Location:** {selected_station}")
+            st.markdown(f"**Data Range:** {start_str} to {end_str}")
+            st.markdown(f"**Average PM2.5:** {avg_pm25:.2f} μg/m³")
+            st.markdown(f"**Parameters:** Temperature, Solar Radiation, Wind Speed, Relative Humidity")
+        else:
+            st.warning(f"No data available for {selected_station}")
+    
+    with col2:
+        st.subheader("Model Performance Overview")
+        
+        try:
+            # Load or train models for selected station
+            models = load_pretrained_model()
+            
+            if models:
+                st.success("Using pre-trained Kolkata PM2.5 model")
+                
+                # Show model performance metrics (example values)
+                st.markdown("**Best Performing Model:** Random Forest")
+                st.markdown("**RMSE:** 27.72")
+                st.markdown("**R² Score:** 3.94")
+            else:
+                # Train new models if no pre-trained available
+                if not station_data.empty:
+                    processed_data = preprocess_data(station_data)
+                    X_train, X_test, y_train, y_test = split_data(processed_data)
+                    models = train_models(X_train, y_train)
+                    evaluation_results = evaluate_models(models, X_test, y_test)
+                    
+                    # Find best model
+                    best_model = min(evaluation_results.items(), key=lambda x: x[1]['rmse'])
+                    st.markdown(f"**Best Performing Model:** {best_model[0]}")
+                    st.markdown(f"**RMSE:** {best_model[1]['rmse']:.2f}")
+                    st.markdown(f"**R² Score:** {best_model[1]['r2']:.2f}")
+                else:
+                    st.info("Train models to see performance metrics")
+        except Exception as e:
+            st.info("Model performance data will be available after training")
+    
+    # AI Health Recommendations Section
+    st.subheader("🤖 AI Health Recommendations")
+    
+    try:
+        # Get current air quality data for AI analysis
+        current_waqi = get_waqi_data(selected_station)
+        current_aqi = current_waqi.get('aqi', latest_pm25 * 2)  # Rough AQI calculation if not available
+        
+        # Generate AI health recommendations
+        health_recommendations = generate_health_recommendations(latest_pm25, current_aqi)
+        
         col1, col2 = st.columns(2)
         
         with col1:
-            st.subheader("Station Overview")
+            st.markdown("**🏃 Activity Recommendations:**")
+            st.info(health_recommendations.get('activities', 'General outdoor activities should be limited during high pollution periods.'))
             
-            # Filter data for selected station
-            station_data = data[data['Station'] == selected_station].copy()
-            
-            if not station_data.empty:
-                # Calculate station statistics
-                avg_pm25 = station_data['PM2.5'].mean()
-                data_range_start = station_data['Date'].min()
-                data_range_end = station_data['Date'].max()
-                
-                # Format dates
-                start_str = pd.to_datetime(data_range_start).strftime("%Y-%m-%d")
-                end_str = pd.to_datetime(data_range_end).strftime("%Y-%m-%d")
-                
-                st.markdown(f"**Location:** {selected_station}")
-                st.markdown(f"**Data Range:** {start_str} to {end_str}")
-                st.markdown(f"**Average PM2.5:** {avg_pm25:.2f} μg/m³")
-                st.markdown(f"**Parameters:** Temperature, Solar Radiation, Wind Speed, Relative Humidity")
-            else:
-                st.warning(f"No data available for {selected_station}")
+            st.markdown("**⚠️ Vulnerable Groups Advice:**")
+            st.warning(health_recommendations.get('vulnerable_groups', 'Children, elderly, and people with respiratory conditions should take extra precautions.'))
         
         with col2:
-            st.subheader("Model Performance Overview")
+            st.markdown("**🛡️ Protective Measures:**")
+            st.success(health_recommendations.get('protective_measures', 'Use N95 masks when outdoors and consider air purifiers indoors.'))
             
-            try:
-                # Load or train models for selected station
-                models = load_pretrained_model()
-                
-                if models:
-                    st.success("Using pre-trained Kolkata PM2.5 model")
-                    
-                    # Show model performance metrics (example values)
-                    st.markdown("**Best Performing Model:** Random Forest")
-                    st.markdown("**RMSE:** 27.72")
-                    st.markdown("**R² Score:** 3.94")
-                else:
-                    # Train new models if no pre-trained available
-                    if not station_data.empty:
-                        processed_data = preprocess_data(station_data)
-                        X_train, X_test, y_train, y_test = split_data(processed_data)
-                        models = train_models(X_train, y_train)
-                        evaluation_results = evaluate_models(models, X_test, y_test)
-                        
-                        # Find best model
-                        best_model = min(evaluation_results.items(), key=lambda x: x[1]['rmse'])
-                        st.markdown(f"**Best Performing Model:** {best_model[0]}")
-                        st.markdown(f"**RMSE:** {best_model[1]['rmse']:.2f}")
-                        st.markdown(f"**R² Score:** {best_model[1]['r2']:.2f}")
-                    else:
-                        st.info("Train models to see performance metrics")
-            except Exception as e:
-                st.info("Model performance data will be available after training")
-        
-        # AI Health Recommendations Section
-        st.subheader("🤖 AI Health Recommendations")
-        
-        try:
-            # Get current air quality data for AI analysis
-            current_waqi = get_waqi_data(selected_station)
-            current_aqi = current_waqi.get('aqi', latest_pm25 * 2)  # Rough AQI calculation if not available
+            st.markdown("**⏰ Best Times for Outdoor Activities:**")
+            st.info(health_recommendations.get('timing', 'Early morning and late evening typically have better air quality.'))
             
-            # Generate AI health recommendations
-            health_recommendations = generate_health_recommendations(latest_pm25, current_aqi)
-            
-            col1, col2 = st.columns(2)
-            
-            with col1:
-                st.markdown("**🏃 Activity Recommendations:**")
-                st.info(health_recommendations.get('activities', 'General outdoor activities should be limited during high pollution periods.'))
-                
-                st.markdown("**⚠️ Vulnerable Groups Advice:**")
-                st.warning(health_recommendations.get('vulnerable_groups', 'Children, elderly, and people with respiratory conditions should take extra precautions.'))
-            
-            with col2:
-                st.markdown("**🛡️ Protective Measures:**")
-                st.success(health_recommendations.get('protective_measures', 'Use N95 masks when outdoors and consider air purifiers indoors.'))
-                
-                st.markdown("**⏰ Best Times for Outdoor Activities:**")
-                st.info(health_recommendations.get('timing', 'Early morning and late evening typically have better air quality.'))
-                
-        except Exception as ai_error:
-            st.info("💡 **General Health Tips:** Use N95 masks during high pollution, limit outdoor exercise, and keep windows closed during peak pollution hours.")
-        
-        # Model Comparison Section
-        st.subheader("Model Comparison")
-        st.markdown("**RMSE by Model (Lower is Better)**")
-        
-        try:
-            # Try to get evaluation results from models
-            if 'evaluation_results' in locals() and evaluation_results:
-                # Create a dataframe for display
-                results_df = pd.DataFrame({
-                    'Model': list(evaluation_results.keys()),
-                    'RMSE': [evaluation_results[model]['rmse'] for model in evaluation_results]
-                })
-            else:
-                # Create example data for visualization
-                results_df = pd.DataFrame({
-                    'Model': ['Random Forest', 'MLR', 'Logistic Regression'],
-                    'RMSE': [27.72, 35.45, 42.18]
-                })
-            
-            # Plot model comparison
-            fig_models = px.bar(
-                results_df,
-                x='Model',
-                y='RMSE',
-                color='Model',
-                color_discrete_sequence=['#1f77b4', '#ff7f0e', '#d62728']
-            )
-            fig_models.update_layout(showlegend=False, height=400)
-            
-            st.plotly_chart(fig_models, use_container_width=True)
-            
-        except Exception as model_error:
-            # Fallback chart with example data
+    except Exception as ai_error:
+        st.info("💡 **General Health Tips:** Use N95 masks during high pollution, limit outdoor exercise, and keep windows closed during peak pollution hours.")
+    
+    # Model Comparison Section
+    st.subheader("Model Comparison")
+    st.markdown("**RMSE by Model (Lower is Better)**")
+    
+    try:
+        # Try to get evaluation results from models
+        if 'evaluation_results' in locals() and evaluation_results:
+            # Create a dataframe for display
+            results_df = pd.DataFrame({
+                'Model': list(evaluation_results.keys()),
+                'RMSE': [evaluation_results[model]['rmse'] for model in evaluation_results]
+            })
+        else:
+            # Create example data for visualization
             results_df = pd.DataFrame({
                 'Model': ['Random Forest', 'MLR', 'Logistic Regression'],
                 'RMSE': [27.72, 35.45, 42.18]
             })
-            
-            fig_models = px.bar(
-                results_df,
-                x='Model',
-                y='RMSE',
-                color='Model',
-                color_discrete_sequence=['#1f77b4', '#ff7f0e', '#d62728']
-            )
-            fig_models.update_layout(showlegend=False, height=400)
-            
-            st.plotly_chart(fig_models, use_container_width=True)
         
-        # Real-time Data Collection and Daily Model Retraining
-        st.header("Real-time Observed Weather Data Collection")
+        # Plot model comparison
+        fig_models = px.bar(
+            results_df,
+            x='Model',
+            y='RMSE',
+            color='Model',
+            color_discrete_sequence=['#1f77b4', '#ff7f0e', '#d62728']
+        )
+        fig_models.update_layout(showlegend=False, height=400)
         
-        # Display current real-time data collection status
-        st.info("This system collects real-time observed weather data (not forecasts) to continuously improve predictions.")
+        st.plotly_chart(fig_models, use_container_width=True)
         
-        col1, col2 = st.columns(2)
+    except Exception as model_error:
+        # Fallback chart with example data
+        results_df = pd.DataFrame({
+            'Model': ['Random Forest', 'MLR', 'Logistic Regression'],
+            'RMSE': [27.72, 35.45, 42.18]
+        })
         
-        with col1:
-            if st.button("📊 Collect Today's Observed Data", use_container_width=True):
-                collect_and_append_realtime_data(selected_station)
+        fig_models = px.bar(
+            results_df,
+            x='Model',
+            y='RMSE',
+            color='Model',
+            color_discrete_sequence=['#1f77b4', '#ff7f0e', '#d62728']
+        )
+        fig_models.update_layout(showlegend=False, height=400)
         
-        with col2:
-            if st.button("🔄 Retrain Model with Latest Data", use_container_width=True):
-                retrain_model_with_latest_data(selected_station)
-        
-        # Show recent data collection history
-        display_recent_data_collection(selected_station)
+        st.plotly_chart(fig_models, use_container_width=True)
+    
+    # Real-time Data Collection and Daily Model Retraining
+    st.header("Real-time Observed Weather Data Collection")
+    
+    # Display current real-time data collection status
+    st.info("This system collects real-time observed weather data (not forecasts) to continuously improve predictions.")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        if st.button("📊 Collect Today's Observed Data", use_container_width=True):
+            collect_and_append_realtime_data(selected_station)
+    
+    with col2:
+        if st.button("🔄 Retrain Model with Latest Data", use_container_width=True):
+            retrain_model_with_latest_data(selected_station)
+    
+    # Show recent data collection history
+    display_recent_data_collection(selected_station)
 
 # Data Analysis and Insights page
 elif page == "Data Analysis and Insights":
