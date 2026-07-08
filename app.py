@@ -301,6 +301,61 @@ st.markdown(
 with open('.streamlit/styles.css') as f:
     st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
 
+# ── Global premium CSS enhancements ────────────────────────────────
+st.markdown("""
+<style>
+/* Ambient background glow blobs (light mode) */
+.stApp::before {
+    content:'';
+    position:fixed;
+    top:-15vh; left:-10vw;
+    width:50vw; height:50vh;
+    border-radius:50%;
+    background:radial-gradient(circle,rgba(59,130,246,.07) 0%,transparent 70%);
+    pointer-events:none;
+    z-index:0;
+}
+.stApp::after {
+    content:'';
+    position:fixed;
+    bottom:-10vh; right:-10vw;
+    width:40vw; height:40vh;
+    border-radius:50%;
+    background:radial-gradient(circle,rgba(139,92,246,.06) 0%,transparent 70%);
+    pointer-events:none;
+    z-index:0;
+}
+/* Sidebar active nav glow */
+[data-testid="stSidebar"] [data-baseweb="radio"] [aria-checked="true"],
+[data-testid="stSidebar"] input[type="radio"]:checked + div {
+    background:rgba(59,130,246,.14) !important;
+    border-radius:8px !important;
+}
+/* Premium scrollbar */
+::-webkit-scrollbar { width:6px; height:6px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb {
+    background:rgba(59,130,246,.3);
+    border-radius:100px;
+}
+::-webkit-scrollbar-thumb:hover { background:rgba(59,130,246,.6); }
+/* Remove streamlit default footer */
+footer { display:none !important; }
+/* Remove red top bar */
+[data-testid="stStatusWidget"] { display:none !important; }
+/* Smooth page transitions */
+.main .block-container { transition:opacity .3s ease; }
+/* Premium tooltip */
+[data-baseweb="tooltip"] {
+    background:rgba(15,23,42,.95) !important;
+    border:1px solid rgba(59,130,246,.25) !important;
+    border-radius:8px !important;
+    backdrop-filter:blur(12px) !important;
+    color:#e2e8f0 !important;
+}
+</style>
+""", unsafe_allow_html=True)
+
 # Create necessary folders for storage
 if not os.path.exists('data/historical'):
     os.makedirs('data/historical', exist_ok=True)
@@ -572,287 +627,244 @@ theme_mode = st.sidebar.radio(
 if theme_mode == "Dark Mode":
     st.markdown("""
     <style>
-    /* ═══════════════════════════════════════════════════
-       DARK MODE — Full override for modern Streamlit
-       ═══════════════════════════════════════════════════ */
+    /* ══════════════════════════════════════════════════════
+       DARK MODE — Premium Space Theme (Spaceedu-inspired)
+       ══════════════════════════════════════════════════════ */
 
-    /* Root backgrounds */
+    /* Override CSS design tokens for dark */
+    :root {
+      --bg:      #030712;
+      --bg2:     #0a0f1e;
+      --surface: rgba(12,18,36,.92);
+      --border:  rgba(59,130,246,.2);
+      --border-h:rgba(139,92,246,.5);
+      --text:    #f1f5f9;
+      --text2:   #94a3b8;
+      --text3:   #475569;
+    }
+
+    /* ── Deep space background with atmospheric glow ── */
     .stApp,
     [data-testid="stAppViewContainer"],
     [data-testid="stAppViewBlockContainer"],
-    .main,
-    .main .block-container {
-        background: linear-gradient(135deg, #050a14 0%, #080d1a 50%, #060a18 100%) !important;
-        background-attachment: fixed !important;
-        color: #e2e8f8 !important;
+    .main, .main .block-container {
+        background: #030712 !important;
+        color: #f1f5f9 !important;
+    }
+    /* Atmospheric glow overlay on main area */
+    [data-testid="stAppViewContainer"]::before {
+        content: '';
+        position: fixed;
+        top: -20%; left: -20%;
+        width: 60%; height: 60%;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(59,130,246,.08) 0%, transparent 70%);
+        pointer-events: none;
+        z-index: 0;
+    }
+    [data-testid="stAppViewContainer"]::after {
+        content: '';
+        position: fixed;
+        bottom: -20%; right: -10%;
+        width: 50%; height: 50%;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(139,92,246,.07) 0%, transparent 70%);
+        pointer-events: none;
+        z-index: 0;
     }
 
-    /* ALL text elements */
-    .stApp p, .stApp span, .stApp div, .stApp label,
-    .stApp li, .stApp td, .stApp th,
+    /* ── All text ── */
+    .stApp p, .stApp li, .stApp td, .stApp th,
     .stMarkdown p, .stMarkdown span, .stMarkdown li,
     [data-testid="stMarkdownContainer"] p,
     [data-testid="stMarkdownContainer"] span,
-    [data-testid="stMarkdownContainer"] li {
-        color: #c8d8f0 !important;
-    }
+    [data-testid="stMarkdownContainer"] li { color: #94a3b8 !important; }
 
-    /* Headings */
-    .stApp h1, .stApp h2, .stApp h3,
-    .stApp h4, .stApp h5, .stApp h6,
-    .stMarkdown h1, .stMarkdown h2, .stMarkdown h3,
+    .stApp h1,.stApp h2,.stApp h3,.stApp h4,.stApp h5,.stApp h6,
+    .stMarkdown h1,.stMarkdown h2,.stMarkdown h3,
     [data-testid="stMarkdownContainer"] h1,
     [data-testid="stMarkdownContainer"] h2,
-    [data-testid="stMarkdownContainer"] h3 {
-        color: #f0f4ff !important;
-    }
+    [data-testid="stMarkdownContainer"] h3 { color: #f1f5f9 !important; }
 
-    /* Section headers (st.header / st.subheader) */
     [data-testid="stHeadingWithActionElements"] *,
-    .stHeadingContainer * {
-        color: #f0f4ff !important;
+    .stHeadingContainer * { color: #f1f5f9 !important; }
+
+    /* ── Streamlit header bar ── */
+    [data-testid="stHeader"] {
+        background: rgba(3,7,18,.85) !important;
+        backdrop-filter: blur(16px) !important;
+        border-bottom: 1px solid rgba(59,130,246,.1) !important;
     }
 
-    /* Tabs */
+    /* ── Metrics ── */
+    [data-testid="stMetric"] {
+        background: rgba(10,15,30,.85) !important;
+        border: 1px solid rgba(59,130,246,.2) !important;
+        border-radius: 16px !important;
+        box-shadow: 0 4px 24px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.04) !important;
+    }
+    [data-testid="stMetricLabel"] > div { color: #475569 !important; }
+    [data-testid="stMetricValue"] > div { color: #e2e8f0 !important; }
+    [data-testid="stMetricDelta"] > div { color: #4ade80 !important; }
+
+    /* ── Tabs ── */
     .stTabs [data-baseweb="tab-list"] {
-        background: rgba(255,255,255,.04) !important;
-        border-bottom: 2px solid rgba(126,184,255,.15) !important;
+        background: rgba(10,15,30,.7) !important;
+        border-bottom: 2px solid rgba(59,130,246,.15) !important;
     }
-    .stTabs [data-baseweb="tab"] {
-        color: #7890b8 !important;
-    }
+    .stTabs [data-baseweb="tab"] { color: #475569 !important; }
     .stTabs [aria-selected="true"] {
-        color: #7eb8ff !important;
-        border-bottom: 2px solid #7eb8ff !important;
-        background: rgba(126,184,255,.08) !important;
-    }
-    .stTabs [data-baseweb="tab-panel"] {
-        background: transparent !important;
+        color: #93c5fd !important;
+        border-bottom: 2px solid #3b82f6 !important;
+        background: rgba(59,130,246,.08) !important;
     }
 
-    /* Inputs */
-    .stTextInput input,
-    .stNumberInput input,
-    .stTextArea textarea {
-        background: #0d1424 !important;
-        color: #e2e8f8 !important;
-        border: 1.5px solid rgba(126,184,255,.2) !important;
+    /* ── Inputs ── */
+    .stTextInput input, .stNumberInput input, .stTextArea textarea {
+        background: rgba(10,15,30,.9) !important;
+        color: #e2e8f0 !important;
+        border: 1.5px solid rgba(59,130,246,.22) !important;
         border-radius: 12px !important;
     }
-    .stTextInput input:focus,
-    .stNumberInput input:focus,
-    .stTextArea textarea:focus {
-        border-color: #7eb8ff !important;
-        box-shadow: 0 0 0 3px rgba(126,184,255,.15) !important;
+    .stTextInput input:focus, .stNumberInput input:focus, .stTextArea textarea:focus {
+        border-color: #3b82f6 !important;
+        box-shadow: 0 0 0 3px rgba(59,130,246,.2) !important;
     }
+    .stTextInput label, .stNumberInput label, .stTextArea label { color: #64748b !important; }
 
-    /* Selectbox & multiselect */
+    /* ── Selectbox / Multiselect ── */
     .stSelectbox [data-baseweb="select"] > div,
     .stMultiSelect [data-baseweb="select"] > div {
-        background: #0d1424 !important;
-        color: #e2e8f8 !important;
-        border: 1.5px solid rgba(126,184,255,.2) !important;
+        background: rgba(10,15,30,.9) !important;
+        color: #e2e8f0 !important;
+        border: 1.5px solid rgba(59,130,246,.22) !important;
         border-radius: 12px !important;
     }
-    [data-baseweb="popover"],
-    [data-baseweb="menu"],
-    [role="listbox"],
-    [data-baseweb="select"] ul {
-        background: #0d1424 !important;
-        border: 1px solid rgba(126,184,255,.2) !important;
+    .stSelectbox label, .stMultiSelect label { color: #64748b !important; }
+    [data-baseweb="popover"],[data-baseweb="menu"],[role="listbox"] {
+        background: #0d1526 !important;
+        border: 1px solid rgba(59,130,246,.25) !important;
         border-radius: 12px !important;
     }
-    [role="option"] {
-        background: #0d1424 !important;
-        color: #c8d8f0 !important;
-    }
-    [role="option"]:hover,
-    [role="option"][aria-selected="true"] {
-        background: rgba(126,184,255,.12) !important;
-        color: #7eb8ff !important;
+    [role="option"] { background: transparent !important; color: #94a3b8 !important; }
+    [role="option"]:hover,[role="option"][aria-selected="true"] {
+        background: rgba(59,130,246,.12) !important;
+        color: #93c5fd !important;
     }
 
-    /* Buttons */
+    /* ── Buttons ── */
     .stButton > button {
-        background: linear-gradient(135deg, #1a2f5a, #1e3870) !important;
-        color: #90c4ff !important;
-        border: 1px solid rgba(126,184,255,.25) !important;
-        box-shadow: 0 4px 15px rgba(0,0,0,.4) !important;
+        background: linear-gradient(135deg,#1e3a8a,#312e81) !important;
+        color: #93c5fd !important;
+        border: 1px solid rgba(59,130,246,.3) !important;
+        box-shadow: 0 4px 20px rgba(0,0,0,.5) !important;
     }
     .stButton > button:hover {
-        background: linear-gradient(135deg, #7eb8ff, #4f8ef7) !important;
+        background: linear-gradient(135deg,#3b82f6,#8b5cf6) !important;
         color: #fff !important;
         border-color: transparent !important;
-        box-shadow: 0 6px 20px rgba(126,184,255,.35) !important;
-        transform: translateY(-2px) scale(1.02) !important;
+        box-shadow: 0 8px 30px rgba(59,130,246,.45) !important;
     }
 
-    /* Metrics */
-    [data-testid="stMetric"] {
-        background: rgba(13,20,36,.9) !important;
-        border: 1px solid rgba(126,184,255,.15) !important;
-        border-radius: 14px !important;
-        padding: 16px !important;
-        box-shadow: 0 4px 20px rgba(0,0,0,.4) !important;
-    }
-    [data-testid="stMetricLabel"] > div {
-        color: #7890b8 !important;
-    }
-    [data-testid="stMetricValue"] > div {
-        color: #e8f0ff !important;
-    }
-    [data-testid="stMetricDelta"] > div {
-        color: #4cde80 !important;
-    }
-
-    /* Alert boxes */
-    [data-testid="stAlert"],
-    .stAlert {
-        background: rgba(13,20,36,.9) !important;
+    /* ── Alerts ── */
+    [data-testid="stAlert"] {
+        background: rgba(10,15,30,.85) !important;
         border-radius: 12px !important;
-        border-left-color: #7eb8ff !important;
     }
-    [data-testid="stAlert"] * {
-        color: #c8d8f0 !important;
-    }
+    [data-testid="stAlert"] * { color: #94a3b8 !important; }
+    [data-testid="stAlert"][data-type="success"] { border-left-color: #22c55e !important; }
+    [data-testid="stAlert"][data-type="info"]    { border-left-color: #3b82f6 !important; }
+    [data-testid="stAlert"][data-type="warning"] { border-left-color: #f59e0b !important; }
+    [data-testid="stAlert"][data-type="error"]   { border-left-color: #ef4444 !important; }
 
-    /* Success / Info / Warning / Error */
-    [data-testid="stAlert"][data-type="success"] {
-        border-left-color: #4cde80 !important;
-    }
-    [data-testid="stAlert"][data-type="warning"] {
-        border-left-color: #fbbf24 !important;
-    }
-    [data-testid="stAlert"][data-type="error"] {
-        border-left-color: #f87171 !important;
-    }
-
-    /* Expander */
-    .streamlit-expanderHeader,
+    /* ── Expander ── */
     [data-testid="stExpander"] summary {
-        background: rgba(13,20,36,.85) !important;
-        color: #c8d8f0 !important;
-        border: 1px solid rgba(126,184,255,.12) !important;
+        background: rgba(10,15,30,.85) !important;
+        color: #94a3b8 !important;
+        border: 1px solid rgba(59,130,246,.18) !important;
         border-radius: 12px !important;
     }
-    .streamlit-expanderContent,
+    [data-testid="stExpander"] summary:hover { background: rgba(59,130,246,.08) !important; }
     [data-testid="stExpander"] [data-testid="stExpanderDetails"] {
-        background: rgba(8,14,26,.6) !important;
-        border: 1px solid rgba(126,184,255,.08) !important;
+        background: rgba(3,7,18,.7) !important;
+        border: 1px solid rgba(59,130,246,.1) !important;
         border-top: none !important;
     }
 
-    /* Checkbox & Radio */
-    .stCheckbox label span:last-child,
-    .stRadio label span:last-child {
-        color: #c8d8f0 !important;
-    }
+    /* ── Checkbox & Radio ── */
+    .stCheckbox label, .stRadio label { color: #94a3b8 !important; }
 
-    /* Slider */
-    .stSlider [data-baseweb="slider"] [role="slider"] {
-        background: #7eb8ff !important;
-    }
-    .stSlider [data-baseweb="slider"] div[class*="track"] {
-        background: rgba(126,184,255,.2) !important;
-    }
+    /* ── Caption ── */
+    [data-testid="stCaptionContainer"] * { color: #334155 !important; }
 
-    /* Captions */
-    .stCaption, [data-testid="stCaptionContainer"] * {
-        color: #4a6090 !important;
-    }
+    /* ── Dividers ── */
+    hr,[data-testid="stDivider"] { border-color: rgba(59,130,246,.1) !important; }
 
-    /* Dividers */
-    hr, [data-testid="stDivider"] {
-        border-color: rgba(126,184,255,.1) !important;
+    /* ── Dataframe ── */
+    .stDataFrame,[data-testid="stDataFrame"] {
+        background: rgba(10,15,30,.9) !important;
+        border: 1px solid rgba(59,130,246,.15) !important;
+        border-radius: 14px !important;
+        overflow: hidden !important;
     }
-
-    /* Dataframe */
-    .stDataFrame,
-    [data-testid="stDataFrame"],
-    [data-testid="stDataFrame"] * {
-        background-color: #0a1020 !important;
-        color: #c8d8f0 !important;
-        border-color: rgba(126,184,255,.1) !important;
-    }
+    [data-testid="stDataFrame"] * { color: #94a3b8 !important; }
     [data-testid="stDataFrame"] th {
-        background: #0d1830 !important;
-        color: #90afd8 !important;
+        background: rgba(15,23,42,.95) !important;
+        color: #64748b !important;
         font-weight: 700 !important;
     }
 
-    /* Progress bar */
+    /* ── Slider ── */
+    .stSlider [role="slider"] { background: #3b82f6 !important; }
+
+    /* ── Progress bar ── */
     .stProgress > div > div > div {
-        background: linear-gradient(90deg,#7eb8ff,#4f8ef7) !important;
+        background: linear-gradient(90deg,#3b82f6,#8b5cf6) !important;
     }
 
-    /* Code */
-    code, pre {
-        background: #0d1424 !important;
-        color: #90c4ff !important;
-        border: 1px solid rgba(126,184,255,.1) !important;
-    }
+    /* ── Spinner ── */
+    .stSpinner > div { border-top-color: #3b82f6 !important; }
 
-    /* Spinners */
-    .stSpinner > div {
-        border-top-color: #7eb8ff !important;
-    }
+    /* ── Code ── */
+    code,pre { background: rgba(10,15,30,.9) !important; color: #93c5fd !important; border: 1px solid rgba(59,130,246,.15) !important; }
 
-    /* --- Custom card components in dark mode --- */
+    /* ── Custom cards — dark ── */
     .weather-card {
-        background: rgba(13,20,36,.92) !important;
-        border: 1px solid rgba(126,184,255,.18) !important;
-        box-shadow: 0 4px 24px rgba(0,0,0,.5) !important;
+        background: rgba(10,15,30,.88) !important;
+        border: 1px solid rgba(59,130,246,.2) !important;
+        box-shadow: 0 4px 28px rgba(0,0,0,.55) !important;
     }
-    .weather-card-value { color: #e8f0ff !important; }
-    .weather-card-unit, .weather-card-label { color: #4a6090 !important; }
+    .weather-card:hover { border-color: rgba(139,92,246,.5) !important; }
+    .weather-card-value { color: #e2e8f0 !important; }
+    .weather-card-unit,.weather-card-label { color: #334155 !important; }
 
-    .station-overview, .model-overview, .main-container {
-        background: rgba(13,20,36,.92) !important;
-        border: 1px solid rgba(126,184,255,.15) !important;
-        box-shadow: 0 4px 24px rgba(0,0,0,.5) !important;
+    .station-overview,.model-overview,.main-container {
+        background: rgba(10,15,30,.88) !important;
+        border: 1px solid rgba(59,130,246,.2) !important;
+        box-shadow: 0 4px 28px rgba(0,0,0,.55) !important;
     }
-    .section-title {
-        color: #e8f0ff !important;
-        border-color: rgba(126,184,255,.15) !important;
-    }
+    .section-title { color: #e2e8f0 !important; border-color: rgba(59,130,246,.15) !important; }
 
-    /* Styled tables dark */
-    .styled-table th {
-        background: rgba(13,20,36,.9) !important;
-        color: #7890b8 !important;
-    }
-    .styled-table td { color: #c8d8f0 !important; }
-    .styled-table tr:hover { background: rgba(126,184,255,.05) !important; }
+    .styled-table th { background: rgba(15,23,42,.95) !important; color: #475569 !important; }
+    .styled-table td { color: #94a3b8 !important; border-color: rgba(59,130,246,.07) !important; }
 
-    /* Tooltip */
-    [data-baseweb="tooltip"] {
-        background: #0d1424 !important;
-        color: #e2e8f8 !important;
-    }
-
-    /* Hide the Streamlit top bar in dark mode */
-    [data-testid="stHeader"] {
-        background: rgba(5,10,20,.95) !important;
-        border-bottom: 1px solid rgba(126,184,255,.08) !important;
-    }
-
-    /* Hero banner dark */
-    .page-hero {
-        background: linear-gradient(135deg, #0d1f4a 0%, #1a3a8f 50%, #3b1f72 100%) !important;
-        box-shadow: 0 20px 60px rgba(0,0,0,.6) !important;
-    }
-
-    /* AQI hero card dark */
+    /* AQI hero card — dark */
     .aqi-hero-card {
-        background: rgba(10,18,34,.95) !important;
-        border-color: rgba(126,184,255,.15) !important;
-        box-shadow: 0 8px 40px rgba(0,0,0,.5) !important;
+        background: rgba(10,15,30,.92) !important;
+        border: 1px solid rgba(59,130,246,.2) !important;
+        box-shadow: 0 8px 40px rgba(0,0,0,.6) !important;
     }
-    .aqi-number { color: #e8f0ff !important; }
-    .aqi-unit   { color: #4a6090 !important; }
-    .aqi-impl   { color: #7890b8 !important; }
-    .aqi-scale-track { background: rgba(255,255,255,.06) !important; }
-    .aqi-scale-labels span { color: #3a5070 !important; }
+    .aqi-number  { color: #e2e8f0 !important; }
+    .aqi-unit    { color: #334155 !important; }
+    .aqi-impl    { color: #64748b !important; }
+    .aqi-scale-track { background: rgba(255,255,255,.05) !important; }
+    .aqi-scale-labels span { color: #1e293b !important; }
+
+    /* Hero banner — dark variant */
+    .page-hero {
+        background: linear-gradient(135deg,#0c1a4a 0%,#1a2f8f 45%,#3b1f82 100%) !important;
+        box-shadow: 0 20px 70px rgba(0,0,0,.7), inset 0 1px 0 rgba(255,255,255,.06) !important;
+    }
     </style>
     """, unsafe_allow_html=True)
 
@@ -947,6 +959,16 @@ if page == "Dashboard":
     _aqi_color = next(level['color'] for level in aqi_levels if level['level'] == aqi_category)
     _aqi_impl  = next(level['implications'] for level in aqi_levels if level['level'] == aqi_category)
     _pct = min(latest_pm25 / 300 * 100, 100)
+    # Premium AQI colors (richer gradients replacing flat neon)
+    _premium_colors = {
+        "Good":                    ("linear-gradient(135deg,#16a34a,#22c55e)", "#fff"),
+        "Moderate":                ("linear-gradient(135deg,#d97706,#f59e0b)", "#fff"),
+        "Unhealthy for Sensitive": ("linear-gradient(135deg,#c2410c,#f97316)", "#fff"),
+        "Unhealthy":               ("linear-gradient(135deg,#b91c1c,#ef4444)", "#fff"),
+        "Very Unhealthy":          ("linear-gradient(135deg,#6d28d9,#8b5cf6)", "#fff"),
+        "Hazardous":               ("linear-gradient(135deg,#7f1d1d,#991b1b)", "#fff"),
+    }
+    _grad, _txt_col = _premium_colors.get(aqi_category, (f"linear-gradient(135deg,{_aqi_color},{_aqi_color})", "#fff"))
     st.markdown(f"""
     <div class="aqi-hero-card" style="--aqi-color:{_aqi_color};">
         <div class="aqi-live-pill">
@@ -958,13 +980,13 @@ if page == "Dashboard":
                 <div class="aqi-unit">μg/m³ &nbsp;<span class="aqi-param">PM2.5</span></div>
                 <div class="aqi-scale-wrap">
                     <div class="aqi-scale-track">
-                        <div class="aqi-scale-fill" style="width:{_pct:.1f}%;background:{_aqi_color};"></div>
+                        <div class="aqi-scale-fill" style="width:{_pct:.1f}%;background:{_grad};"></div>
                     </div>
                     <div class="aqi-scale-labels"><span>0</span><span>150</span><span>300+</span></div>
                 </div>
             </div>
             <div class="aqi-right">
-                <div class="aqi-badge-pill" style="background:{_aqi_color};">{aqi_category}</div>
+                <div class="aqi-badge-pill" style="background:{_grad};color:{_txt_col};">{aqi_category}</div>
                 <p class="aqi-impl">{_aqi_impl}</p>
             </div>
         </div>
