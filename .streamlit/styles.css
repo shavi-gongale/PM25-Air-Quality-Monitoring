@@ -756,3 +756,305 @@ code,pre {
   [data-testid="stMetricValue"] div { font-size:1.4rem !important; }
   .weather-card { padding:16px 14px !important; }
 }
+
+/* ══════════════════════════════════════════════════════════════════
+   DASHBOARD — Premium Hero & Sections v4.0
+   ══════════════════════════════════════════════════════════════════ */
+
+/* ── Additional keyframes ──────────────────────────────────────── */
+@keyframes dbOrbFloat {
+  0%,100% { transform:scale(1) translate(0,0); }
+  33%      { transform:scale(1.05) translate(10px,-6px); }
+  66%      { transform:scale(.97) translate(-6px,5px); }
+}
+@keyframes dbScrollBounce {
+  0%,100% { opacity:.2; transform:translateY(0); }
+  50%      { opacity:.7; transform:translateY(4px); }
+}
+@keyframes sphereBreathe {
+  0%,100% { box-shadow:0 0 55px rgba(37,99,235,.18),0 24px 80px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.07); }
+  50%      { box-shadow:0 0 90px rgba(37,99,235,.28),0 28px 90px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.1); }
+}
+
+/* ── HERO ──────────────────────────────────────────────────────── */
+.db-hero {
+  position:relative;
+  min-height:88vh;
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  overflow:hidden;
+  border-radius:var(--r-2xl);
+  background:linear-gradient(145deg,#060e20 0%,#0a1635 40%,#0d1f42 70%,#06101f 100%);
+  margin-bottom:40px;
+  padding:72px 32px 88px;
+}
+.db-hero-orb {
+  position:absolute; border-radius:50%; pointer-events:none;
+  animation:dbOrbFloat 14s ease-in-out infinite;
+}
+.db-hero-orb-1 {
+  width:520px; height:520px; top:-12%; left:-8%;
+  background:radial-gradient(circle,rgba(37,99,235,.11) 0%,transparent 70%);
+}
+.db-hero-orb-2 {
+  width:400px; height:400px; bottom:-8%; right:-4%;
+  background:radial-gradient(circle,rgba(79,70,229,.09) 0%,transparent 70%);
+  animation-delay:-6s;
+}
+
+/* Live pill */
+.db-live-pill {
+  position:absolute; top:24px; right:28px;
+  display:flex; align-items:center; gap:7px;
+  background:rgba(16,185,129,.1);
+  border:1px solid rgba(16,185,129,.28);
+  border-radius:var(--r-full);
+  padding:6px 14px;
+  font-size:.68rem; font-weight:700;
+  letter-spacing:.12em; color:#10b981;
+  text-transform:uppercase;
+  backdrop-filter:blur(10px);
+  z-index:4;
+}
+.db-live-dot {
+  width:6px; height:6px; border-radius:50%;
+  background:#10b981;
+  animation:liveRing 1.8s ease-out infinite;
+  flex-shrink:0;
+}
+
+/* AQI Sphere */
+.db-sphere-wrap {
+  position:relative; z-index:3;
+  display:flex; align-items:center; justify-content:center;
+  width:280px; height:280px;
+}
+.db-sphere-ring {
+  position:absolute; border-radius:50%;
+  pointer-events:none;
+}
+.db-sphere-ring-1 {
+  width:360px; height:360px;
+  border:1px solid rgba(59,130,246,.22);
+  transform:rotateX(68deg);
+  animation:ringOrbit 24s linear infinite;
+}
+.db-sphere-ring-2 {
+  width:430px; height:430px;
+  border:1px solid rgba(99,102,241,.13);
+  transform:rotateX(68deg);
+  animation:ringOrbitRev 38s linear infinite;
+}
+.db-sphere-core {
+  position:relative; z-index:2;
+  width:260px; height:260px;
+  border-radius:50%;
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  background:radial-gradient(circle at 38% 36%,rgba(255,255,255,.07) 0%,transparent 55%),
+             linear-gradient(145deg,rgba(13,24,60,.96) 0%,rgba(8,16,48,.99) 100%);
+  border:1.5px solid rgba(255,255,255,.09);
+  animation:sphereBreathe 6s ease-in-out infinite;
+  cursor:default; gap:2px;
+}
+.db-sphere-pm25 {
+  font-size:3.6rem; font-weight:800;
+  color:#fff; letter-spacing:-.05em; line-height:1;
+}
+.db-sphere-unit {
+  font-size:.68rem; color:rgba(255,255,255,.38);
+  letter-spacing:.08em; text-transform:uppercase; margin-top:4px;
+}
+.db-sphere-badge {
+  margin-top:12px; padding:4px 16px;
+  border-radius:var(--r-full);
+  font-size:.7rem; font-weight:700;
+  letter-spacing:.07em; color:#fff;
+}
+.db-sphere-station {
+  margin-top:9px; font-size:.75rem;
+  color:rgba(255,255,255,.45); font-weight:500;
+}
+.db-sphere-date {
+  font-size:.65rem; color:rgba(255,255,255,.24); margin-top:3px;
+}
+
+/* Hero meta row */
+.db-hero-meta {
+  display:flex; align-items:center; gap:18px;
+  margin-top:40px; z-index:2; flex-wrap:wrap; justify-content:center;
+}
+.db-hero-tag {
+  font-size:.7rem; color:rgba(255,255,255,.28);
+  letter-spacing:.09em; text-transform:uppercase;
+}
+.db-hero-sep { color:rgba(255,255,255,.13); font-size:.8rem; }
+
+/* Scroll indicator */
+.db-scroll-indicator {
+  position:absolute; bottom:28px; left:50%; transform:translateX(-50%);
+  display:flex; flex-direction:column; align-items:center; gap:5px;
+  z-index:2;
+}
+.db-scroll-dot {
+  width:3px; height:3px; border-radius:50%;
+  background:rgba(255,255,255,.4);
+  animation:dbScrollBounce 1.6s ease-in-out infinite;
+}
+.db-scroll-dot:nth-child(2) { animation-delay:.18s; }
+.db-scroll-dot:nth-child(3) { animation-delay:.36s; }
+
+/* ── SECTION HEADERS ────────────────────────────────────────────── */
+.db-section { margin-top:52px; animation:fadeUp .5s ease both; }
+.db-section-label {
+  font-size:.67rem; font-weight:700; letter-spacing:.14em;
+  text-transform:uppercase; color:var(--blue); margin-bottom:5px;
+}
+.db-section-title {
+  font-size:1.45rem; font-weight:700; color:var(--text);
+  letter-spacing:-.03em; margin:0 0 5px;
+}
+.db-section-sub {
+  font-size:.85rem; color:var(--text-3); margin:0 0 24px; line-height:1.5;
+}
+
+/* ── ENVIRONMENTAL CARDS ────────────────────────────────────────── */
+.env-card {
+  background:var(--bg-surface);
+  border:1px solid var(--border);
+  border-radius:var(--r-xl);
+  padding:22px 18px 20px;
+  display:flex; flex-direction:column; gap:4px;
+  box-shadow:var(--sh-sm);
+  transition:transform var(--t),box-shadow var(--t);
+  position:relative; overflow:hidden;
+}
+.env-card::after {
+  content:''; position:absolute; bottom:0; left:0; right:0;
+  height:3px; background:var(--card-accent,var(--blue));
+  border-radius:0 0 var(--r-xl) var(--r-xl); opacity:.65;
+}
+.env-card:hover { transform:translateY(-3px); box-shadow:var(--sh-lg); }
+.env-card-icon { font-size:1.25rem; margin-bottom:4px; }
+.env-card-value {
+  font-size:2rem; font-weight:800; color:var(--text);
+  letter-spacing:-.03em; line-height:1;
+}
+.env-card-unit { font-size:.7rem; font-weight:500; color:var(--text-3); }
+.env-card-label {
+  font-size:.7rem; font-weight:600; color:var(--text-3);
+  letter-spacing:.05em; text-transform:uppercase; margin-top:6px;
+}
+.env-card-trend { font-size:.69rem; color:var(--text-3); margin-top:2px; }
+
+/* ── HEALTH PANEL ───────────────────────────────────────────────── */
+.health-panel {
+  background:var(--bg-surface);
+  border:1px solid var(--border);
+  border-radius:var(--r-xl);
+  overflow:hidden; box-shadow:var(--sh-md);
+}
+.health-panel-header {
+  padding:18px 24px 14px;
+  border-bottom:1px solid var(--border);
+  display:flex; align-items:center; gap:9px;
+}
+.health-panel-dot {
+  width:7px; height:7px; border-radius:50%;
+  background:var(--blue); animation:liveRing 2.4s ease-out infinite; flex-shrink:0;
+}
+.health-panel-label {
+  font-size:.68rem; font-weight:700;
+  letter-spacing:.12em; text-transform:uppercase; color:var(--blue);
+}
+.health-row {
+  display:grid; grid-template-columns:repeat(3,1fr);
+}
+.health-col {
+  padding:20px 22px;
+  border-right:1px solid var(--border);
+}
+.health-col:last-child { border-right:none; }
+.health-col-label {
+  font-size:.65rem; font-weight:700; letter-spacing:.12em;
+  text-transform:uppercase; color:var(--text-3); margin-bottom:6px;
+}
+.health-col-title {
+  font-size:.88rem; font-weight:700; color:var(--text); margin-bottom:7px;
+}
+.health-col-text { font-size:.8rem; line-height:1.6; color:var(--text-2); }
+.health-measures {
+  padding:16px 22px;
+  border-top:1px solid var(--border);
+  background:var(--bg-raised);
+}
+.health-measures-label {
+  font-size:.65rem; font-weight:700; letter-spacing:.12em;
+  text-transform:uppercase; color:var(--text-3); margin-bottom:7px;
+}
+.health-measures-text { font-size:.82rem; line-height:1.65; color:var(--text-2); }
+
+/* ── OVERVIEW CARDS ─────────────────────────────────────────────── */
+.overview-card {
+  background:var(--bg-surface);
+  border:1px solid var(--border);
+  border-radius:var(--r-xl);
+  padding:22px 22px;
+  box-shadow:var(--sh-sm); height:100%;
+}
+.overview-card-label {
+  font-size:.67rem; font-weight:700; letter-spacing:.12em;
+  text-transform:uppercase; color:var(--blue); margin-bottom:16px;
+}
+.overview-row {
+  display:flex; align-items:center;
+  justify-content:space-between;
+  padding:9px 0;
+  border-bottom:1px solid var(--border-sub);
+}
+.overview-row:last-child { border-bottom:none; }
+.overview-key { font-size:.79rem; color:var(--text-3); }
+.overview-val { font-size:.83rem; font-weight:600; color:var(--text); }
+.overview-badge {
+  display:inline-block; padding:2px 10px;
+  border-radius:var(--r-full); font-size:.68rem; font-weight:700;
+  background:rgba(37,99,235,.07); color:var(--blue);
+  border:1px solid rgba(37,99,235,.14);
+}
+
+/* ── CHART CARD ─────────────────────────────────────────────────── */
+.chart-card {
+  background:var(--bg-surface);
+  border:1px solid var(--border);
+  border-radius:var(--r-xl);
+  padding:28px 28px 16px;
+  box-shadow:var(--sh-sm);
+}
+.chart-card-title {
+  font-size:1rem; font-weight:700; color:var(--text);
+  letter-spacing:-.02em; margin-bottom:4px;
+}
+.chart-card-insight {
+  font-size:.8rem; color:var(--text-3); margin-bottom:18px;
+  display:flex; align-items:center; gap:8px; line-height:1.5;
+}
+.chart-card-insight::before {
+  content:''; display:inline-block;
+  width:4px; height:4px; border-radius:50%;
+  background:var(--blue); flex-shrink:0;
+}
+
+/* ── ACTION CARDS ───────────────────────────────────────────────── */
+.action-card {
+  background:var(--bg-surface);
+  border:1px solid var(--border);
+  border-radius:var(--r-xl);
+  padding:20px 20px 14px;
+  box-shadow:var(--sh-sm);
+  transition:transform var(--t),box-shadow var(--t);
+  margin-bottom:10px;
+}
+.action-card:hover { transform:translateY(-2px); box-shadow:var(--sh-md); }
+.action-card-icon { font-size:1.4rem; margin-bottom:8px; }
+.action-card-title { font-size:.9rem; font-weight:700; color:var(--text); margin-bottom:5px; }
+.action-card-desc { font-size:.77rem; line-height:1.55; color:var(--text-3); margin-bottom:12px; }

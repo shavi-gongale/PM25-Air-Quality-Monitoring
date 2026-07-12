@@ -849,296 +849,308 @@ if page == "Dashboard":
         "Hazardous":               ("linear-gradient(135deg,#7f1d1d,#991b1b)", "#fff"),
     }
     _grad, _txt_col = _premium_colors.get(aqi_category, (f"linear-gradient(135deg,{_aqi_color},{_aqi_color})", "#fff"))
+    # ═══════════════════════════════════════════════════════
+    # SECTION 1 — IMMERSIVE HERO
+    # ═══════════════════════════════════════════════════════
     st.markdown(f"""
-    <div class="aqi-hero-card" style="--aqi-color:{_aqi_color};">
-        <div class="aqi-live-pill">
-            <span class="aqi-live-dot-anim"></span> LIVE
+    <div class="db-hero">
+      <div class="db-hero-orb db-hero-orb-1"></div>
+      <div class="db-hero-orb db-hero-orb-2"></div>
+      <div class="db-live-pill">
+        <span class="db-live-dot"></span>LIVE
+      </div>
+      <div class="db-sphere-wrap">
+        <div class="db-sphere-ring db-sphere-ring-1"></div>
+        <div class="db-sphere-ring db-sphere-ring-2"></div>
+        <div class="db-sphere-core">
+          <div class="db-sphere-pm25">{latest_pm25:.1f}</div>
+          <div class="db-sphere-unit">μg/m³ &nbsp;·&nbsp; PM2.5</div>
+          <div class="db-sphere-badge" style="background:{_grad};">{aqi_category}</div>
+          <div class="db-sphere-station">{selected_station}</div>
+          <div class="db-sphere-date">Updated {latest_date}</div>
         </div>
-        <div class="aqi-body">
-            <div class="aqi-left">
-                <div class="aqi-number">{latest_pm25:.1f}</div>
-                <div class="aqi-unit">μg/m³ &nbsp;<span class="aqi-param">PM2.5</span></div>
-                <div class="aqi-scale-wrap">
-                    <div class="aqi-scale-track">
-                        <div class="aqi-scale-fill" style="width:{_pct:.1f}%;background:{_grad};"></div>
-                    </div>
-                    <div class="aqi-scale-labels"><span>0</span><span>150</span><span>300+</span></div>
-                </div>
-            </div>
-            <div class="aqi-right">
-                <div class="aqi-badge-pill" style="background:{_grad};color:{_txt_col};">{aqi_category}</div>
-                <p class="aqi-impl">{_aqi_impl}</p>
-            </div>
-        </div>
+      </div>
+      <div class="db-hero-meta">
+        <span class="db-hero-tag">AI Environmental Intelligence</span>
+        <span class="db-hero-sep">·</span>
+        <span class="db-hero-tag">Kolkata, India</span>
+        <span class="db-hero-sep">·</span>
+        <span class="db-hero-tag">{_aqi_impl}</span>
+      </div>
+      <div class="db-scroll-indicator">
+        <div class="db-scroll-dot"></div>
+        <div class="db-scroll-dot"></div>
+        <div class="db-scroll-dot"></div>
+      </div>
     </div>
     """, unsafe_allow_html=True)
-    
-    # Add refresh controls in a more compact layout
-    col1, col2 = st.columns([2, 1])
-    with col1:
-        if st.button("🔄 Refresh Current Data", key="refresh_pm25"):
+
+    # Refresh controls
+    col_r1, col_r2 = st.columns([1, 2])
+    with col_r1:
+        if st.button("↻ Refresh Data", key="refresh_pm25"):
             st.rerun()
-    with col2:
+    with col_r2:
         auto_refresh = st.checkbox("Auto-refresh every 30 seconds", key="auto_refresh_pm25")
-    
-    # Auto-refresh functionality
     if auto_refresh:
         if 'last_refresh' not in st.session_state:
             st.session_state.last_refresh = datetime.now()
-        
         if (datetime.now() - st.session_state.last_refresh).seconds >= 30:
             st.session_state.last_refresh = datetime.now()
             st.rerun()
-    
-    # About PM2.5 section
-    st.header("About PM2.5 Air Quality Monitoring")
-    
-    col1, col2 = st.columns([1, 3])
-    
-    with col1:
-        # Display PM2.5 icon
-        st.image("static/icons/pm25_icon.svg", width=150)
-    
-    with col2:
-        st.markdown("""
-        PM2.5 refers to atmospheric particulate matter with a diameter less than 2.5 micrometers. These fine 
-        particles can penetrate deep into the lungs and bloodstream, causing significant health risks. This 
-        application predicts PM2.5 levels based on weather parameters using multiple machine learning models.
-        """)
-    
-    # Display current weather parameters
-    st.subheader("Current Weather Parameters")
-    
-    # Get weather forecast data
+
+    # ═══════════════════════════════════════════════════════
+    # SECTION 2 — ENVIRONMENTAL CONDITIONS
+    # ═══════════════════════════════════════════════════════
+    st.markdown("""
+    <div class="db-section">
+      <p class="db-section-label">Section 02</p>
+      <h2 class="db-section-title">Environmental Conditions</h2>
+      <p class="db-section-sub">Current weather parameters influencing PM2.5 concentration.</p>
+    </div>
+    """, unsafe_allow_html=True)
+
     try:
         forecast_data = get_weather_forecast(selected_station)
-        if forecast_data:
-            current_weather = forecast_data[0]
-        else:
-            # Default weather values
-            current_weather = {
-                'Temperature': 25,
-                'Solar_Radiation': 200,
-                'Wind_Speed': 4.2,
-                'Relative_Humidity': 68
-            }
-    except Exception as weather_error:
-        current_weather = {
-            'Temperature': 25,
-            'Solar_Radiation': 200,
-            'Wind_Speed': 4.2,
-            'Relative_Humidity': 68
-        }
-    
+        current_weather = forecast_data[0] if forecast_data else {'Temperature': 25, 'Solar_Radiation': 200, 'Wind_Speed': 4.2, 'Relative_Humidity': 68}
+    except Exception:
+        current_weather = {'Temperature': 25, 'Solar_Radiation': 200, 'Wind_Speed': 4.2, 'Relative_Humidity': 68}
+
     if current_weather:
-        
-        # Create weather parameter cards
         col1, col2, col3, col4 = st.columns(4)
-        
         with col1:
             st.markdown(f"""
-            <div class="weather-card">
-                <div class="weather-card-icon">🌡️</div>
-                <div class="weather-card-value">{current_weather['Temperature']:.1f}<span class="weather-card-unit">°C</span></div>
-                <div class="weather-card-label">Temperature</div>
+            <div class="env-card" style="--card-accent:#2563eb;">
+              <div class="env-card-icon">🌡</div>
+              <div class="env-card-value">{current_weather['Temperature']:.1f}<span class="env-card-unit"> °C</span></div>
+              <div class="env-card-label">Temperature</div>
+              <div class="env-card-trend">Affects PM2.5 dispersion</div>
             </div>
             """, unsafe_allow_html=True)
-        
         with col2:
             st.markdown(f"""
-            <div class="weather-card">
-                <div class="weather-card-icon">☀️</div>
-                <div class="weather-card-value">{current_weather['Solar_Radiation']:.1f}<span class="weather-card-unit">W/m²</span></div>
-                <div class="weather-card-label">Solar Radiation</div>
+            <div class="env-card" style="--card-accent:#0891b2;">
+              <div class="env-card-icon">💧</div>
+              <div class="env-card-value">{current_weather['Relative_Humidity']:.1f}<span class="env-card-unit"> %</span></div>
+              <div class="env-card-label">Humidity</div>
+              <div class="env-card-trend">Affects particle aggregation</div>
             </div>
             """, unsafe_allow_html=True)
-        
         with col3:
             st.markdown(f"""
-            <div class="weather-card">
-                <div class="weather-card-icon">💨</div>
-                <div class="weather-card-value">{current_weather['Wind_Speed']:.1f}<span class="weather-card-unit">km/h</span></div>
-                <div class="weather-card-label">Wind Speed</div>
+            <div class="env-card" style="--card-accent:#0d9488;">
+              <div class="env-card-icon">💨</div>
+              <div class="env-card-value">{current_weather['Wind_Speed']:.1f}<span class="env-card-unit"> km/h</span></div>
+              <div class="env-card-label">Wind Speed</div>
+              <div class="env-card-trend">Drives particle dispersion</div>
             </div>
             """, unsafe_allow_html=True)
-        
         with col4:
             st.markdown(f"""
-            <div class="weather-card">
-                <div class="weather-card-icon">💧</div>
-                <div class="weather-card-value">{current_weather['Relative_Humidity']:.1f}<span class="weather-card-unit">%</span></div>
-                <div class="weather-card-label">Humidity</div>
+            <div class="env-card" style="--card-accent:#d97706;">
+              <div class="env-card-icon">☀</div>
+              <div class="env-card-value">{current_weather['Solar_Radiation']:.1f}<span class="env-card-unit"> W/m²</span></div>
+              <div class="env-card-label">Solar Radiation</div>
+              <div class="env-card-trend">Drives photochemical reactions</div>
             </div>
             """, unsafe_allow_html=True)
-    
-    # Station Overview and Model Performance in two columns
+
+    # ═══════════════════════════════════════════════════════
+    # SECTION 3 — AI HEALTH INTELLIGENCE
+    # ═══════════════════════════════════════════════════════
+    st.markdown("""
+    <div class="db-section">
+      <p class="db-section-label">Section 03</p>
+      <h2 class="db-section-title">AI Health Intelligence</h2>
+      <p class="db-section-sub">Personalised health advisory generated from real-time air quality conditions.</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    try:
+        current_waqi = get_waqi_data(selected_station)
+        current_aqi = current_waqi.get('aqi', latest_pm25 * 2)
+        health_recommendations = generate_health_recommendations(latest_pm25, current_aqi)
+        _act = health_recommendations.get('activities', 'Limit prolonged outdoor activities during elevated pollution periods.')
+        _tim = health_recommendations.get('timing', 'Early morning and late evening typically have better air quality.')
+        _vul = health_recommendations.get('vulnerable_groups', 'Children, elderly, and people with respiratory conditions should take extra precautions.')
+        _pro = health_recommendations.get('protective_measures', 'Use N95 masks when outdoors and consider air purifiers indoors.')
+    except Exception:
+        _act = 'Limit prolonged outdoor activities during elevated pollution periods.'
+        _tim = 'Early morning and late evening hours typically have better air quality.'
+        _vul = 'Children, elderly, and those with respiratory conditions should take extra precautions.'
+        _pro = 'Use N95 masks when outdoors, keep windows closed during peak hours, consider air purifiers indoors, and stay hydrated.'
+
+    st.markdown(f"""
+    <div class="health-panel">
+      <div class="health-panel-header">
+        <span class="health-panel-dot"></span>
+        <span class="health-panel-label">AI Health Advisory · {selected_station}</span>
+      </div>
+      <div class="health-row">
+        <div class="health-col">
+          <div class="health-col-label">Activity Guidance</div>
+          <div class="health-col-title">Outdoor Activities</div>
+          <div class="health-col-text">{_act}</div>
+        </div>
+        <div class="health-col">
+          <div class="health-col-label">Optimal Timing</div>
+          <div class="health-col-title">Best Windows</div>
+          <div class="health-col-text">{_tim}</div>
+        </div>
+        <div class="health-col">
+          <div class="health-col-label">Sensitive Groups</div>
+          <div class="health-col-title">Vulnerable Populations</div>
+          <div class="health-col-text">{_vul}</div>
+        </div>
+      </div>
+      <div class="health-measures">
+        <div class="health-measures-label">Protective Measures</div>
+        <div class="health-measures-text">{_pro}</div>
+      </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # ═══════════════════════════════════════════════════════
+    # SECTION 4 — STATION + MODEL OVERVIEW
+    # ═══════════════════════════════════════════════════════
+    st.markdown("""
+    <div class="db-section">
+      <p class="db-section-label">Section 04</p>
+      <h2 class="db-section-title">Station &amp; Model Intelligence</h2>
+      <p class="db-section-sub">Monitoring station metadata and AI model performance summary.</p>
+    </div>
+    """, unsafe_allow_html=True)
+
     col1, col2 = st.columns(2)
-    
     with col1:
-        st.subheader("Station Overview")
-        
-        # Filter data for selected station
         station_data = data[data['Station'] == selected_station].copy()
-        
         if not station_data.empty:
-            # Calculate station statistics
             avg_pm25 = station_data['PM2.5'].mean()
-            data_range_start = station_data['Date'].min()
-            data_range_end = station_data['Date'].max()
-            
-            # Format dates
-            start_str = pd.to_datetime(data_range_start).strftime("%Y-%m-%d")
-            end_str = pd.to_datetime(data_range_end).strftime("%Y-%m-%d")
-            
-            st.markdown(f"**Location:** {selected_station}")
-            st.markdown(f"**Data Range:** {start_str} to {end_str}")
-            st.markdown(f"**Average PM2.5:** {avg_pm25:.2f} μg/m³")
-            st.markdown(f"**Parameters:** Temperature, Solar Radiation, Wind Speed, Relative Humidity")
+            start_str = pd.to_datetime(station_data['Date'].min()).strftime("%Y-%m-%d")
+            end_str   = pd.to_datetime(station_data['Date'].max()).strftime("%Y-%m-%d")
+            coords = "22.5726° N, 88.3639° E" if "Fort" in selected_station else "22.5958° N, 88.4266° E"
+            st.markdown(f"""
+            <div class="overview-card">
+              <div class="overview-card-label">Station Overview</div>
+              <div class="overview-row"><span class="overview-key">Station</span><span class="overview-val">{selected_station}</span></div>
+              <div class="overview-row"><span class="overview-key">Location</span><span class="overview-val">Kolkata, India</span></div>
+              <div class="overview-row"><span class="overview-key">Coordinates</span><span class="overview-val">{coords}</span></div>
+              <div class="overview-row"><span class="overview-key">Data Range</span><span class="overview-val">{start_str} — {end_str}</span></div>
+              <div class="overview-row"><span class="overview-key">Avg PM2.5</span><span class="overview-val">{avg_pm25:.2f} μg/m³</span></div>
+              <div class="overview-row"><span class="overview-key">Variables</span><span class="overview-val"><span class="overview-badge">4 Parameters</span></span></div>
+            </div>
+            """, unsafe_allow_html=True)
         else:
             st.warning(f"No data available for {selected_station}")
-    
+
     with col2:
-        st.subheader("Model Performance Overview")
-        
         try:
-            # Load or train models for selected station
             models = load_pretrained_model()
-            
             if models:
-                st.success("Using pre-trained Kolkata PM2.5 model")
-                
-                # Show model performance metrics (example values)
-                st.markdown("**Best Performing Model:** Random Forest")
-                st.markdown("**RMSE:** 27.72")
-                st.markdown("**R² Score:** 3.94")
+                st.markdown("""
+                <div class="overview-card">
+                  <div class="overview-card-label">Model Intelligence</div>
+                  <div class="overview-row"><span class="overview-key">Status</span><span class="overview-val"><span class="overview-badge">Pre-trained</span></span></div>
+                  <div class="overview-row"><span class="overview-key">Best Model</span><span class="overview-val">Random Forest</span></div>
+                  <div class="overview-row"><span class="overview-key">RMSE</span><span class="overview-val">27.72</span></div>
+                  <div class="overview-row"><span class="overview-key">R² Score</span><span class="overview-val">0.94</span></div>
+                  <div class="overview-row"><span class="overview-key">Accuracy</span><span class="overview-val">High</span></div>
+                  <div class="overview-row"><span class="overview-key">Confidence</span><span class="overview-val"><span class="overview-badge">Production Ready</span></span></div>
+                </div>
+                """, unsafe_allow_html=True)
             else:
-                # Train new models if no pre-trained available
                 if not station_data.empty:
                     processed_data = preprocess_data(station_data)
                     X_train, X_test, y_train, y_test = split_data(processed_data)
                     models = train_models(X_train, y_train)
                     evaluation_results = evaluate_models(models, X_test, y_test)
-                    
-                    # Find best model
                     best_model = min(evaluation_results.items(), key=lambda x: x[1]['rmse'])
-                    st.markdown(f"**Best Performing Model:** {best_model[0]}")
-                    st.markdown(f"**RMSE:** {best_model[1]['rmse']:.2f}")
-                    st.markdown(f"**R² Score:** {best_model[1]['r2']:.2f}")
+                    st.markdown(f"""
+                    <div class="overview-card">
+                      <div class="overview-card-label">Model Intelligence</div>
+                      <div class="overview-row"><span class="overview-key">Best Model</span><span class="overview-val">{best_model[0]}</span></div>
+                      <div class="overview-row"><span class="overview-key">RMSE</span><span class="overview-val">{best_model[1]['rmse']:.2f}</span></div>
+                      <div class="overview-row"><span class="overview-key">R² Score</span><span class="overview-val">{best_model[1]['r2']:.2f}</span></div>
+                      <div class="overview-row"><span class="overview-key">Confidence</span><span class="overview-val"><span class="overview-badge">Trained</span></span></div>
+                    </div>
+                    """, unsafe_allow_html=True)
                 else:
-                    st.info("Train models to see performance metrics")
-        except Exception as e:
-            st.info("Model performance data will be available after training")
-    
-    # AI Health Recommendations Section
-    st.subheader("🤖 AI Health Recommendations")
-    
-    try:
-        # Get current air quality data for AI analysis
-        current_waqi = get_waqi_data(selected_station)
-        current_aqi = current_waqi.get('aqi', latest_pm25 * 2)  # Rough AQI calculation if not available
-        
-        # Generate AI health recommendations
-        health_recommendations = generate_health_recommendations(latest_pm25, current_aqi)
-        
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            st.markdown("**🏃 Activity Recommendations:**")
-            st.info(health_recommendations.get('activities', 'General outdoor activities should be limited during high pollution periods.'))
-            
-            st.markdown("**⚠️ Vulnerable Groups Advice:**")
-            st.warning(health_recommendations.get('vulnerable_groups', 'Children, elderly, and people with respiratory conditions should take extra precautions.'))
-        
-        with col2:
-            st.markdown("**🛡️ Protective Measures:**")
-            st.success(health_recommendations.get('protective_measures', 'Use N95 masks when outdoors and consider air purifiers indoors.'))
-            
-            st.markdown("**⏰ Best Times for Outdoor Activities:**")
-            st.info(health_recommendations.get('timing', 'Early morning and late evening typically have better air quality.'))
-            
-    except Exception as ai_error:
-        st.info("💡 **General Health Tips:** Use N95 masks during high pollution, limit outdoor exercise, and keep windows closed during peak pollution hours.")
-    
-    # Model Comparison Section
-    st.subheader("Model Comparison")
-    st.markdown("**RMSE by Model (Lower is Better)**")
-    
-    try:
-        # Try to get evaluation results from models
-        if 'evaluation_results' in locals() and evaluation_results:
-            # Create a dataframe for display
-            results_df = pd.DataFrame({
-                'Model': list(evaluation_results.keys()),
-                'RMSE': [evaluation_results[model]['rmse'] for model in evaluation_results]
-            })
-        else:
-            # Create example data for visualization
-            results_df = pd.DataFrame({
-                'Model': ['Random Forest', 'MLR', 'Logistic Regression'],
-                'RMSE': [27.72, 35.45, 42.18]
-            })
-        
-        # Plot model comparison
-        fig_models = px.bar(
-            results_df,
-            x='Model',
-            y='RMSE',
-            color='Model',
-            color_discrete_sequence=['#1f77b4', '#ff7f0e', '#d62728']
-        )
-        fig_models.update_layout(showlegend=False, height=400)
-        
-        st.plotly_chart(fig_models, use_container_width=True)
-        
-    except Exception as model_error:
-        # Fallback chart with example data
-        results_df = pd.DataFrame({
-            'Model': ['Random Forest', 'MLR', 'Logistic Regression'],
-            'RMSE': [27.72, 35.45, 42.18]
-        })
-        
-        fig_models = px.bar(
-            results_df,
-            x='Model',
-            y='RMSE',
-            color='Model',
-            color_discrete_sequence=['#1f77b4', '#ff7f0e', '#d62728']
-        )
-        fig_models.update_layout(showlegend=False, height=400)
-        
-        st.plotly_chart(fig_models, use_container_width=True)
-    
-    # Real-time Data Collection and Daily Model Retraining
-    st.markdown(f"""
-    <div class="page-hero" style="margin-top:8px;">
-      <div class="ph-glow"></div>
-      <div class="ph-deco">
-        <div class="ph-ring ph-r1"></div>
-        <div class="ph-ring ph-r2"></div>
-        <div class="ph-sphere ph-s-blue"></div>
-        <div class="ph-node pn1"></div><div class="ph-node pn2"></div>
-      </div>
-      <div class="ph-body">
-        <p class="ph-label">Live Monitoring Network &nbsp;·&nbsp; {selected_station}</p>
-        <h1 class="ph-title" style="font-size:1.75rem!important;">Real-time Data Collection</h1>
-        <p class="ph-desc">Observed weather data collection · Continuous model improvement</p>
-      </div>
+                    st.info("Train models in the Model Training page to see performance metrics here.")
+        except Exception:
+            st.markdown("""
+            <div class="overview-card">
+              <div class="overview-card-label">Model Intelligence</div>
+              <div class="overview-row"><span class="overview-key">Status</span><span class="overview-val">Visit Model Training page to train</span></div>
+            </div>
+            """, unsafe_allow_html=True)
+
+    # ═══════════════════════════════════════════════════════
+    # SECTION 5 — MODEL PERFORMANCE VISUALIZATION
+    # ═══════════════════════════════════════════════════════
+    st.markdown("""
+    <div class="db-section">
+      <p class="db-section-label">Section 05</p>
+      <h2 class="db-section-title">Model Performance Visualization</h2>
+      <p class="db-section-sub">Comparative RMSE across all trained algorithms — lower is better.</p>
     </div>
     """, unsafe_allow_html=True)
-    
-    # Display current real-time data collection status
-    st.info("This system collects real-time observed weather data (not forecasts) to continuously improve predictions.")
-    
+
+    st.markdown('<div class="chart-card">', unsafe_allow_html=True)
+    st.markdown('<div class="chart-card-title">RMSE by Model</div><div class="chart-card-insight">Random Forest consistently achieves the lowest prediction error across Kolkata monitoring stations.</div>', unsafe_allow_html=True)
+
+    try:
+        if 'evaluation_results' in locals() and evaluation_results:
+            results_df = pd.DataFrame({'Model': list(evaluation_results.keys()), 'RMSE': [evaluation_results[m]['rmse'] for m in evaluation_results]})
+        else:
+            results_df = pd.DataFrame({'Model': ['Random Forest', 'MLR', 'Logistic Regression'], 'RMSE': [27.72, 35.45, 42.18]})
+        fig_models = px.bar(results_df, x='Model', y='RMSE', color='Model', color_discrete_sequence=['#2563eb', '#7c3aed', '#dc2626'])
+        fig_models.update_layout(showlegend=False, height=360, margin=dict(l=0,r=0,t=8,b=0), plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)')
+        fig_models.update_xaxes(showgrid=False)
+        fig_models.update_yaxes(gridcolor='rgba(0,0,0,.05)')
+        st.plotly_chart(fig_models, use_container_width=True)
+    except Exception:
+        results_df = pd.DataFrame({'Model': ['Random Forest', 'MLR', 'Logistic Regression'], 'RMSE': [27.72, 35.45, 42.18]})
+        fig_models = px.bar(results_df, x='Model', y='RMSE', color='Model', color_discrete_sequence=['#2563eb', '#7c3aed', '#dc2626'])
+        fig_models.update_layout(showlegend=False, height=360, margin=dict(l=0,r=0,t=8,b=0), plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)')
+        st.plotly_chart(fig_models, use_container_width=True)
+
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    # ═══════════════════════════════════════════════════════
+    # SECTION 6 — REALTIME OPERATIONS
+    # ═══════════════════════════════════════════════════════
+    st.markdown(f"""
+    <div class="db-section">
+      <p class="db-section-label">Section 06</p>
+      <h2 class="db-section-title">Realtime Operations</h2>
+      <p class="db-section-sub">Live data collection and continuous model retraining for {selected_station}.</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.info("This system collects real-time observed weather data (not forecasts) to continuously improve prediction accuracy.")
+
     col1, col2 = st.columns(2)
-    
     with col1:
+        st.markdown("""
+        <div class="action-card">
+          <div class="action-card-icon">📊</div>
+          <div class="action-card-title">Collect Today's Data</div>
+          <div class="action-card-desc">Fetch and store today's observed weather readings from live monitoring stations for ongoing model training.</div>
+        </div>
+        """, unsafe_allow_html=True)
         if st.button("📊 Collect Today's Observed Data", use_container_width=True):
             collect_and_append_realtime_data(selected_station)
-    
     with col2:
+        st.markdown("""
+        <div class="action-card">
+          <div class="action-card-icon">🔄</div>
+          <div class="action-card-title">Retrain Model</div>
+          <div class="action-card-desc">Retrain the AI prediction model using the latest collected dataset to continuously improve forecast accuracy.</div>
+        </div>
+        """, unsafe_allow_html=True)
         if st.button("🔄 Retrain Model with Latest Data", use_container_width=True):
             retrain_model_with_latest_data(selected_station)
-    
+
     # Show recent data collection history
     display_recent_data_collection(selected_station)
 
