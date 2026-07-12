@@ -1,0 +1,421 @@
+Redesign ONLY the Dashboard page.
+
+Do NOT modify any backend logic.
+
+Do NOT remove any existing feature.
+
+Do NOT remove any chart.
+
+Do NOT remove any button.
+
+Do NOT remove any functionality.
+
+Only redesign the Dashboard UI and layout using the global design system.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+GOAL
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+The Dashboard should immediately impress users.
+
+It should feel like the landing page of a premium AI SaaS platform.
+
+The first screen should communicate:
+
+• Current PM2.5
+• AQI Status
+• Selected Station
+• Live Monitoring
+• AI Intelligence
+
+The dashboard should not feel like a Streamlit page.
+
+It should feel like a premium web application.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+LAYOUT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Dashboard follows this structure.
+
+SECTION 1
+
+Full Screen Hero (100vh)
+
+↓
+
+SECTION 2
+
+Environmental Conditions
+
+↓
+
+SECTION 3
+
+AI Health Intelligence
+
+↓
+
+SECTION 4
+
+Station + Model Overview
+
+↓
+
+SECTION 5
+
+Model Performance Visualization
+
+↓
+
+SECTION 6
+
+Realtime Operations
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SECTION 1
+HERO
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+The Hero occupies the entire first screen.
+
+Remove the traditional banner appearance.
+
+Create a premium immersive hero.
+
+Background
+
+Animated subtle gradient.
+
+Very slow movement.
+
+Soft floating particles.
+
+No flashy effects.
+
+Center of screen
+
+Large Animated AQI Sphere.
+
+The AQI Sphere becomes the identity of the application.
+
+AQI Sphere Design
+
+Multi-layer circle
+
+Soft inner gradient
+
+Thin animated orbital ring
+
+Slow breathing animation
+
+Soft shadow
+
+Very subtle glow in dark mode
+
+Hover should slightly tilt.
+
+Inside the sphere
+
+Large PM2.5 value
+
+Below
+
+AQI Category
+
+Example
+
+Moderate
+
+Good
+
+Unhealthy
+
+Below
+
+Station Name
+
+Below
+
+Last Updated
+
+Top Right
+
+Live Status Pill
+
+LIVE
+
+Green Dot Animation
+
+No buttons inside hero except existing Live indicator.
+
+Bottom Center
+
+Small scroll indicator.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SECTION 2
+ENVIRONMENTAL CONDITIONS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Remove the boring 4-column grid.
+
+Create a premium layout.
+
+Top
+
+Section Title
+
+Environmental Conditions
+
+Subtitle
+
+Current weather parameters affecting air quality.
+
+Below
+
+2 × 2 Grid
+
+Temperature
+
+Humidity
+
+Wind Speed
+
+Solar Radiation
+
+Cards
+
+Rounded
+
+Clean
+
+Glass only in dark mode
+
+White surface in light mode
+
+Each card
+
+Large Value
+
+Small Unit
+
+Small Trend Indicator
+
+Professional icon
+
+Bottom Accent Line
+
+Hover
+
+Lift slightly
+
+Shadow increases
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SECTION 3
+AI HEALTH INTELLIGENCE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Replace plain info boxes.
+
+Create one large premium panel.
+
+Layout
+
+Left
+
+Current Health Risk
+
+Center
+
+AI Recommendation
+
+Right
+
+Sensitive Groups
+
+Bottom Full Width
+
+Protective Measures
+
+This section should look like an AI assistant.
+
+Not warning messages.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SECTION 4
+STATION + MODEL OVERVIEW
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Two column layout.
+
+LEFT
+
+Station Overview
+
+Location
+
+Coordinates
+
+Date Range
+
+Average PM2.5
+
+Station Information
+
+RIGHT
+
+Model Intelligence
+
+Best Model
+
+RMSE
+
+R²
+
+Accuracy
+
+Prediction Confidence
+
+Use premium information cards.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SECTION 5
+MODEL PERFORMANCE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Keep Plotly chart.
+
+Do NOT replace chart.
+
+Create premium chart container.
+
+Layout
+
+Title
+
+Short AI Insight
+
+Chart
+
+Observation
+
+Chart card should have large padding.
+
+Rounded corners.
+
+Professional spacing.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SECTION 6
+REALTIME OPERATIONS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Group all controls into one Operations Panel.
+
+Instead of scattered buttons.
+
+Layout
+
+Collect Today's Data
+
+Today's Dataset
+
+Retrain Model
+
+Recent Activity
+
+Use action cards.
+
+Every action card
+
+Icon
+
+Title
+
+Description
+
+Action Button
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+LIGHT MODE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Feels like
+
+Modern Environmental Research Lab.
+
+Off-white background.
+
+White cards.
+
+Soft shadows.
+
+Minimal gradients.
+
+Dark typography.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+DARK MODE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Feels like
+
+AI Environmental Command Center.
+
+Deep Navy.
+
+Premium layered cards.
+
+Soft ambient lighting.
+
+Elegant blue glow.
+
+No excessive glass.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SPACING
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Increase whitespace significantly.
+
+Every section should breathe.
+
+Use 8px spacing system.
+
+Consistent margins.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ANIMATIONS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Hero fades in.
+
+AQI Sphere breathes slowly.
+
+Cards reveal one after another.
+
+Hover Lift.
+
+Smooth transitions.
+
+No flashy effects.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+IMPORTANT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Do not change backend.
+
+Do not remove functionality.
+
+Do not remove charts.
+
+Do not remove controls.
+
+Do not simplify the dashboard.
+
+Only redesign the layout and visual presentation into a premium AI SaaS experience.
+
+When complete, ensure the Dashboard feels like the homepage of a professionally designed AI platform rather than a Streamlit dashboard.

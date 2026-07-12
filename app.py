@@ -303,42 +303,29 @@ with open('.streamlit/styles.css') as f:
 
 # ── Global premium CSS + 3D JS engine ──────────────────────────────
 st.markdown("""
-<style>
-/* Ambient glow blobs */
-.stApp::before{content:'';position:fixed;top:-15vh;left:-10vw;width:50vw;height:50vh;border-radius:50%;background:radial-gradient(circle,rgba(59,130,246,.07) 0%,transparent 70%);pointer-events:none;z-index:0;}
-.stApp::after{content:'';position:fixed;bottom:-10vh;right:-10vw;width:40vw;height:40vh;border-radius:50%;background:radial-gradient(circle,rgba(139,92,246,.06) 0%,transparent 70%);pointer-events:none;z-index:0;}
-/* Premium scrollbar */
-::-webkit-scrollbar{width:5px;height:5px;}
-::-webkit-scrollbar-track{background:transparent;}
-::-webkit-scrollbar-thumb{background:rgba(59,130,246,.35);border-radius:100px;}
-::-webkit-scrollbar-thumb:hover{background:rgba(59,130,246,.65);}
-footer,[data-testid="stStatusWidget"]{display:none!important;}
-[data-baseweb="tooltip"]{background:rgba(15,23,42,.95)!important;border:1px solid rgba(59,130,246,.25)!important;border-radius:8px!important;backdrop-filter:blur(12px)!important;color:#e2e8f0!important;}
-</style>
-<canvas id="aq-particles" style="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;opacity:.3;"></canvas>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<canvas id="aq-particles" style="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;opacity:.18;"></canvas>
 <script>
 (function(){
   'use strict';
-  var TILT=13,LIFT=13;
+  var TILT=9,LIFT=8;
   function bindTilt(el){
     if(el._aqT)return; el._aqT=true;
-    el.classList.add('tilt-card');
     el.addEventListener('mousemove',function(e){
       var r=el.getBoundingClientRect();
       var x=(e.clientX-r.left)/r.width-.5;
       var y=(e.clientY-r.top)/r.height-.5;
       el.style.transition='none';
       el.style.transform='perspective(900px) rotateX('+(-y*TILT)+'deg) rotateY('+(x*TILT)+'deg) translateZ('+LIFT+'px)';
-      el.style.boxShadow=(-x*16)+'px '+(y*16)+'px 48px rgba(59,130,246,.22),0 28px 56px rgba(0,0,0,.15)';
     });
     el.addEventListener('mouseleave',function(){
-      el.style.transition='transform .65s cubic-bezier(.34,1.56,.64,1),box-shadow .65s ease';
-      el.style.transform='perspective(900px) rotateX(0) rotateY(0) translateZ(0)';
-      el.style.boxShadow='';
+      el.style.transition='transform .5s cubic-bezier(.4,0,.2,1)';
+      el.style.transform='none';
     });
   }
   function initTilt(){
-    ['.weather-card','[data-testid="stMetric"]','.aqi-hero-card','.station-overview','.model-overview','.main-container','.page-banner-3d'].forEach(function(sel){
+    ['.weather-card','[data-testid="stMetric"]','.aqi-hero-card','.station-overview','.model-overview','.page-hero'].forEach(function(sel){
       document.querySelectorAll(sel).forEach(bindTilt);
     });
   }
@@ -347,12 +334,12 @@ footer,[data-testid="stStatusWidget"]{display:none!important;}
     var ctx=c.getContext('2d');
     function resize(){c.width=window.innerWidth;c.height=window.innerHeight;}
     resize(); window.addEventListener('resize',resize);
-    var ps=Array.from({length:40},function(){return{x:Math.random()*window.innerWidth,y:Math.random()*window.innerHeight,r:Math.random()*1.8+.4,speed:Math.random()*.45+.12,dx:(Math.random()-.5)*.25,op:Math.random()*.35+.08};});
+    var ps=Array.from({length:35},function(){return{x:Math.random()*window.innerWidth,y:Math.random()*window.innerHeight,r:Math.random()*1.5+.3,speed:Math.random()*.4+.1,dx:(Math.random()-.5)*.2,op:Math.random()*.28+.06};});
     function draw(){
       ctx.clearRect(0,0,c.width,c.height);
       ps.forEach(function(p){
         ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
-        ctx.fillStyle='rgba(59,130,246,'+p.op+')';ctx.fill();
+        ctx.fillStyle='rgba(37,99,235,'+p.op+')';ctx.fill();
         p.y-=p.speed;p.x+=p.dx;
         if(p.y<-10){p.y=c.height+10;p.x=Math.random()*c.width;}
         if(p.x<0)p.x=c.width;if(p.x>c.width)p.x=0;
@@ -361,8 +348,8 @@ footer,[data-testid="stStatusWidget"]{display:none!important;}
     }
     draw();
   }
-  function init(){initTilt();initParticles();}
-  if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',init);}else{setTimeout(init,120);}
+  if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',function(){initTilt();initParticles();});}
+  else{setTimeout(function(){initTilt();initParticles();},150);}
   new MutationObserver(function(){initTilt();}).observe(document.body,{childList:true,subtree:true});
 })();
 </script>
@@ -639,244 +626,116 @@ theme_mode = st.sidebar.radio(
 if theme_mode == "Dark Mode":
     st.markdown("""
     <style>
-    /* ══════════════════════════════════════════════════════
-       DARK MODE — Premium Space Theme (Spaceedu-inspired)
-       ══════════════════════════════════════════════════════ */
-
-    /* Override CSS design tokens for dark */
+    /* ══════ DARK MODE — AI Environmental Command Center ══════ */
     :root {
-      --bg:      #030712;
-      --bg2:     #0a0f1e;
-      --surface: rgba(12,18,36,.92);
-      --border:  rgba(59,130,246,.2);
-      --border-h:rgba(139,92,246,.5);
-      --text:    #f1f5f9;
-      --text2:   #94a3b8;
-      --text3:   #475569;
+      --bg:         #060b18;
+      --bg-alt:     #090f1f;
+      --bg-surface: #0d1526;
+      --bg-raised:  #111d30;
+      --border:     rgba(255,255,255,.07);
+      --border-sub: rgba(255,255,255,.03);
+      --text:       #e8edf5;
+      --text-2:     #8496b0;
+      --text-3:     #4a5f7a;
+      --blue:       #3b82f6;
+      --blue-dark:  #2563eb;
+      --blue-light: #60a5fa;
     }
-
-    /* ── Deep space background with atmospheric glow ── */
-    .stApp,
-    [data-testid="stAppViewContainer"],
-    [data-testid="stAppViewBlockContainer"],
-    .main, .main .block-container {
-        background: #030712 !important;
-        color: #f1f5f9 !important;
+    .stApp,[data-testid="stAppViewContainer"],[data-testid="stAppViewBlockContainer"],
+    .main,.main .block-container { background:var(--bg) !important; color:var(--text) !important; }
+    .stApp::before { background:radial-gradient(circle,rgba(37,99,235,.06) 0%,transparent 70%); }
+    .stApp::after  { background:radial-gradient(circle,rgba(79,70,229,.05) 0%,transparent 70%); }
+    [data-testid="stHeader"] {
+      background:rgba(6,11,24,.92) !important;
+      border-bottom:1px solid rgba(255,255,255,.06) !important;
     }
-    /* Atmospheric glow overlay on main area */
-    [data-testid="stAppViewContainer"]::before {
-        content: '';
-        position: fixed;
-        top: -20%; left: -20%;
-        width: 60%; height: 60%;
-        border-radius: 50%;
-        background: radial-gradient(circle, rgba(59,130,246,.08) 0%, transparent 70%);
-        pointer-events: none;
-        z-index: 0;
-    }
-    [data-testid="stAppViewContainer"]::after {
-        content: '';
-        position: fixed;
-        bottom: -20%; right: -10%;
-        width: 50%; height: 50%;
-        border-radius: 50%;
-        background: radial-gradient(circle, rgba(139,92,246,.07) 0%, transparent 70%);
-        pointer-events: none;
-        z-index: 0;
-    }
-
-    /* ── All text ── */
-    .stApp p, .stApp li, .stApp td, .stApp th,
-    .stMarkdown p, .stMarkdown span, .stMarkdown li,
+    .stApp p,.stApp li,.stApp td,.stApp th,
+    .stMarkdown p,.stMarkdown span,.stMarkdown li,
     [data-testid="stMarkdownContainer"] p,
     [data-testid="stMarkdownContainer"] span,
-    [data-testid="stMarkdownContainer"] li { color: #94a3b8 !important; }
-
+    [data-testid="stMarkdownContainer"] li { color:var(--text-2) !important; }
     .stApp h1,.stApp h2,.stApp h3,.stApp h4,.stApp h5,.stApp h6,
     .stMarkdown h1,.stMarkdown h2,.stMarkdown h3,
     [data-testid="stMarkdownContainer"] h1,
     [data-testid="stMarkdownContainer"] h2,
-    [data-testid="stMarkdownContainer"] h3 { color: #f1f5f9 !important; }
-
+    [data-testid="stMarkdownContainer"] h3,
     [data-testid="stHeadingWithActionElements"] *,
-    .stHeadingContainer * { color: #f1f5f9 !important; }
-
-    /* ── Streamlit header bar ── */
-    [data-testid="stHeader"] {
-        background: rgba(3,7,18,.85) !important;
-        backdrop-filter: blur(16px) !important;
-        border-bottom: 1px solid rgba(59,130,246,.1) !important;
-    }
-
-    /* ── Metrics ── */
+    .stHeadingContainer * { color:var(--text) !important; }
     [data-testid="stMetric"] {
-        background: rgba(10,15,30,.85) !important;
-        border: 1px solid rgba(59,130,246,.2) !important;
-        border-radius: 16px !important;
-        box-shadow: 0 4px 24px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.04) !important;
+      background:var(--bg-surface) !important; border-color:var(--border) !important;
+      box-shadow:0 4px 24px rgba(0,0,0,.4) !important;
     }
-    [data-testid="stMetricLabel"] > div { color: #475569 !important; }
-    [data-testid="stMetricValue"] > div { color: #e2e8f0 !important; }
-    [data-testid="stMetricDelta"] > div { color: #4ade80 !important; }
-
-    /* ── Tabs ── */
-    .stTabs [data-baseweb="tab-list"] {
-        background: rgba(10,15,30,.7) !important;
-        border-bottom: 2px solid rgba(59,130,246,.15) !important;
+    [data-testid="stMetricLabel"] div { color:var(--text-3) !important; }
+    [data-testid="stMetricValue"] div { color:var(--text) !important; }
+    [data-testid="stMetricDelta"] div { color:#34d399 !important; }
+    .stTabs [data-baseweb="tab-list"] { background:transparent !important; border-bottom-color:var(--border) !important; }
+    .stTabs [data-baseweb="tab"] { color:var(--text-3) !important; }
+    .stTabs [aria-selected="true"] { color:var(--blue-light) !important; border-bottom-color:var(--blue) !important; }
+    .stTextInput input,.stNumberInput input,.stTextArea textarea {
+      background:var(--bg-surface) !important; color:var(--text) !important; border-color:var(--border) !important;
     }
-    .stTabs [data-baseweb="tab"] { color: #475569 !important; }
-    .stTabs [aria-selected="true"] {
-        color: #93c5fd !important;
-        border-bottom: 2px solid #3b82f6 !important;
-        background: rgba(59,130,246,.08) !important;
+    .stTextInput input:focus,.stNumberInput input:focus,.stTextArea textarea:focus {
+      border-color:var(--blue) !important; box-shadow:0 0 0 3px rgba(59,130,246,.15) !important;
     }
-
-    /* ── Inputs ── */
-    .stTextInput input, .stNumberInput input, .stTextArea textarea {
-        background: rgba(10,15,30,.9) !important;
-        color: #e2e8f0 !important;
-        border: 1.5px solid rgba(59,130,246,.22) !important;
-        border-radius: 12px !important;
-    }
-    .stTextInput input:focus, .stNumberInput input:focus, .stTextArea textarea:focus {
-        border-color: #3b82f6 !important;
-        box-shadow: 0 0 0 3px rgba(59,130,246,.2) !important;
-    }
-    .stTextInput label, .stNumberInput label, .stTextArea label { color: #64748b !important; }
-
-    /* ── Selectbox / Multiselect ── */
+    .stTextInput label,.stNumberInput label,.stTextArea label { color:var(--text-3) !important; }
     .stSelectbox [data-baseweb="select"] > div,
     .stMultiSelect [data-baseweb="select"] > div {
-        background: rgba(10,15,30,.9) !important;
-        color: #e2e8f0 !important;
-        border: 1.5px solid rgba(59,130,246,.22) !important;
-        border-radius: 12px !important;
+      background:var(--bg-surface) !important; color:var(--text) !important; border-color:var(--border) !important;
     }
-    .stSelectbox label, .stMultiSelect label { color: #64748b !important; }
+    .stSelectbox label,.stMultiSelect label { color:var(--text-3) !important; }
     [data-baseweb="popover"],[data-baseweb="menu"],[role="listbox"] {
-        background: #0d1526 !important;
-        border: 1px solid rgba(59,130,246,.25) !important;
-        border-radius: 12px !important;
+      background:var(--bg-surface) !important; border-color:var(--border) !important;
     }
-    [role="option"] { background: transparent !important; color: #94a3b8 !important; }
+    [role="option"] { color:var(--text-2) !important; }
     [role="option"]:hover,[role="option"][aria-selected="true"] {
-        background: rgba(59,130,246,.12) !important;
-        color: #93c5fd !important;
+      background:rgba(59,130,246,.1) !important; color:var(--blue-light) !important;
     }
-
-    /* ── Buttons ── */
-    .stButton > button {
-        background: linear-gradient(135deg,#1e3a8a,#312e81) !important;
-        color: #93c5fd !important;
-        border: 1px solid rgba(59,130,246,.3) !important;
-        box-shadow: 0 4px 20px rgba(0,0,0,.5) !important;
-    }
-    .stButton > button:hover {
-        background: linear-gradient(135deg,#3b82f6,#8b5cf6) !important;
-        color: #fff !important;
-        border-color: transparent !important;
-        box-shadow: 0 8px 30px rgba(59,130,246,.45) !important;
-    }
-
-    /* ── Alerts ── */
-    [data-testid="stAlert"] {
-        background: rgba(10,15,30,.85) !important;
-        border-radius: 12px !important;
-    }
-    [data-testid="stAlert"] * { color: #94a3b8 !important; }
-    [data-testid="stAlert"][data-type="success"] { border-left-color: #22c55e !important; }
-    [data-testid="stAlert"][data-type="info"]    { border-left-color: #3b82f6 !important; }
-    [data-testid="stAlert"][data-type="warning"] { border-left-color: #f59e0b !important; }
-    [data-testid="stAlert"][data-type="error"]   { border-left-color: #ef4444 !important; }
-
-    /* ── Expander ── */
+    .stButton > button { background:var(--blue) !important; color:#fff !important; box-shadow:0 4px 20px rgba(59,130,246,.25) !important; }
+    .stButton > button:hover { background:var(--blue-dark) !important; box-shadow:0 6px 28px rgba(59,130,246,.35) !important; }
+    [data-testid="stAlert"] { background:var(--bg-surface) !important; border-radius:12px !important; }
+    [data-testid="stAlert"] * { color:var(--text-2) !important; }
+    [data-testid="stAlert"][data-type="success"] { border-left-color:#10b981 !important; }
+    [data-testid="stAlert"][data-type="info"]    { border-left-color:#3b82f6 !important; }
+    [data-testid="stAlert"][data-type="warning"] { border-left-color:#f59e0b !important; }
+    [data-testid="stAlert"][data-type="error"]   { border-left-color:#ef4444 !important; }
     [data-testid="stExpander"] summary {
-        background: rgba(10,15,30,.85) !important;
-        color: #94a3b8 !important;
-        border: 1px solid rgba(59,130,246,.18) !important;
-        border-radius: 12px !important;
+      background:var(--bg-surface) !important; color:var(--text-2) !important; border-color:var(--border) !important;
     }
-    [data-testid="stExpander"] summary:hover { background: rgba(59,130,246,.08) !important; }
+    [data-testid="stExpander"] summary:hover { background:var(--bg-raised) !important; }
     [data-testid="stExpander"] [data-testid="stExpanderDetails"] {
-        background: rgba(3,7,18,.7) !important;
-        border: 1px solid rgba(59,130,246,.1) !important;
-        border-top: none !important;
+      background:var(--bg) !important; border-color:var(--border) !important; border-top:none !important;
     }
-
-    /* ── Checkbox & Radio ── */
-    .stCheckbox label, .stRadio label { color: #94a3b8 !important; }
-
-    /* ── Caption ── */
-    [data-testid="stCaptionContainer"] * { color: #334155 !important; }
-
-    /* ── Dividers ── */
-    hr,[data-testid="stDivider"] { border-color: rgba(59,130,246,.1) !important; }
-
-    /* ── Dataframe ── */
-    .stDataFrame,[data-testid="stDataFrame"] {
-        background: rgba(10,15,30,.9) !important;
-        border: 1px solid rgba(59,130,246,.15) !important;
-        border-radius: 14px !important;
-        overflow: hidden !important;
-    }
-    [data-testid="stDataFrame"] * { color: #94a3b8 !important; }
-    [data-testid="stDataFrame"] th {
-        background: rgba(15,23,42,.95) !important;
-        color: #64748b !important;
-        font-weight: 700 !important;
-    }
-
-    /* ── Slider ── */
-    .stSlider [role="slider"] { background: #3b82f6 !important; }
-
-    /* ── Progress bar ── */
-    .stProgress > div > div > div {
-        background: linear-gradient(90deg,#3b82f6,#8b5cf6) !important;
-    }
-
-    /* ── Spinner ── */
-    .stSpinner > div { border-top-color: #3b82f6 !important; }
-
-    /* ── Code ── */
-    code,pre { background: rgba(10,15,30,.9) !important; color: #93c5fd !important; border: 1px solid rgba(59,130,246,.15) !important; }
-
-    /* ── Custom cards — dark ── */
-    .weather-card {
-        background: rgba(10,15,30,.88) !important;
-        border: 1px solid rgba(59,130,246,.2) !important;
-        box-shadow: 0 4px 28px rgba(0,0,0,.55) !important;
-    }
-    .weather-card:hover { border-color: rgba(139,92,246,.5) !important; }
-    .weather-card-value { color: #e2e8f0 !important; }
-    .weather-card-unit,.weather-card-label { color: #334155 !important; }
-
+    .stCheckbox label,.stRadio label { color:var(--text-2) !important; }
+    [data-testid="stCaptionContainer"] * { color:var(--text-3) !important; }
+    hr,[data-testid="stDivider"] { border-color:var(--border) !important; }
+    .stDataFrame,[data-testid="stDataFrame"] { background:var(--bg-surface) !important; border-color:var(--border) !important; }
+    [data-testid="stDataFrame"] * { color:var(--text-2) !important; }
+    [data-testid="stDataFrame"] th { background:var(--bg-raised) !important; color:var(--text-3) !important; }
+    .stSlider [role="slider"] { background:var(--blue) !important; }
+    .stProgress > div > div > div { background:var(--blue) !important; }
+    .stSpinner > div { border-top-color:var(--blue) !important; }
+    code,pre { background:var(--bg-surface) !important; color:#93c5fd !important; border-color:var(--border) !important; }
+    .weather-card { background:var(--bg-surface) !important; border-color:var(--border) !important; box-shadow:0 4px 24px rgba(0,0,0,.3) !important; }
+    .weather-card-value { color:var(--text) !important; }
+    .weather-card-unit,.weather-card-label { color:var(--text-3) !important; }
     .station-overview,.model-overview,.main-container {
-        background: rgba(10,15,30,.88) !important;
-        border: 1px solid rgba(59,130,246,.2) !important;
-        box-shadow: 0 4px 28px rgba(0,0,0,.55) !important;
+      background:var(--bg-surface) !important; border-color:var(--border) !important;
+      box-shadow:0 4px 24px rgba(0,0,0,.3) !important;
     }
-    .section-title { color: #e2e8f0 !important; border-color: rgba(59,130,246,.15) !important; }
-
-    .styled-table th { background: rgba(15,23,42,.95) !important; color: #475569 !important; }
-    .styled-table td { color: #94a3b8 !important; border-color: rgba(59,130,246,.07) !important; }
-
-    /* AQI hero card — dark */
-    .aqi-hero-card {
-        background: rgba(10,15,30,.92) !important;
-        border: 1px solid rgba(59,130,246,.2) !important;
-        box-shadow: 0 8px 40px rgba(0,0,0,.6) !important;
-    }
-    .aqi-number  { color: #e2e8f0 !important; }
-    .aqi-unit    { color: #334155 !important; }
-    .aqi-impl    { color: #64748b !important; }
-    .aqi-scale-track { background: rgba(255,255,255,.05) !important; }
-    .aqi-scale-labels span { color: #1e293b !important; }
-
-    /* Hero banner — dark variant */
-    .page-hero {
-        background: linear-gradient(135deg,#0c1a4a 0%,#1a2f8f 45%,#3b1f82 100%) !important;
-        box-shadow: 0 20px 70px rgba(0,0,0,.7), inset 0 1px 0 rgba(255,255,255,.06) !important;
-    }
+    .station-overview h2,.station-overview h3,
+    .model-overview h2,.model-overview h3 { color:var(--text) !important; }
+    .aqi-hero-card { background:var(--bg-surface) !important; border-color:var(--border) !important; box-shadow:0 8px 40px rgba(0,0,0,.4) !important; }
+    .aqi-value { color:var(--text) !important; }
+    .aqi-bar-track { background:var(--bg-raised) !important; }
+    .page-hero { background:var(--bg-surface) !important; border-color:var(--border) !important; box-shadow:0 4px 24px rgba(0,0,0,.3) !important; }
+    .ph-title { color:var(--text) !important; }
+    .ph-desc  { color:var(--text-2) !important; }
+    .ph-tag { background:var(--bg-raised) !important; border-color:var(--border) !important; color:var(--text-3) !important; }
+    .page-hero.dash-hero { background:linear-gradient(145deg,#0c1a40 0%,#131e4a 50%,#0a1630 100%) !important; border-color:rgba(37,99,235,.15) !important; }
+    [data-testid="stPlotlyChart"] { background:var(--bg-surface) !important; border-color:var(--border) !important; }
+    [data-testid="stFileUploader"] { background:var(--bg-raised) !important; border-color:var(--border) !important; }
+    ::-webkit-scrollbar-thumb { background:rgba(255,255,255,.1) !important; }
+    ::-webkit-scrollbar-thumb:hover { background:rgba(59,130,246,.35) !important; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -909,14 +768,23 @@ st.sidebar.caption("📊 Dataset: Fort William & Bidhannagar (2021-2025)")
 if page == "Dashboard":
     # Station-specific title
     st.markdown(f"""
-    <div class="page-hero">
-        <div class="hero-eyebrow">🌬️ Real-time Monitoring &nbsp;•&nbsp; Kolkata, India</div>
-        <h1 class="hero-title">PM2.5 Air Quality</h1>
-        <p class="hero-subtitle">{selected_station} Station</p>
+    <div class="page-hero dash-hero">
+      <div class="ph-glow"></div>
+      <div class="ph-deco">
+        <div class="ph-ring ph-r1"></div>
+        <div class="ph-ring ph-r2"></div>
+        <div class="ph-ring ph-r3"></div>
+        <div class="ph-sphere ph-s-blue"></div>
+      </div>
+      <div class="ph-body">
+        <p class="ph-label">Real-time Monitoring &nbsp;·&nbsp; Kolkata, India</p>
+        <h1 class="ph-title">PM2.5 Air Quality</h1>
+        <p class="ph-desc">{selected_station} Station</p>
         <div class="hero-live-badge">
-            <span class="hero-live-dot"></span>
-            Live &amp; Forecasting
+          <span class="hero-live-dot"></span>
+          Live &amp; Forecasting
         </div>
+      </div>
     </div>
     """, unsafe_allow_html=True)
     
@@ -1242,17 +1110,18 @@ if page == "Dashboard":
     
     # Real-time Data Collection and Daily Model Retraining
     st.markdown(f"""
-    <div class="page-banner-3d" style="background:linear-gradient(135deg,#0c2a52 0%,#1e3a8a 50%,#1e1b4b 100%);background-size:300%;animation:gradientShift 8s ease infinite;margin-top:8px;">
-      <div class="b3d-bubble bb1"></div>
-      <div class="b3d-scene">
-        <div class="b3d-ring r1"></div><div class="b3d-ring r2"></div>
-        <div class="b3d-orb b3d-orb-blue"></div>
-        <div class="b3d-node n1"></div><div class="b3d-node n2"></div><div class="b3d-node n3"></div>
+    <div class="page-hero" style="margin-top:8px;">
+      <div class="ph-glow"></div>
+      <div class="ph-deco">
+        <div class="ph-ring ph-r1"></div>
+        <div class="ph-ring ph-r2"></div>
+        <div class="ph-sphere ph-s-blue"></div>
+        <div class="ph-node pn1"></div><div class="ph-node pn2"></div>
       </div>
-      <div class="b3d-content">
-        <div class="b3d-eyebrow">📡 Live Monitoring Network &nbsp;·&nbsp; {selected_station}</div>
-        <h1 class="b3d-title" style="font-size:1.9rem!important;">Real-time Data<br><span>Collection</span></h1>
-        <p class="b3d-sub">Observed weather data collection · Continuous model improvement</p>
+      <div class="ph-body">
+        <p class="ph-label">Live Monitoring Network &nbsp;·&nbsp; {selected_station}</p>
+        <h1 class="ph-title" style="font-size:1.75rem!important;">Real-time Data Collection</h1>
+        <p class="ph-desc">Observed weather data collection · Continuous model improvement</p>
       </div>
     </div>
     """, unsafe_allow_html=True)
@@ -1276,18 +1145,20 @@ if page == "Dashboard":
 # Data Analysis and Insights page
 elif page == "Data Analysis and Insights":
     st.markdown(f"""
-    <div class="page-banner-3d" style="background:linear-gradient(135deg,#0c4451 0%,#0e6e8e 30%,#1e3a8a 70%,#3730a3 100%);background-size:300%;animation:gradientShift 8s ease infinite;">
-      <div class="b3d-bubble bb1"></div><div class="b3d-bubble bb2"></div>
-      <div class="b3d-scene">
-        <div class="b3d-ring r1"></div><div class="b3d-ring r2"></div><div class="b3d-ring r3"></div>
-        <div class="b3d-orb b3d-orb-teal"></div>
-        <div class="b3d-node n1"></div><div class="b3d-node n2"></div><div class="b3d-node n3"></div><div class="b3d-node n4"></div>
+    <div class="page-hero ph-teal">
+      <div class="ph-glow"></div>
+      <div class="ph-deco">
+        <div class="ph-ring ph-r1"></div>
+        <div class="ph-ring ph-r2"></div>
+        <div class="ph-ring ph-r3"></div>
+        <div class="ph-sphere ph-s-teal"></div>
+        <div class="ph-node pn1"></div><div class="ph-node pn2"></div><div class="ph-node pn3"></div>
       </div>
-      <div class="b3d-content">
-        <div class="b3d-eyebrow">📊 AI Analytics Engine &nbsp;·&nbsp; {selected_station}</div>
-        <h1 class="b3d-title">Data Analysis<br><span>&amp; Insights</span></h1>
-        <p class="b3d-sub">Parameter correlations · Historical trends · Model performance · Forecasting</p>
-        <div class="b3d-tags"><span class="b3d-tag">Correlations</span><span class="b3d-tag">Trends</span><span class="b3d-tag">Models</span><span class="b3d-tag">Forecasting</span></div>
+      <div class="ph-body">
+        <p class="ph-label">Analytics Engine &nbsp;·&nbsp; {selected_station}</p>
+        <h1 class="ph-title">Data Analysis<br>&amp; Insights</h1>
+        <p class="ph-desc">Parameter correlations · Historical trends · Model performance · Forecasting</p>
+        <div class="ph-tags"><span class="ph-tag">Correlations</span><span class="ph-tag">Trends</span><span class="ph-tag">Models</span><span class="ph-tag">Forecasting</span></div>
       </div>
     </div>
     """, unsafe_allow_html=True)
@@ -1649,22 +1520,23 @@ elif page == "Data Analysis and Insights":
 # Model Training & Comparison page
 elif page == "Model Training & Comparison":
     st.markdown("""
-    <div class="page-banner-3d" style="background:linear-gradient(135deg,#2e1065 0%,#6d28d9 40%,#9333ea 65%,#c026d3 100%);background-size:300%;animation:gradientShift 8s ease infinite;">
-      <div class="b3d-bubble bb1"></div><div class="b3d-bubble bb2"></div>
-      <div class="b3d-scene" style="perspective:600px;">
-        <div class="b3d-ring r1"></div><div class="b3d-ring r2"></div>
-        <div class="b3d-cube-wrap"><div class="b3d-cube">
-          <div class="cube-face cube-front"></div><div class="cube-face cube-back"></div>
-          <div class="cube-face cube-left"></div><div class="cube-face cube-right"></div>
-          <div class="cube-face cube-top"></div><div class="cube-face cube-bottom"></div>
-        </div></div>
-        <div class="b3d-node n1"></div><div class="b3d-node n2"></div><div class="b3d-node n3"></div>
+    <div class="page-hero ph-purple">
+      <div class="ph-glow"></div>
+      <div class="ph-deco">
+        <div class="ph-ring ph-r1"></div>
+        <div class="ph-ring ph-r2"></div>
+        <div class="ph-cube-wrap">
+          <div class="ph-cube-face ph-cf-front"></div><div class="ph-cube-face ph-cf-back"></div>
+          <div class="ph-cube-face ph-cf-left"></div><div class="ph-cube-face ph-cf-right"></div>
+          <div class="ph-cube-face ph-cf-top"></div><div class="ph-cube-face ph-cf-bottom"></div>
+        </div>
+        <div class="ph-node pn1"></div><div class="ph-node pn2"></div>
       </div>
-      <div class="b3d-content">
-        <div class="b3d-eyebrow">🤖 Machine Learning Pipeline</div>
-        <h1 class="b3d-title">Model Training<br><span>&amp; Comparison</span></h1>
-        <p class="b3d-sub">Train, evaluate and compare 4 ML algorithms side-by-side</p>
-        <div class="b3d-tags"><span class="b3d-tag">Random Forest</span><span class="b3d-tag">Decision Tree</span><span class="b3d-tag">Linear Reg.</span><span class="b3d-tag">Logistic Reg.</span></div>
+      <div class="ph-body">
+        <p class="ph-label">Machine Learning Pipeline</p>
+        <h1 class="ph-title">Model Training<br>&amp; Comparison</h1>
+        <p class="ph-desc">Train, evaluate and compare 4 ML algorithms side-by-side</p>
+        <div class="ph-tags"><span class="ph-tag">Random Forest</span><span class="ph-tag">Decision Tree</span><span class="ph-tag">Linear Reg.</span><span class="ph-tag">Logistic Reg.</span></div>
       </div>
     </div>
     """, unsafe_allow_html=True)
@@ -1900,18 +1772,20 @@ elif page == "Model Training & Comparison":
 # PM2.5 Predictions page
 elif page == "PM2.5 Predictions":
     st.markdown(f"""
-    <div class="page-banner-3d" style="background:linear-gradient(135deg,#0c2a52 0%,#1d4ed8 40%,#0891b2 75%,#06b6d4 100%);background-size:300%;animation:gradientShift 8s ease infinite;">
-      <div class="b3d-bubble bb1"></div><div class="b3d-bubble bb2"></div>
-      <div class="b3d-scene">
-        <div class="b3d-ring r4"></div><div class="b3d-ring r1"></div><div class="b3d-ring r2"></div><div class="b3d-ring r3"></div>
-        <div class="b3d-orb b3d-orb-blue"></div>
-        <div class="b3d-node n1"></div><div class="b3d-node n2"></div><div class="b3d-node n3"></div>
+    <div class="page-hero ph-cyan">
+      <div class="ph-glow"></div>
+      <div class="ph-deco">
+        <div class="ph-ring ph-r1"></div>
+        <div class="ph-ring ph-r2"></div>
+        <div class="ph-ring ph-r3"></div>
+        <div class="ph-sphere ph-s-cyan"></div>
+        <div class="ph-node pn1"></div><div class="ph-node pn2"></div><div class="ph-node pn3"></div>
       </div>
-      <div class="b3d-content">
-        <div class="b3d-eyebrow">🔮 AI Prediction Engine &nbsp;·&nbsp; {selected_station}</div>
-        <h1 class="b3d-title">PM2.5<br><span>Predictions</span></h1>
-        <p class="b3d-sub">Real-time forecasting · 1–7 day predictions · Best model auto-selection</p>
-        <div class="b3d-tags"><span class="b3d-tag">Present Day</span><span class="b3d-tag">1-Day Ahead</span><span class="b3d-tag">7-Day Ahead</span><span class="b3d-tag">AI-Powered</span></div>
+      <div class="ph-body">
+        <p class="ph-label">AI Prediction Engine &nbsp;·&nbsp; {selected_station}</p>
+        <h1 class="ph-title">PM2.5<br>Predictions</h1>
+        <p class="ph-desc">Real-time forecasting · 1–7 day predictions · Best model auto-selection</p>
+        <div class="ph-tags"><span class="ph-tag">Present Day</span><span class="ph-tag">1-Day Ahead</span><span class="ph-tag">7-Day Ahead</span><span class="ph-tag">AI-Powered</span></div>
       </div>
     </div>
     """, unsafe_allow_html=True)
@@ -2414,18 +2288,19 @@ elif page == "PM2.5 Predictions":
 # Historical Analysis page
 elif page == "Satellite Imagery":
     st.markdown(f"""
-    <div class="page-banner-3d" style="background:linear-gradient(135deg,#0c1445 0%,#1e3a8a 30%,#0c4a6e 65%,#0d9488 100%);background-size:300%;animation:gradientShift 8s ease infinite;">
-      <div class="b3d-bubble bb1"></div><div class="b3d-bubble bb2"></div>
-      <div class="b3d-scene">
-        <div class="b3d-ring r2"></div><div class="b3d-ring r3"></div>
-        <div class="b3d-orb b3d-orb-earth"></div>
-        <div class="b3d-node n1"></div><div class="b3d-node n2"></div><div class="b3d-node n3"></div><div class="b3d-node n4"></div>
+    <div class="page-hero ph-navy">
+      <div class="ph-glow"></div>
+      <div class="ph-deco">
+        <div class="ph-ring ph-r2"></div>
+        <div class="ph-ring ph-r3"></div>
+        <div class="ph-sphere ph-s-earth"></div>
+        <div class="ph-node pn1"></div><div class="ph-node pn2"></div><div class="ph-node pn3"></div><div class="ph-node pn4"></div>
       </div>
-      <div class="b3d-content">
-        <div class="b3d-eyebrow">🛰️ NASA Earth Observation &nbsp;·&nbsp; {selected_station}</div>
-        <h1 class="b3d-title">Satellite Imagery<br><span>&amp; Air Quality Maps</span></h1>
-        <p class="b3d-sub">Live satellite views · Aerosol optical depth · Pollution plume tracking</p>
-        <div class="b3d-tags"><span class="b3d-tag">NASA EOSDIS</span><span class="b3d-tag">Aerosol Maps</span><span class="b3d-tag">Live Imagery</span><span class="b3d-tag">PM2.5 Plumes</span></div>
+      <div class="ph-body">
+        <p class="ph-label">NASA Earth Observation &nbsp;·&nbsp; {selected_station}</p>
+        <h1 class="ph-title">Satellite Imagery<br>&amp; Air Quality Maps</h1>
+        <p class="ph-desc">Live satellite views · Aerosol optical depth · Pollution plume tracking</p>
+        <div class="ph-tags"><span class="ph-tag">NASA EOSDIS</span><span class="ph-tag">Aerosol Maps</span><span class="ph-tag">Live Imagery</span><span class="ph-tag">PM2.5 Plumes</span></div>
       </div>
     </div>
     """, unsafe_allow_html=True)
@@ -2668,21 +2543,21 @@ elif page == "Satellite Imagery":
 
 elif page == "Historical Analysis":
     st.markdown(f"""
-    <div class="page-banner-3d" style="background:linear-gradient(135deg,#431407 0%,#9a3412 35%,#b45309 65%,#a16207 100%);background-size:300%;animation:gradientShift 8s ease infinite;">
-      <div class="b3d-bubble bb1"></div><div class="b3d-bubble bb2"></div>
-      <div class="b3d-scene">
-        <div class="b3d-ring r2"></div>
-        <div class="b3d-layers">
-          <div class="b3d-layer ll1"></div><div class="b3d-layer ll2"></div>
-          <div class="b3d-layer ll3"></div><div class="b3d-layer ll4"></div>
+    <div class="page-hero ph-amber">
+      <div class="ph-glow"></div>
+      <div class="ph-deco">
+        <div class="ph-ring ph-r2"></div>
+        <div class="ph-layers">
+          <div class="ph-layer ph-ll1"></div><div class="ph-layer ph-ll2"></div>
+          <div class="ph-layer ph-ll3"></div><div class="ph-layer ph-ll4"></div>
         </div>
-        <div class="b3d-node n1"></div><div class="b3d-node n2"></div><div class="b3d-node n3"></div>
+        <div class="ph-node pn1"></div><div class="ph-node pn2"></div>
       </div>
-      <div class="b3d-content">
-        <div class="b3d-eyebrow">📈 Historical Data Archive &nbsp;·&nbsp; {selected_station}</div>
-        <h1 class="b3d-title">Historical<br><span>Analysis</span></h1>
-        <p class="b3d-sub">2021–2025 air quality records · Seasonal patterns · Long-term trend analysis</p>
-        <div class="b3d-tags"><span class="b3d-tag">2021–2025</span><span class="b3d-tag">Seasonal</span><span class="b3d-tag">Trends</span><span class="b3d-tag">Heatmaps</span></div>
+      <div class="ph-body">
+        <p class="ph-label">Historical Data Archive &nbsp;·&nbsp; {selected_station}</p>
+        <h1 class="ph-title">Historical<br>Analysis</h1>
+        <p class="ph-desc">2021–2025 air quality records · Seasonal patterns · Long-term trend analysis</p>
+        <div class="ph-tags"><span class="ph-tag">2021–2025</span><span class="ph-tag">Seasonal</span><span class="ph-tag">Trends</span><span class="ph-tag">Heatmaps</span></div>
       </div>
     </div>
     """, unsafe_allow_html=True)
@@ -3527,18 +3402,20 @@ elif page == "Historical Analysis":
 # Data Download page
 elif page == "Data Download":
     st.markdown(f"""
-    <div class="page-banner-3d" style="background:linear-gradient(135deg,#052e16 0%,#15803d 40%,#0d9488 70%,#0891b2 100%);background-size:300%;animation:gradientShift 8s ease infinite;">
-      <div class="b3d-bubble bb1"></div><div class="b3d-bubble bb2"></div>
-      <div class="b3d-scene">
-        <div class="b3d-ring r1"></div><div class="b3d-ring r2"></div><div class="b3d-ring r3"></div>
-        <div class="b3d-orb b3d-orb-green"></div>
-        <div class="b3d-node n1"></div><div class="b3d-node n2"></div><div class="b3d-node n3"></div><div class="b3d-node n4"></div>
+    <div class="page-hero ph-green">
+      <div class="ph-glow"></div>
+      <div class="ph-deco">
+        <div class="ph-ring ph-r1"></div>
+        <div class="ph-ring ph-r2"></div>
+        <div class="ph-ring ph-r3"></div>
+        <div class="ph-sphere ph-s-green"></div>
+        <div class="ph-node pn1"></div><div class="ph-node pn2"></div><div class="ph-node pn3"></div><div class="ph-node pn4"></div>
       </div>
-      <div class="b3d-content">
-        <div class="b3d-eyebrow">📥 Data Export Portal &nbsp;·&nbsp; {selected_station}</div>
-        <h1 class="b3d-title">Download<br><span>Air Quality Data</span></h1>
-        <p class="b3d-sub">Export CSV · Excel · Filter by date range · Fort William &amp; Bidhannagar</p>
-        <div class="b3d-tags"><span class="b3d-tag">CSV</span><span class="b3d-tag">Excel</span><span class="b3d-tag">Date Filter</span><span class="b3d-tag">Both Stations</span></div>
+      <div class="ph-body">
+        <p class="ph-label">Data Export Portal &nbsp;·&nbsp; {selected_station}</p>
+        <h1 class="ph-title">Download<br>Air Quality Data</h1>
+        <p class="ph-desc">Export CSV · Excel · Filter by date range · Fort William &amp; Bidhannagar</p>
+        <div class="ph-tags"><span class="ph-tag">CSV</span><span class="ph-tag">Excel</span><span class="ph-tag">Date Filter</span><span class="ph-tag">Both Stations</span></div>
       </div>
     </div>
     """, unsafe_allow_html=True)

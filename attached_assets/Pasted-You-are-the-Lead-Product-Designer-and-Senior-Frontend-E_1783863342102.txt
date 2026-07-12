@@ -1,0 +1,393 @@
+You are the Lead Product Designer and Senior Frontend Engineer for this project.
+
+Before redesigning any page, create one consistent design system that every page in this Streamlit application will use.
+
+This is NOT a redesign of functionality.
+
+This is ONLY the visual design system.
+
+Do NOT change backend logic.
+
+Do NOT remove features.
+
+Do NOT change charts.
+
+Do NOT change ML logic.
+
+Do NOT change APIs.
+
+Do NOT change pages.
+
+Everything should continue working exactly as before.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PROJECT STYLE
+
+Transform this application into a premium AI Environmental Intelligence Platform.
+
+The design should feel inspired by
+
+• Apple
+• Linear
+• OpenAI
+• Vercel
+• NASA
+
+Avoid
+
+Gaming UI
+
+Cyberpunk
+
+Crypto dashboard
+
+Childish UI
+
+Emoji icons
+
+Cartoon illustrations
+
+Rainbow gradients
+
+Heavy glassmorphism
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+DESIGN PHILOSOPHY
+
+Minimal
+
+Elegant
+
+Scientific
+
+Modern
+
+Premium
+
+Timeless
+
+Large whitespace
+
+Excellent alignment
+
+Excellent typography
+
+Strong visual hierarchy
+
+Every page must feel like the same product.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+LIGHT MODE
+
+The light theme should feel like
+
+Modern Environmental Research Laboratory.
+
+Background
+
+Soft Off White
+
+Cards
+
+White
+
+Shadow
+
+Very subtle
+
+Borders
+
+Thin
+
+Professional
+
+Avoid pure white.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+DARK MODE
+
+Dark mode should feel like
+
+AI Environmental Command Center.
+
+Deep navy background.
+
+Layered cards.
+
+Soft ambient blue lighting.
+
+Elegant shadows.
+
+Very subtle glow.
+
+Do NOT simply invert colors.
+
+Dark mode must have its own identity.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+TYPOGRAPHY
+
+Use Inter.
+
+Create one typography scale.
+
+Hero Heading
+
+Page Heading
+
+Section Heading
+
+Card Heading
+
+Body
+
+Caption
+
+Maintain consistency.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+SPACING
+
+Create one spacing system.
+
+Use an 8px spacing scale.
+
+Every section should have generous breathing room.
+
+Nothing should feel crowded.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+CARDS
+
+Create reusable card components.
+
+Hero Card
+
+Metric Card
+
+Insight Card
+
+Chart Card
+
+Action Card
+
+Information Card
+
+Every card must use the same radius, spacing and shadow system.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+BUTTONS
+
+Only three button styles.
+
+Primary
+
+Filled
+
+Secondary
+
+Glass
+
+Danger
+
+Outline
+
+Maintain consistency.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+ICONS
+
+Remove emoji icons.
+
+Use Lucide icons.
+
+Outline style.
+
+Monochrome.
+
+Thin strokes.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+FORMS
+
+Redesign
+
+Inputs
+
+Dropdowns
+
+Sliders
+
+Date Pickers
+
+Tabs
+
+Radio Buttons
+
+File Uploads
+
+Everything must feel consistent.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+CHARTS
+
+Do not change Plotly.
+
+Redesign only chart containers.
+
+Every chart card should contain
+
+Title
+
+Short AI Insight
+
+Chart
+
+Observation
+
+Increase padding.
+
+Increase spacing.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+SIDEBAR
+
+Keep navigation exactly the same.
+
+Only redesign visually.
+
+Improve
+
+Spacing
+
+Typography
+
+Hover states
+
+Active indicator
+
+Section headers
+
+Icons
+
+Premium AI SaaS appearance.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+ANIMATIONS
+
+Use subtle animations only.
+
+Fade
+
+Slide
+
+Scale
+
+Hover Lift
+
+Soft Parallax
+
+Smooth Section Reveal
+
+No flashy animations.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+GLOBAL PAGE STRUCTURE
+
+Every page must follow
+
+Hero
+
+↓
+
+Summary
+
+↓
+
+Primary Visualization
+
+↓
+
+Insights
+
+↓
+
+Actions
+
+↓
+
+Advanced Details
+
+Do not stack everything vertically without hierarchy.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+HERO SYSTEM
+
+Every page keeps a hero section.
+
+Dashboard
+
+AQI Sphere
+
+Analytics
+
+Data Nodes
+
+Training
+
+AI Cube
+
+Predictions
+
+Forecast Rings
+
+Satellite
+
+Earth
+
+Historical
+
+Timeline Layers
+
+Downloads
+
+Data Crystal
+
+Use elegant CSS animations.
+
+No heavy WebGL.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+RESPONSIVE DESIGN
+
+Improve Desktop.
+
+Improve Tablet.
+
+Maintain Mobile.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+IMPORTANT
+
+This prompt creates ONLY the design system.
+
+Do NOT redesign pages yet.
+
+Prepare reusable components that will be used by all remaining redesign prompts.
