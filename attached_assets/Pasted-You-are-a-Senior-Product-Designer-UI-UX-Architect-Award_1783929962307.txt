@@ -1,0 +1,585 @@
+You are a Senior Product Designer, UI/UX Architect, Award-Winning Frontend Engineer, Streamlit Expert, and AI SaaS Product Designer.
+
+Your task is to completely redesign the UI/UX of my existing PM2.5 Air Quality Monitoring & Prediction Platform.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+CRITICAL RULES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+This is ONLY a UI/UX redesign.
+
+DO NOT modify any backend logic.
+
+DO NOT modify ML models.
+
+DO NOT modify APIs.
+
+DO NOT modify prediction logic.
+
+DO NOT modify datasets.
+
+DO NOT remove any page.
+
+DO NOT remove any feature.
+
+DO NOT remove any chart.
+
+DO NOT remove any table.
+
+DO NOT remove any form.
+
+DO NOT remove any control.
+
+DO NOT remove any button.
+
+DO NOT remove any functionality.
+
+DO NOT change navigation logic.
+
+DO NOT rebuild the project.
+
+DO NOT simplify the application.
+
+Preserve 100% of existing functionality.
+
+Only redesign the UI, layout, hierarchy, spacing, animations, typography and visual presentation.
+
+Before writing code, analyze the entire project first.
+
+Understand every page and create one consistent design language for the whole application.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PROJECT GOAL
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Transform this project from a Streamlit dashboard into a premium AI SaaS platform.
+
+The final result should look like something built by a professional product company.
+
+Users should completely forget that this is a Streamlit application.
+
+The experience should be comparable to Apple, Linear, Vercel, OpenAI and award-winning Awwwards websites.
+
+NOT gaming.
+
+NOT cyberpunk.
+
+NOT crypto dashboard.
+
+NOT childish.
+
+NOT colorful for the sake of being colorful.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+BIGGEST UI CHANGES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. REMOVE THE STREAMLIT SIDEBAR NAVIGATION.
+
+Replace it with a floating premium top navigation.
+
+Navigation should stay fixed while scrolling.
+
+Layout
+
+------------------------------------------------
+
+LOGO
+
+Dashboard
+
+Analytics
+
+Model Training
+
+Predictions
+
+Satellite
+
+Historical
+
+Downloads
+
+Station Selector
+
+Theme Toggle
+
+------------------------------------------------
+
+Navigation should have
+
+glass effect
+
+backdrop blur
+
+premium spacing
+
+smooth hover
+
+active indicator
+
+minimal outline icons
+
+NO emoji icons.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+GLOBAL LAYOUT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Every page must follow exactly this hierarchy.
+
+Hero Section
+
+↓
+
+Summary
+
+↓
+
+Primary Visualization
+
+↓
+
+Insights
+
+↓
+
+Interactive Content
+
+↓
+
+Actions
+
+↓
+
+Advanced Information
+
+Every section should have generous spacing.
+
+Never stack everything one after another without hierarchy.
+
+The layout must breathe.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+HERO DESIGN
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Every page starts with a full-width premium hero.
+
+Do NOT create a traditional banner.
+
+Instead create immersive hero sections.
+
+Each page has one signature visual object.
+
+Dashboard
+
+Interactive AQI Orb
+
+Analytics
+
+Floating Data Nodes
+
+Model Training
+
+Minimal AI Cube
+
+Predictions
+
+Forecast Rings
+
+Satellite
+
+3D Earth
+
+Historical
+
+Timeline Layers
+
+Downloads
+
+Data Crystal
+
+Keep animations subtle.
+
+No heavy WebGL.
+
+Use elegant CSS.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+DASHBOARD
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+This page must become the homepage of the platform.
+
+Remove the current large AQI card layout.
+
+Instead make the AQI the hero centerpiece.
+
+Create one large animated AQI Orb in the center of the hero.
+
+The orb should display
+
+Current PM2.5
+
+AQI Category
+
+Station
+
+Last Updated
+
+Live Status
+
+Below the hero
+
+Environmental Conditions
+
+Temperature
+
+Humidity
+
+Wind
+
+Solar Radiation
+
+Arrange these as premium metric cards.
+
+Do NOT use the old equal-size card layout.
+
+Create visual hierarchy.
+
+Below
+
+AI Health Intelligence
+
+Large intelligent recommendation panel.
+
+Instead of warning boxes.
+
+Present recommendations like an AI assistant.
+
+Below
+
+Station Overview
+
+Model Intelligence
+
+Side-by-side premium cards.
+
+Below
+
+Model Performance
+
+Keep Plotly.
+
+Redesign only the container.
+
+Below
+
+Realtime Operations
+
+Collect Data
+
+Retrain
+
+Today's Data
+
+Recent Activity
+
+inside one premium operations panel.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ANALYTICS PAGE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Keep every chart.
+
+Keep every tab.
+
+Redesign layout.
+
+Each visualization should have
+
+Title
+
+AI Insight
+
+Chart
+
+Key Finding
+
+Recommendation
+
+Charts should have premium containers.
+
+Large spacing.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+MODEL TRAINING
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Transform into an AI workflow.
+
+Configuration
+
+↓
+
+Training
+
+↓
+
+Evaluation
+
+↓
+
+Comparison
+
+↓
+
+Feature Importance
+
+↓
+
+Save Results
+
+Create premium workflow cards.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PREDICTIONS PAGE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+This page should be the strongest page in the project.
+
+Keep every feature.
+
+Keep every table.
+
+Keep every download.
+
+Layout
+
+Hero
+
+↓
+
+Current AQI
+
+↓
+
+Forecast Timeline
+
+↓
+
+Prediction Cards
+
+↓
+
+Confidence Visualization
+
+↓
+
+Model Comparison
+
+↓
+
+Forecast Chart
+
+↓
+
+Download
+
+Create beautiful forecast cards.
+
+Improve spacing.
+
+Improve hierarchy.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SATELLITE PAGE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Earth visualization becomes page identity.
+
+Below
+
+Satellite Maps
+
+↓
+
+Ground Comparison
+
+↓
+
+Historical Imagery
+
+↓
+
+Insights
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+HISTORICAL PAGE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Transform into a scientific archive.
+
+Timeline feeling.
+
+Beautiful charts.
+
+Large spacing.
+
+Premium upload area.
+
+Interactive storytelling.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+DOWNLOAD PAGE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Transform into a premium data library.
+
+Downloads should look like document cards instead of plain tables wherever possible without losing functionality.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+LIGHT MODE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Modern Research Laboratory.
+
+Soft off-white background.
+
+White cards.
+
+Thin borders.
+
+Soft shadows.
+
+Minimal gradients.
+
+Professional.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+DARK MODE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+AI Environmental Command Center.
+
+Deep navy background.
+
+Layered surfaces.
+
+Premium cards.
+
+Soft ambient blue lighting.
+
+No pure black.
+
+No excessive glow.
+
+Dark mode should feel different from light mode, not simply inverted.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+DESIGN SYSTEM
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Use one consistent system.
+
+Font
+
+Inter
+
+Spacing
+
+8px grid
+
+Cards
+
+20px radius
+
+Buttons
+
+Primary
+
+Secondary
+
+Outline
+
+Forms
+
+Premium
+
+Charts
+
+Premium containers
+
+Icons
+
+Lucide outline icons only
+
+No emoji icons.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+VISUAL STYLE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Use
+
+Large whitespace
+
+Premium alignment
+
+Perfect typography
+
+Clean grid
+
+Minimal color palette
+
+Subtle glass
+
+Soft shadows
+
+Smooth hover
+
+Professional animations
+
+Do NOT overuse glassmorphism.
+
+Do NOT create flashy gradients.
+
+Do NOT make the UI look busy.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ANIMATIONS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Fade
+
+Slide
+
+Scale
+
+Hover Lift
+
+Parallax
+
+Smooth reveal
+
+Slow floating hero objects
+
+Everything should feel premium.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FINAL GOAL
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+This application should look like an award-winning AI SaaS platform.
+
+When a recruiter opens it they should immediately think:
+
+"This looks like a professionally designed product, not a student Streamlit dashboard."
+
+Keep every feature exactly as it is.
+
+Only transform the complete UI, UX, layout, navigation, spacing, hierarchy, typography, animations and visual presentation.
+
+Work until every page follows one premium design language.

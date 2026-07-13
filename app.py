@@ -604,23 +604,30 @@ def load_user_data(filename):
     with open(filepath, 'r') as f:
         return json.load(f)
 
-# Sidebar for navigation
-st.sidebar.title("Navigation")
+# ── Navigation & settings via session state ───────────────────────
+_ALL_PAGES = ["Dashboard", "Data Analysis and Insights", "Model Training & Comparison",
+              "PM2.5 Predictions", "Satellite Imagery", "Historical Analysis", "Data Download"]
+
+if "page" not in st.session_state:
+    st.session_state.page = "Dashboard"
+if "selected_station" not in st.session_state:
+    st.session_state.selected_station = "Fort William"
+if "theme_mode" not in st.session_state:
+    st.session_state.theme_mode = "Light Mode"
+if "prediction_horizons" not in st.session_state:
+    st.session_state.prediction_horizons = ["Present Day"]
+
+# Keep hidden sidebar for JS-click navigation fallback
 page = st.sidebar.radio(
-    "Go to",
-    ["Dashboard", "Data Analysis and Insights", "Model Training & Comparison", "PM2.5 Predictions", "Satellite Imagery", "Historical Analysis", "Data Download"]
+    "Go to", _ALL_PAGES,
+    index=_ALL_PAGES.index(st.session_state.page) if st.session_state.page in _ALL_PAGES else 0,
+    key="_hs_nav"
 )
+st.session_state.page = page
 
-# Station selection for predictions
-st.sidebar.title("Settings")
-selected_station = st.sidebar.selectbox("Select Station", ["Fort William", "Bidhannagar"], index=0)
-
-# Theme selection (dark/light mode)
-st.sidebar.title("Display Settings")
-theme_mode = st.sidebar.radio(
-    "Select Theme",
-    ["Light Mode", "Dark Mode"]
-)
+# Station and theme come from session state (controlled by inline controls strip)
+selected_station = st.session_state.selected_station
+theme_mode = st.session_state.theme_mode
 
 # Apply selected theme
 if theme_mode == "Dark Mode":
@@ -736,58 +743,173 @@ if theme_mode == "Dark Mode":
     [data-testid="stFileUploader"] { background:var(--bg-raised) !important; border-color:var(--border) !important; }
     ::-webkit-scrollbar-thumb { background:rgba(255,255,255,.1) !important; }
     ::-webkit-scrollbar-thumb:hover { background:rgba(59,130,246,.35) !important; }
+    /* ── Dark Mode Topnav ──────────────────────────────────── */
+    .aq-topnav {
+      background:rgba(6,11,24,.92) !important;
+      border-bottom-color:rgba(255,255,255,.06) !important;
+      box-shadow:0 1px 0 rgba(0,0,0,.3),0 4px 24px rgba(0,0,0,.2) !important;
+    }
+    .tn-brand { color:#e8edf5 !important; }
+    .tn-link { color:rgba(255,255,255,.3) !important; }
+    .tn-link:hover,.tn-link.tn-active { color:#e8edf5 !important; }
+    .tn-station-pill {
+      background:rgba(255,255,255,.05) !important;
+      border-color:rgba(255,255,255,.08) !important;
+      color:rgba(255,255,255,.5) !important;
+    }
+    .tn-icon-btn {
+      background:rgba(255,255,255,.04) !important;
+      border-color:rgba(255,255,255,.07) !important;
+      color:rgba(255,255,255,.4) !important;
+    }
+    .tn-icon-btn:hover {
+      background:rgba(255,255,255,.09) !important;
+      color:rgba(255,255,255,.85) !important;
+      border-color:rgba(59,130,246,.4) !important;
+    }
+    /* Dark mode dashboard hero */
+    .db-hero { border:1px solid rgba(255,255,255,.03) !important; }
+    /* Dark mode section headers */
+    .db-section-label { color:#60a5fa !important; }
+    .db-section-title { color:#e8edf5 !important; }
+    .db-section-sub { color:#4a5f7a !important; }
+    /* Dark mode env cards */
+    .env-card { background:#0d1526 !important; border-color:rgba(255,255,255,.06) !important; }
+    .env-card-value { color:#e8edf5 !important; }
+    .env-card-label,.env-card-trend { color:#4a5f7a !important; }
+    /* Dark mode health panel */
+    .health-panel { background:#0d1526 !important; border-color:rgba(255,255,255,.06) !important; }
+    .health-col { border-right-color:rgba(255,255,255,.05) !important; }
+    .health-col-title { color:#e8edf5 !important; }
+    .health-col-text,.health-measures-text { color:#8496b0 !important; }
+    .health-measures { background:#111d30 !important; border-top-color:rgba(255,255,255,.05) !important; }
+    /* Dark mode overview */
+    .overview-card { background:#0d1526 !important; border-color:rgba(255,255,255,.06) !important; }
+    .overview-key { color:#4a5f7a !important; }
+    .overview-val { color:#e8edf5 !important; }
+    .overview-badge { background:rgba(59,130,246,.12) !important; border-color:rgba(59,130,246,.2) !important; color:#60a5fa !important; }
+    /* Dark mode chart */
+    .chart-card { background:#0d1526 !important; border-color:rgba(255,255,255,.06) !important; }
+    .chart-card-title { color:#e8edf5 !important; }
+    /* Dark mode action cards */
+    .action-card { background:#0d1526 !important; border-color:rgba(255,255,255,.06) !important; }
+    .action-card-title { color:#e8edf5 !important; }
     </style>
     """, unsafe_allow_html=True)
 
-# Prediction time horizon
-st.sidebar.subheader("Select Prediction Time Horizon")
-prediction_horizons = st.sidebar.multiselect(
-    "Prediction Days",
-    ["Present Day", "1 Day Ahead", "2 Days Ahead", "4 Days Ahead", "7 Days Ahead"],
-    default=["Present Day"]
-)
+# Prediction horizons via session state (selector moved to Predictions page)
+prediction_horizons = st.session_state.prediction_horizons
 
-# Display AQI scale in sidebar
-st.sidebar.title("AQI Levels")
-
-# Create a table for AQI levels
-aqi_table_data = {
-    "AQI Level": [level["level"] for level in aqi_levels],
-    "Range": [level["range"] for level in aqi_levels],
-    "Health Implications": [level["implications"] for level in aqi_levels]
+# ══════════════════════════════════════════════════════════════════
+# FLOATING TOP NAVIGATION BAR
+# ══════════════════════════════════════════════════════════════════
+_PAGES_MAP = {
+    "Dashboard":                      "Dashboard",
+    "Data Analysis and Insights":     "Analytics",
+    "Model Training & Comparison":    "Models",
+    "PM2.5 Predictions":              "Predictions",
+    "Satellite Imagery":              "Satellite",
+    "Historical Analysis":            "Historical",
+    "Data Download":                  "Downloads",
 }
+_tn_html = "".join([
+    f'<button class="tn-link{" tn-active" if page == k else ""}" onclick="aqNav(\'{k.replace(chr(39), "")}\')"><span>{v}</span></button>'
+    for k, v in _PAGES_MAP.items()
+])
+_is_dark_nav = theme_mode == "Dark Mode"
+_moon_svg = '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>'
+_sun_svg  = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>'
+_theme_icon = _sun_svg if _is_dark_nav else _moon_svg
+_theme_title = "Switch to Light Mode" if _is_dark_nav else "Switch to Dark Mode"
 
-aqi_df = pd.DataFrame(aqi_table_data)
-st.sidebar.dataframe(aqi_df, hide_index=True)
+st.markdown(f"""
+<nav class="aq-topnav" id="aqTopNav">
+  <div class="tn-logo">
+    <div class="tn-logomark">A</div>
+    <span class="tn-brand">AURA</span>
+  </div>
+  <div class="tn-links">{_tn_html}</div>
+  <div class="tn-right">
+    <div class="tn-station-pill">
+      <span class="tn-station-live"></span>
+      {selected_station}
+    </div>
+    <button class="tn-icon-btn" id="aqThemeToggle" title="{_theme_title}" onclick="aqTheme()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">{_theme_icon}</svg>
+    </button>
+  </div>
+</nav>
+<script>
+(function() {{
+  function aqNav(pg) {{
+    var sb = document.querySelector('[data-testid="stSidebar"]');
+    if (!sb) return;
+    var labels = sb.querySelectorAll('label');
+    for (var i = 0; i < labels.length; i++) {{
+      var t = (labels[i].innerText || labels[i].textContent || '').trim();
+      if (t === pg) {{ labels[i].click(); return; }}
+    }}
+  }}
+  function aqTheme() {{
+    var btn = document.querySelector('[data-testid="stBaseButton-secondary"][key="_ctrl_theme"]') ||
+              document.querySelector('button[data-testid="stBaseButton-secondary"]');
+    if (btn) {{ btn.click(); return; }}
+    // Fallback: find by text
+    var btns = document.querySelectorAll('button');
+    for (var i = 0; i < btns.length; i++) {{
+      var t = btns[i].innerText || '';
+      if (t === '🌙' || t === '☀️') {{ btns[i].click(); return; }}
+    }}
+  }}
+  window.aqNav = aqNav;
+  window.aqTheme = aqTheme;
+}})();
+</script>
+""", unsafe_allow_html=True)
 
-# Add dataset info at bottom of sidebar
-st.sidebar.markdown("---")
-st.sidebar.caption("📊 Dataset: Fort William & Bidhannagar (2021-2025)")
+# ── SUB-NAV: station + theme controls ────────────────────────────────
+st.markdown("""<style>
+/* Controls strip — thin secondary bar */
+div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"] [data-testid="stSelectbox"]:first-of-type) {
+  background: var(--bg-surface) !important;
+  border-bottom: 1px solid var(--border) !important;
+  padding: 4px 0 !important;
+  margin: 0 -1rem !important;
+  width: calc(100% + 2rem) !important;
+}
+/* Style the station selectbox */
+div[data-testid="stSelectbox"] [data-baseweb="select"] > div {
+  border-radius: 999px !important;
+  border-color: var(--border) !important;
+  font-size: .75rem !important;
+  min-height: 30px !important;
+  padding: 2px 10px !important;
+  background: var(--bg-raised) !important;
+}
+div[data-testid="stSelectbox"] [data-baseweb="select"] span {
+  font-size: .75rem !important; font-weight: 500 !important;
+}
+</style>""", unsafe_allow_html=True)
+
+_cc_pad, _cc_stn, _cc_thm = st.columns([5.5, 1.8, 0.6])
+with _cc_stn:
+    _new_stn = st.selectbox(
+        "Station", ["Fort William", "Bidhannagar"],
+        index=0 if selected_station == "Fort William" else 1,
+        key="_ctrl_station", label_visibility="collapsed"
+    )
+    if _new_stn != selected_station:
+        st.session_state.selected_station = _new_stn
+        st.rerun()
+    selected_station = st.session_state.selected_station
+with _cc_thm:
+    _is_dark_now = theme_mode == "Dark Mode"
+    if st.button("☀️" if _is_dark_now else "🌙", key="_ctrl_theme", help=_theme_title):
+        st.session_state.theme_mode = "Light Mode" if _is_dark_now else "Dark Mode"
+        st.rerun()
 
 # Dashboard page
 if page == "Dashboard":
-    # Station-specific title
-    st.markdown(f"""
-    <div class="page-hero dash-hero">
-      <div class="ph-glow"></div>
-      <div class="ph-deco">
-        <div class="ph-ring ph-r1"></div>
-        <div class="ph-ring ph-r2"></div>
-        <div class="ph-ring ph-r3"></div>
-        <div class="ph-sphere ph-s-blue"></div>
-      </div>
-      <div class="ph-body">
-        <p class="ph-label">Real-time Monitoring &nbsp;·&nbsp; Kolkata, India</p>
-        <h1 class="ph-title">PM2.5 Air Quality</h1>
-        <p class="ph-desc">{selected_station} Station</p>
-        <div class="hero-live-badge">
-          <span class="hero-live-dot"></span>
-          Live &amp; Forecasting
-        </div>
-      </div>
-    </div>
-    """, unsafe_allow_html=True)
-    
     # Try to get real-time data first, then fall back to dataset
     try:
         # Get current observed data from APIs
@@ -1178,6 +1300,14 @@ elif page == "Data Analysis and Insights":
     if data.empty:
         st.warning("No data available for analysis.")
     else:
+        st.markdown(f"""
+        <div class="aq-section">
+          <p class="aq-section-label">Analytics Engine · {selected_station}</p>
+          <h2 class="aq-section-title">Explore the Data</h2>
+          <p class="aq-section-sub">Correlations, historical trends, model performance and forecasting insights across all meteorological parameters.</p>
+        </div>
+        <div class="aq-section-rule"></div>
+        """, unsafe_allow_html=True)
         # Create tabs for different analyses
         tabs = st.tabs(["Parameter Correlations", "Historical Trends", "Model Performance", "Forecasting Insights"])
         
@@ -1556,31 +1686,40 @@ elif page == "Model Training & Comparison":
     if data.empty:
         st.warning("No data available for model training.")
     else:
+        st.markdown("""
+        <div class="aq-section">
+          <p class="aq-section-label">Machine Learning Pipeline</p>
+          <h2 class="aq-section-title">Train &amp; Compare Models</h2>
+          <p class="aq-section-sub">Fit four ML algorithms on historical PM2.5 data and compare their accuracy side-by-side using RMSE, MAE, and R² metrics.</p>
+        </div>
+        <div class="aq-section-rule"></div>
+        """, unsafe_allow_html=True)
+
+        _mc1, _mc2 = st.columns([1, 1])
+        with _mc1:
+            st.markdown("""<div class="aq-info-card">
+              <div class="aq-info-card-title">Pipeline Steps</div>
+              <div class="aq-info-card-body">
+                1. <b>Data Preprocessing</b> — clean and normalize inputs<br>
+                2. <b>Feature Engineering</b> — seasonal sine/cosine transforms<br>
+                3. <b>Train-Test Split</b> — configurable ratio<br>
+                4. <b>Model Training</b> — fit all 4 algorithms<br>
+                5. <b>Evaluation</b> — compare with RMSE, MAE, R²
+              </div>
+            </div>""", unsafe_allow_html=True)
+        with _mc2:
+            st.markdown("""<div class="aq-info-card">
+              <div class="aq-info-card-title">Models Compared</div>
+              <div class="aq-info-card-body">
+                <b>Random Forest</b> — ensemble of decision trees (primary)<br>
+                <b>Decision Tree</b> — interpretable tree regressor<br>
+                <b>Linear Regression</b> — baseline linear model<br>
+                <b>Logistic Regression</b> — adapted for PM2.5 classification bins
+              </div>
+            </div>""", unsafe_allow_html=True)
+
         # Station selection for model training
         station_for_model = st.selectbox("Select Station for Model Training", ["Fort William", "Bidhannagar"])
-        
-        # Filter data for the selected station
-        station_data = data[data['Station'] == station_for_model].copy()
-        
-        # Add detailed explanation about model training process
-        st.markdown("""
-        ### Model Training Process
-        
-        This page allows you to train multiple machine learning models on historical data and compare their performance.
-        
-        **Steps in the model training process:**
-        1. **Data Preprocessing:** Clean and prepare the data for training
-        2. **Feature Engineering:** Extract relevant features from the data
-        3. **Train-Test Split:** Divide data into training and testing sets
-        4. **Model Training:** Train multiple models on the training data
-        5. **Model Evaluation:** Compare models using various metrics
-        
-        **Models Used:**
-        - **Model Tree:** Decision tree-based regressor for PM2.5 prediction
-        - **NLR (Non-Linear Regression):** Advanced non-linear modeling
-        - **Random Forest:** Ensemble learning method using multiple decision trees
-        - **Logistic Regression:** Adapted for regression by binning PM2.5 values
-        """)
         
         # Train test split ratio
         split_ratio = st.slider("Test Data Size (%)", 10, 40, 20) / 100
@@ -1811,8 +1950,28 @@ elif page == "PM2.5 Predictions":
         # Current date for reference
         current_date = datetime.now().strftime("%Y-%m-%d")
         
-        st.subheader(f"PM2.5 Prediction for {selected_station}")
-        
+        st.markdown(f"""
+        <div class="aq-section">
+          <p class="aq-section-label">AI Prediction Engine · {selected_station}</p>
+          <h2 class="aq-section-title">Run a Forecast</h2>
+          <p class="aq-section-sub">Choose real-time observed weather data or enter parameters manually. The best-performing model is auto-selected from training results.</p>
+        </div>
+        <div class="aq-section-rule"></div>
+        """, unsafe_allow_html=True)
+
+        # Prediction horizon selector (moved from sidebar)
+        _ph_options = ["Present Day", "1 Day Ahead", "2 Days Ahead", "4 Days Ahead", "7 Days Ahead"]
+        _ph_sel = st.multiselect(
+            "Prediction Horizons",
+            _ph_options,
+            default=st.session_state.prediction_horizons,
+            key="_pred_horizons_sel",
+            help="Select one or more forecast horizons"
+        )
+        if _ph_sel != st.session_state.prediction_horizons:
+            st.session_state.prediction_horizons = _ph_sel
+            prediction_horizons = _ph_sel
+
         # Option to use real-time observed data or manual input
         prediction_method = st.radio(
             "Select prediction method",
@@ -2317,6 +2476,15 @@ elif page == "Satellite Imagery":
     </div>
     """, unsafe_allow_html=True)
     
+    st.markdown(f"""
+    <div class="aq-section">
+      <p class="aq-section-label">NASA Earth Observation · {selected_station}</p>
+      <h2 class="aq-section-title">Satellite &amp; Aerosol Maps</h2>
+      <p class="aq-section-sub">View real-time satellite imagery and aerosol optical depth maps for Kolkata from NASA EOSDIS, cross-referenced with ground-level PM2.5 readings.</p>
+    </div>
+    <div class="aq-section-rule"></div>
+    """, unsafe_allow_html=True)
+
     # Date selection for satellite imagery
     sat_date = st.date_input("Select Date for Satellite Data", datetime.now().date())
     sat_date_str = sat_date.strftime("%Y-%m-%d")
@@ -2580,8 +2748,15 @@ elif page == "Historical Analysis":
     if station_data.empty:
         st.warning(f"No data available for {selected_station}. Please check the dataset or try another station.")
     else:
-        # Option to upload custom data for analysis
-        st.subheader("Analyze Data")
+        st.markdown(f"""
+        <div class="aq-section">
+          <p class="aq-section-label">Historical Archive · {selected_station}</p>
+          <h2 class="aq-section-title">Explore Historical Records</h2>
+          <p class="aq-section-sub">Five years of PM2.5 and meteorological data from 2021–2025. Filter by date, visualize seasonal cycles, and detect long-term air quality trends.</p>
+        </div>
+        <div class="aq-section-rule"></div>
+        """, unsafe_allow_html=True)
+
         data_source = st.radio(
             "Select Data Source",
             ["Use Built-in Dataset", "Upload Your Own Dataset"]
@@ -3438,6 +3613,14 @@ elif page == "Data Download":
     if station_data.empty:
         st.warning(f"No data available for download for {selected_station}.")
     else:
+        st.markdown(f"""
+        <div class="aq-section">
+          <p class="aq-section-label">Data Export Portal · {selected_station}</p>
+          <h2 class="aq-section-title">Download Records</h2>
+          <p class="aq-section-sub">Export historical data, model predictions, and analysis results in CSV, Excel, or JSON. Filter by station, date range, and aggregation level.</p>
+        </div>
+        <div class="aq-section-rule"></div>
+        """, unsafe_allow_html=True)
         # Tabs for different data types
         download_tabs = st.tabs(["Historical Data", "Prediction Data", "User Analysis Data"])
         

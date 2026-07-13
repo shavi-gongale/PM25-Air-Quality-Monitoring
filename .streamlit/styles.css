@@ -77,12 +77,24 @@
   color:var(--text) !important;
 }
 .main .block-container {
-  padding-top:1.25rem !important;
+  padding-top:0 !important;
   padding-bottom:4rem !important;
-  max-width:1200px !important;
+  max-width:1240px !important;
 }
+/* Remove sidebar spacing — full-width content */
+.main { margin-left:0 !important; padding-left:0 !important; }
+section.main > div { padding-left:0 !important; }
+[data-testid="stAppViewBlockContainer"] { padding-top:0 !important; }
 
-/* ── 5. Staggered Entrance ──────────────────────────────────────── */
+/* ── 5. Hide Sidebar Completely ──────────────────────────────────── */
+[data-testid="stSidebar"],
+[data-testid="stSidebarCollapsedControl"],
+[data-testid="stSidebarNavToggleButton"],
+section[data-testid="stSidebar"] { display:none !important; }
+/* Show when settings opened */
+[data-testid="stSidebar"].aq-sb-visible { display:flex !important; }
+
+/* ── 6. Staggered Entrance ──────────────────────────────────────── */
 [data-testid="stVerticalBlock"] > [data-testid="stVerticalBlockBorderWrapper"],
 [data-testid="stVerticalBlock"] > div { animation:fadeUp .4s ease both; }
 [data-testid="stVerticalBlock"] > div:nth-child(1)  {animation-delay:.00s}
@@ -93,31 +105,521 @@
 [data-testid="stVerticalBlock"] > div:nth-child(6)  {animation-delay:.25s}
 [data-testid="stVerticalBlock"] > div:nth-child(n+7){animation-delay:.30s}
 
-/* ── 6. Sidebar ─────────────────────────────────────────────────── */
-[data-testid="stSidebar"] {
+/* ── 7. Streamlit Native Component Overrides (Global Premium) ───── */
+
+/* ── Tabs ── */
+[data-testid="stTabs"] [data-baseweb="tab-list"] {
+  gap:4px !important;
+  background:var(--bg-raised) !important;
+  border:1px solid var(--border) !important;
+  border-radius:var(--r-full) !important;
+  padding:4px !important;
+  display:inline-flex !important;
+  margin-bottom:24px !important;
+}
+[data-testid="stTabs"] [data-baseweb="tab"] {
+  border-radius:var(--r-full) !important;
+  font-size:.78rem !important;
+  font-weight:500 !important;
+  letter-spacing:.01em !important;
+  padding:6px 16px !important;
+  color:var(--text-2) !important;
+  border:none !important;
+  background:transparent !important;
+  transition:all var(--t) !important;
+}
+[data-testid="stTabs"] [data-baseweb="tab"][aria-selected="true"] {
+  background:var(--bg-surface) !important;
+  color:var(--text) !important;
+  box-shadow:var(--sh-xs) !important;
+}
+[data-testid="stTabs"] [data-baseweb="tab-highlight"] { display:none !important; }
+[data-testid="stTabs"] [data-baseweb="tab-border"]    { display:none !important; }
+
+/* ── Metric cards ── */
+[data-testid="stMetric"] {
+  background:var(--bg-surface) !important;
+  border:1px solid var(--border) !important;
+  border-radius:var(--r-xl) !important;
+  padding:18px 20px 16px !important;
+  box-shadow:var(--sh-sm) !important;
+  transition:box-shadow var(--t) !important;
+}
+[data-testid="stMetric"]:hover { box-shadow:var(--sh-md) !important; }
+[data-testid="stMetricLabel"] {
+  font-size:.7rem !important;
+  font-weight:600 !important;
+  letter-spacing:.08em !important;
+  text-transform:uppercase !important;
+  color:var(--text-3) !important;
+}
+[data-testid="stMetricValue"] {
+  font-size:1.6rem !important;
+  font-weight:700 !important;
+  color:var(--text) !important;
+  letter-spacing:-.02em !important;
+  line-height:1.1 !important;
+}
+[data-testid="stMetricDelta"] svg { display:none !important; }
+[data-testid="stMetricDeltaIcon-Up"]   { color:var(--green) !important; }
+[data-testid="stMetricDeltaIcon-Down"] { color:var(--red) !important; }
+
+/* ── Alert/Info/Warning/Error boxes ── */
+[data-testid="stAlert"] {
+  border-radius:var(--r-lg) !important;
+  border-left-width:3px !important;
+  font-size:.875rem !important;
+  font-family:var(--font) !important;
+}
+.stSuccess { background:rgba(5,150,105,.06) !important; border-left-color:var(--green) !important; }
+.stInfo    { background:rgba(37,99,235,.06) !important; border-left-color:var(--blue) !important; }
+.stWarning { background:rgba(217,119,6,.06) !important; border-left-color:var(--amber) !important; }
+.stError   { background:rgba(220,38,38,.06) !important; border-left-color:var(--red) !important; }
+[data-testid="stAlertContainer"] p { font-family:var(--font) !important; }
+
+/* ── Buttons ── */
+[data-testid="stButton"] button {
+  border-radius:var(--r-full) !important;
+  font-size:.8rem !important;
+  font-weight:600 !important;
+  letter-spacing:.01em !important;
+  padding:8px 18px !important;
+  font-family:var(--font) !important;
+  transition:all var(--t) !important;
+}
+[data-testid="stButton"] button[kind="primary"],
+[data-testid="stButton"] button[data-testid="stBaseButton-primary"] {
+  background:var(--blue) !important;
+  border-color:var(--blue) !important;
+  color:#fff !important;
+  box-shadow:0 1px 2px rgba(37,99,235,.2) !important;
+}
+[data-testid="stButton"] button[kind="primary"]:hover {
+  background:var(--blue-dark) !important;
+  box-shadow:0 4px 12px rgba(37,99,235,.3) !important;
+}
+[data-testid="stButton"] button[kind="secondary"],
+[data-testid="stButton"] button[data-testid="stBaseButton-secondary"] {
+  background:var(--bg-surface) !important;
+  border:1px solid var(--border) !important;
+  color:var(--text) !important;
+}
+[data-testid="stButton"] button[kind="secondary"]:hover {
+  border-color:var(--blue-light) !important;
+  color:var(--blue) !important;
+}
+
+/* ── Selectboxes / dropdowns ── */
+[data-baseweb="select"] > div:first-child {
+  border-color:var(--border) !important;
+  border-radius:var(--r-lg) !important;
+  background:var(--bg-surface) !important;
+  font-family:var(--font) !important;
+  font-size:.875rem !important;
+  transition:border-color var(--t) !important;
+}
+[data-baseweb="select"] > div:first-child:hover  { border-color:var(--blue-light) !important; }
+[data-baseweb="select"] > div:first-child:focus-within { border-color:var(--blue) !important; }
+[data-baseweb="popover"] [data-baseweb="menu"] {
+  border-radius:var(--r-lg) !important;
+  border:1px solid var(--border) !important;
+  box-shadow:var(--sh-lg) !important;
+  overflow:hidden !important;
+}
+
+/* ── Text inputs ── */
+[data-baseweb="input"] input,
+[data-baseweb="textarea"] textarea {
+  border-color:var(--border) !important;
+  border-radius:var(--r-lg) !important;
+  background:var(--bg-surface) !important;
+  font-family:var(--font) !important;
+  font-size:.875rem !important;
+}
+[data-baseweb="input"] input:focus,
+[data-baseweb="textarea"] textarea:focus {
+  border-color:var(--blue) !important;
+  box-shadow:0 0 0 3px rgba(37,99,235,.12) !important;
+}
+
+/* ── Sliders ── */
+[data-testid="stSlider"] [data-baseweb="slider"] [data-testid="stTickBar"] { display:none; }
+[data-testid="stSlider"] [data-baseweb="slider"] [class*="thumb"] {
+  background:var(--blue) !important;
+  border:2px solid #fff !important;
+  box-shadow:0 1px 4px rgba(37,99,235,.35) !important;
+}
+[data-testid="stSlider"] [data-baseweb="slider"] [class*="track"]:not([class*="fill"]) {
+  background:var(--border) !important;
+  border-radius:var(--r-full) !important;
+  height:3px !important;
+}
+[data-testid="stSlider"] [data-baseweb="slider"] [class*="track"][class*="fill"] {
+  background:var(--blue) !important;
+  border-radius:var(--r-full) !important;
+}
+
+/* ── Radio buttons ── */
+[data-testid="stRadio"] [data-baseweb="radio"] {
+  font-family:var(--font) !important;
+  font-size:.875rem !important;
+}
+[data-testid="stRadio"] label { cursor:pointer !important; }
+
+/* ── Checkboxes ── */
+[data-testid="stCheckbox"] label { font-family:var(--font) !important; }
+[data-testid="stCheckbox"] [data-testid="stCheckboxLabel"] { font-size:.875rem !important; }
+
+/* ── Date inputs ── */
+[data-testid="stDateInput"] [data-baseweb="input"] input {
+  font-family:var(--font) !important;
+}
+
+/* ── File uploader ── */
+[data-testid="stFileUploader"] {
+  border:1.5px dashed var(--border) !important;
+  border-radius:var(--r-xl) !important;
+  background:var(--bg-raised) !important;
+  padding:12px !important;
+  transition:border-color var(--t) !important;
+}
+[data-testid="stFileUploader"]:hover { border-color:var(--blue-light) !important; }
+[data-testid="stFileUploader"] [data-testid="stFileUploaderDropzoneInstructions"] {
+  font-family:var(--font) !important;
+  font-size:.85rem !important;
+}
+
+/* ── Expanders ── */
+[data-testid="stExpander"] {
+  border:1px solid var(--border) !important;
+  border-radius:var(--r-lg) !important;
+  background:var(--bg-surface) !important;
+  overflow:hidden !important;
+}
+[data-testid="stExpander"] summary {
+  font-family:var(--font) !important;
+  font-size:.875rem !important;
+  font-weight:500 !important;
+  padding:12px 16px !important;
+}
+[data-testid="stExpander"] summary:hover { background:var(--bg-raised) !important; }
+
+/* ── Dataframes / tables ── */
+[data-testid="stDataFrame"],
+[data-testid="stTable"] {
+  border:1px solid var(--border) !important;
+  border-radius:var(--r-xl) !important;
+  overflow:hidden !important;
+  box-shadow:var(--sh-sm) !important;
+}
+.dvn-scroller { border-radius:inherit !important; }
+
+/* ── Spinner ── */
+[data-testid="stSpinner"] > div { border-color:var(--blue) transparent transparent !important; }
+
+/* ── st.subheader / h* from markdown ── */
+.main h1,.main h2,.main h3 {
+  font-family:var(--font) !important;
+  color:var(--text) !important;
+  letter-spacing:-.015em !important;
+  font-weight:700 !important;
+}
+.main h3 { font-size:1rem !important; font-weight:600 !important; }
+.main h4 { font-size:.9rem !important; font-weight:600 !important; font-family:var(--font) !important; color:var(--text-2) !important; }
+
+/* ── Dividers ── */
+hr { border-color:var(--border) !important; margin:28px 0 !important; }
+
+/* ── MultiSelect ── */
+[data-baseweb="tag"] {
+  border-radius:var(--r-full) !important;
+  font-size:.7rem !important;
+  font-weight:600 !important;
+  background:rgba(37,99,235,.1) !important;
+  color:var(--blue) !important;
+  border:none !important;
+}
+
+/* ── Download button ── */
+[data-testid="stDownloadButton"] button {
+  border-radius:var(--r-full) !important;
+  font-family:var(--font) !important;
+  font-size:.8rem !important;
+  font-weight:600 !important;
+  background:var(--blue) !important;
+  border-color:var(--blue) !important;
+  color:#fff !important;
+  padding:8px 20px !important;
+  box-shadow:0 1px 2px rgba(37,99,235,.2) !important;
+  transition:all var(--t) !important;
+}
+[data-testid="stDownloadButton"] button:hover {
+  background:var(--blue-dark) !important;
+  box-shadow:0 4px 12px rgba(37,99,235,.3) !important;
+}
+
+/* ── Caption / small text ── */
+[data-testid="stCaptionContainer"] p {
+  font-family:var(--font) !important;
+  font-size:.75rem !important;
+  color:var(--text-3) !important;
+}
+
+/* ── Plotly chart containers ── */
+[data-testid="stPlotlyChart"] {
+  border:1px solid var(--border) !important;
+  border-radius:var(--r-xl) !important;
+  overflow:hidden !important;
+  background:var(--bg-surface) !important;
+  padding:8px !important;
+  box-shadow:var(--sh-sm) !important;
+}
+
+/* ── Image containers ── */
+[data-testid="stImage"] img {
+  border-radius:var(--r-xl) !important;
+  border:1px solid var(--border) !important;
+}
+
+/* ── Spinner text ── */
+.stSpinner p { font-family:var(--font) !important; font-size:.85rem !important; color:var(--text-2) !important; }
+
+/* ── Progress bar ── */
+[data-testid="stProgressBar"] > div > div { background:var(--blue) !important; border-radius:var(--r-full) !important; }
+[data-testid="stProgressBar"] > div { background:var(--border) !important; border-radius:var(--r-full) !important; height:4px !important; }
+
+/* ── Labels / form labels ── */
+[data-testid="stWidgetLabel"] p,
+label[data-testid="stWidgetLabel"] {
+  font-family:var(--font) !important;
+  font-size:.75rem !important;
+  font-weight:600 !important;
+  letter-spacing:.04em !important;
+  text-transform:uppercase !important;
+  color:var(--text-3) !important;
+  margin-bottom:4px !important;
+}
+
+/* ── Columns gap ── */
+[data-testid="stHorizontalBlock"] { gap:16px !important; }
+
+/* ═══ Section Header Helper Classes (used in each page) ═══════════ */
+.aq-section {
+  margin:32px 0 20px;
+}
+.aq-section-label {
+  font-size:.7rem; font-weight:700;
+  letter-spacing:.1em; text-transform:uppercase;
+  color:var(--blue); margin-bottom:6px;
+}
+.aq-section-title {
+  font-size:1.25rem; font-weight:700;
+  color:var(--text); letter-spacing:-.02em;
+  margin:0 0 4px;
+}
+.aq-section-sub {
+  font-size:.85rem; color:var(--text-2);
+  line-height:1.5; margin:0;
+}
+.aq-section-rule {
+  height:1px; background:var(--border);
+  margin:16px 0 24px;
+}
+/* Stat row card */
+.aq-stat-card {
+  background:var(--bg-surface);
+  border:1px solid var(--border);
+  border-radius:var(--r-xl);
+  padding:20px 22px 18px;
+  box-shadow:var(--sh-sm);
+  transition:box-shadow var(--t);
+}
+.aq-stat-card:hover { box-shadow:var(--sh-md); }
+.aq-stat-label {
+  font-size:.68rem; font-weight:700;
+  letter-spacing:.09em; text-transform:uppercase;
+  color:var(--text-3); margin-bottom:8px;
+}
+.aq-stat-value {
+  font-size:1.7rem; font-weight:700;
+  color:var(--text); letter-spacing:-.025em;
+  line-height:1;
+}
+.aq-stat-unit {
+  font-size:.75rem; font-weight:400;
+  color:var(--text-3); margin-left:4px;
+}
+.aq-stat-trend {
+  font-size:.7rem; color:var(--text-3);
+  margin-top:8px;
+}
+/* Info card (for text content) */
+.aq-info-card {
+  background:var(--bg-surface);
+  border:1px solid var(--border);
+  border-radius:var(--r-xl);
+  padding:20px 24px;
+  box-shadow:var(--sh-sm);
+  font-family:var(--font);
+  margin-bottom:16px;
+}
+.aq-info-card-title {
+  font-size:.8rem; font-weight:700;
+  letter-spacing:.04em; text-transform:uppercase;
+  color:var(--blue); margin-bottom:10px;
+}
+.aq-info-card-body {
+  font-size:.875rem; line-height:1.6;
+  color:var(--text-2);
+}
+/* Premium badge pill */
+.aq-badge {
+  display:inline-flex; align-items:center;
+  gap:5px; padding:3px 10px;
+  border-radius:var(--r-full);
+  font-size:.68rem; font-weight:600;
+  letter-spacing:.05em; text-transform:uppercase;
+}
+.aq-badge-blue  { background:rgba(37,99,235,.08); color:var(--blue); border:1px solid rgba(37,99,235,.15); }
+.aq-badge-green { background:rgba(5,150,105,.08); color:var(--green); border:1px solid rgba(5,150,105,.15); }
+.aq-badge-amber { background:rgba(217,119,6,.08); color:var(--amber); border:1px solid rgba(217,119,6,.15); }
+.aq-badge-red   { background:rgba(220,38,38,.08); color:var(--red); border:1px solid rgba(220,38,38,.15); }
+
+/* ── 8. TOP NAVIGATION BAR (sticky — works inside Streamlit scroll) */
+.aq-topnav {
+  position:sticky;
+  top:0;
+  height:56px;
+  z-index:9998;
+  display:flex; align-items:center;
+  padding:0 28px; gap:0;
+  background:rgba(245,246,248,.95);
+  border-bottom:1px solid rgba(0,0,0,.055);
+  backdrop-filter:blur(24px) saturate(180%);
+  -webkit-backdrop-filter:blur(24px) saturate(180%);
+  font-family:var(--font);
+  box-shadow:0 1px 0 rgba(0,0,0,.04), 0 8px 28px rgba(0,0,0,.04);
+  margin:-1rem -1rem 0;       /* bleed to edges */
+  width:calc(100% + 2rem);    /* match bleed */
+}
+
+/* Logo */
+.tn-logo {
+  display:flex; align-items:center; gap:8px;
+  flex-shrink:0; margin-right:28px; cursor:default;
+}
+.tn-logomark {
+  width:26px; height:26px; border-radius:7px;
+  background:linear-gradient(135deg,#2563eb,#4f46e5);
+  display:flex; align-items:center; justify-content:center;
+  font-size:.7rem; font-weight:800; color:#fff;
+  letter-spacing:-.02em; flex-shrink:0;
+  box-shadow:0 2px 8px rgba(37,99,235,.35);
+}
+.tn-brand {
+  font-size:.85rem; font-weight:700;
+  color:var(--text); letter-spacing:.01em;
+}
+.tn-brand-dot {
+  width:4px; height:4px; border-radius:50%;
+  background:var(--blue); margin:0 2px;
+  opacity:.6; flex-shrink:0;
+}
+
+/* Nav links */
+.tn-links {
+  display:flex; align-items:center;
+  flex:1; gap:0; height:100%;
+}
+.tn-link {
+  display:inline-flex; align-items:center;
+  height:56px; padding:0 12px;
+  font-size:.78rem; font-weight:500;
+  color:var(--text-3);
+  background:none; border:none;
+  cursor:pointer; position:relative;
+  transition:color var(--t);
+  white-space:nowrap; letter-spacing:-.01em;
+  text-decoration:none;
+}
+.tn-link:hover { color:var(--text); }
+.tn-link::after {
+  content:''; position:absolute;
+  bottom:0; left:12px; right:12px;
+  height:2px; background:var(--blue);
+  transform:scaleX(0); transform-origin:left;
+  transition:transform .22s ease;
+  border-radius:2px 2px 0 0;
+}
+.tn-link:hover::after { transform:scaleX(.5); }
+.tn-link.tn-active { color:var(--text); font-weight:600; }
+.tn-link.tn-active::after { transform:scaleX(1); }
+
+/* Right controls */
+.tn-right {
+  display:flex; align-items:center; gap:8px;
+  flex-shrink:0; margin-left:auto;
+}
+.tn-station-pill {
+  display:flex; align-items:center; gap:6px;
+  padding:5px 12px;
+  background:var(--bg-raised);
+  border:1px solid var(--border);
+  border-radius:var(--r-full);
+  font-size:.72rem; font-weight:500;
+  color:var(--text-2);
+  cursor:pointer; transition:all var(--t);
+  white-space:nowrap;
+}
+.tn-station-pill:hover {
+  background:var(--bg-alt);
+  border-color:var(--blue);
+  color:var(--text);
+}
+.tn-station-live {
+  width:5px; height:5px; border-radius:50%;
+  background:#10b981; flex-shrink:0;
+  animation:liveRing 2s ease-out infinite;
+}
+.tn-icon-btn {
+  width:32px; height:32px;
+  border-radius:var(--r-md);
+  border:1px solid var(--border);
+  background:var(--bg-surface);
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer; color:var(--text-3);
+  transition:all var(--t);
+}
+.tn-icon-btn:hover {
+  background:var(--bg-raised);
+  color:var(--text);
+  border-color:var(--blue);
+}
+
+/* ── Controls strip (station + theme, below topnav) ─────────────── */
+.aq-controls-strip {
+  display:flex; align-items:center; justify-content:flex-end;
+  gap:8px;
+  padding:6px 0;
+  margin-bottom:8px;
+}
+
+/* Sidebar (premium, when opened via settings) ───────────────────── */
+[data-testid="stSidebar"].aq-sb-visible {
+  display:flex !important;
   background:#06090f !important;
   border-right:1px solid rgba(255,255,255,.05) !important;
+  z-index:9997 !important;
 }
 [data-testid="stSidebarContent"] { padding:20px 14px !important; }
-[data-testid="stSidebar"] * { font-family:var(--font) !important; color:#7d8fa3 !important; }
-[data-testid="stSidebar"] h1,
-[data-testid="stSidebar"] h2,
-[data-testid="stSidebar"] h3 {
+[data-testid="stSidebar"].aq-sb-visible * { font-family:var(--font) !important; color:#7d8fa3 !important; }
+[data-testid="stSidebar"].aq-sb-visible h1,
+[data-testid="stSidebar"].aq-sb-visible h2,
+[data-testid="stSidebar"].aq-sb-visible h3 {
   color:#fff !important;
   font-size:.65rem !important; font-weight:600 !important;
   letter-spacing:1.8px !important; text-transform:uppercase !important;
   padding:20px 8px 8px !important;
-  border-top:1px solid rgba(255,255,255,.05) !important;
-  margin-top:8px !important;
-}
-[data-testid="stSidebar"] h1:first-child { border-top:none !important; padding-top:4px !important; }
-[data-testid="stSidebar"] [data-baseweb="radio"] label {
-  padding:9px 12px !important; border-radius:8px !important;
-  font-size:.875rem !important; font-weight:500 !important; color:#5d6f82 !important;
-  transition:all var(--t) !important; cursor:pointer !important;
-}
-[data-testid="stSidebar"] [data-baseweb="radio"] label:hover {
-  background:rgba(255,255,255,.05) !important; color:#b0bfcd !important;
 }
 [data-testid="stSidebar"] [data-baseweb="radio"]:has(input:checked) label,
 [data-testid="stSidebar"] [aria-checked="true"] ~ div label {
