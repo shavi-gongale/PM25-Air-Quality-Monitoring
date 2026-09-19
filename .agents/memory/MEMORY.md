@@ -1,0 +1,1 @@
+- [Streamlit HTML compatibility](streamlit-html-compatibility.md) — avoid inline JavaScript and event-handler attributes in `st.markdown(..., unsafe_allow_html=True)`.

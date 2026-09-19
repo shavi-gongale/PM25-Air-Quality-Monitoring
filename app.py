@@ -10,6 +10,7 @@ from io import BytesIO
 import base64
 import json
 import pickle
+from urllib.parse import quote
 
 # Import custom modules
 from data_handler import load_data, preprocess_data, split_data
@@ -301,59 +302,10 @@ st.markdown(
 with open('.streamlit/styles.css') as f:
     st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
 
-# ── Global premium CSS + 3D JS engine ──────────────────────────────
-st.markdown("""
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-<canvas id="aq-particles" style="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;opacity:.18;"></canvas>
-<script>
-(function(){
-  'use strict';
-  var TILT=9,LIFT=8;
-  function bindTilt(el){
-    if(el._aqT)return; el._aqT=true;
-    el.addEventListener('mousemove',function(e){
-      var r=el.getBoundingClientRect();
-      var x=(e.clientX-r.left)/r.width-.5;
-      var y=(e.clientY-r.top)/r.height-.5;
-      el.style.transition='none';
-      el.style.transform='perspective(900px) rotateX('+(-y*TILT)+'deg) rotateY('+(x*TILT)+'deg) translateZ('+LIFT+'px)';
-    });
-    el.addEventListener('mouseleave',function(){
-      el.style.transition='transform .5s cubic-bezier(.4,0,.2,1)';
-      el.style.transform='none';
-    });
-  }
-  function initTilt(){
-    ['.weather-card','[data-testid="stMetric"]','.aqi-hero-card','.station-overview','.model-overview','.page-hero'].forEach(function(sel){
-      document.querySelectorAll(sel).forEach(bindTilt);
-    });
-  }
-  function initParticles(){
-    var c=document.getElementById('aq-particles'); if(!c)return;
-    var ctx=c.getContext('2d');
-    function resize(){c.width=window.innerWidth;c.height=window.innerHeight;}
-    resize(); window.addEventListener('resize',resize);
-    var ps=Array.from({length:35},function(){return{x:Math.random()*window.innerWidth,y:Math.random()*window.innerHeight,r:Math.random()*1.5+.3,speed:Math.random()*.4+.1,dx:(Math.random()-.5)*.2,op:Math.random()*.28+.06};});
-    function draw(){
-      ctx.clearRect(0,0,c.width,c.height);
-      ps.forEach(function(p){
-        ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
-        ctx.fillStyle='rgba(37,99,235,'+p.op+')';ctx.fill();
-        p.y-=p.speed;p.x+=p.dx;
-        if(p.y<-10){p.y=c.height+10;p.x=Math.random()*c.width;}
-        if(p.x<0)p.x=c.width;if(p.x>c.width)p.x=0;
-      });
-      requestAnimationFrame(draw);
-    }
-    draw();
-  }
-  if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',function(){initTilt();initParticles();});}
-  else{setTimeout(function(){initTilt();initParticles();},150);}
-  new MutationObserver(function(){initTilt();}).observe(document.body,{childList:true,subtree:true});
-})();
-</script>
-""", unsafe_allow_html=True)
+# Keep the app compatible with Streamlit's HTML-to-React renderer. Decorative
+# canvas animation was previously injected here as an inline script, but
+# Streamlit can interpret script content as component props and crash the
+# entire page in the browser.
 
 # Create necessary folders for storage
 if not os.path.exists('data/historical'):
@@ -617,7 +569,18 @@ if "theme_mode" not in st.session_state:
 if "prediction_horizons" not in st.session_state:
     st.session_state.prediction_horizons = ["Present Day"]
 
-# Keep hidden sidebar for JS-click navigation fallback
+# Apply navigation and theme changes from the custom top bar. Plain links are
+# used instead of inline onclick handlers, which Streamlit's React renderer
+# cannot safely render.
+_requested_page = st.query_params.get("page")
+if _requested_page in _ALL_PAGES:
+    st.session_state.page = _requested_page
+
+_requested_theme = st.query_params.get("theme")
+if _requested_theme in ("Light Mode", "Dark Mode"):
+    st.session_state.theme_mode = _requested_theme
+
+# Keep the sidebar radio synchronized with the custom top navigation.
 page = st.sidebar.radio(
     "Go to", _ALL_PAGES,
     index=_ALL_PAGES.index(st.session_state.page) if st.session_state.page in _ALL_PAGES else 0,
@@ -813,7 +776,7 @@ _PAGES_MAP = {
     "Data Download":                  "Downloads",
 }
 _tn_html = "".join([
-    f'<button class="tn-link{" tn-active" if page == k else ""}" onclick="aqNav(\'{k.replace(chr(39), "")}\')"><span>{v}</span></button>'
+    f'<a class="tn-link{" tn-active" if page == k else ""}" href="?page={quote(k)}"><span>{v}</span></a>'
     for k, v in _PAGES_MAP.items()
 ])
 _is_dark_nav = theme_mode == "Dark Mode"
@@ -821,6 +784,7 @@ _moon_svg = '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/
 _sun_svg  = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>'
 _theme_icon = _sun_svg if _is_dark_nav else _moon_svg
 _theme_title = "Switch to Light Mode" if _is_dark_nav else "Switch to Dark Mode"
+_next_theme = "Light Mode" if _is_dark_nav else "Dark Mode"
 
 st.markdown(f"""
 <nav class="aq-topnav" id="aqTopNav">
@@ -834,37 +798,11 @@ st.markdown(f"""
       <span class="tn-station-live"></span>
       {selected_station}
     </div>
-    <button class="tn-icon-btn" id="aqThemeToggle" title="{_theme_title}" onclick="aqTheme()">
+    <a class="tn-icon-btn" id="aqThemeToggle" title="{_theme_title}" href="?page={quote(page)}&theme={quote(_next_theme)}">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">{_theme_icon}</svg>
-    </button>
+    </a>
   </div>
 </nav>
-<script>
-(function() {{
-  function aqNav(pg) {{
-    var sb = document.querySelector('[data-testid="stSidebar"]');
-    if (!sb) return;
-    var labels = sb.querySelectorAll('label');
-    for (var i = 0; i < labels.length; i++) {{
-      var t = (labels[i].innerText || labels[i].textContent || '').trim();
-      if (t === pg) {{ labels[i].click(); return; }}
-    }}
-  }}
-  function aqTheme() {{
-    var btn = document.querySelector('[data-testid="stBaseButton-secondary"][key="_ctrl_theme"]') ||
-              document.querySelector('button[data-testid="stBaseButton-secondary"]');
-    if (btn) {{ btn.click(); return; }}
-    // Fallback: find by text
-    var btns = document.querySelectorAll('button');
-    for (var i = 0; i < btns.length; i++) {{
-      var t = btns[i].innerText || '';
-      if (t === '🌙' || t === '☀️') {{ btns[i].click(); return; }}
-    }}
-  }}
-  window.aqNav = aqNav;
-  window.aqTheme = aqTheme;
-}})();
-</script>
 """, unsafe_allow_html=True)
 
 # ── SUB-NAV: station + theme controls ────────────────────────────────
