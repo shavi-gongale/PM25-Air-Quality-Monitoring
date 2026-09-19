@@ -40,7 +40,9 @@ def generate_mock_waqi_data(location):
         'pressure': round(1013 * random.uniform(0.98, 1.02), 1),
         'wind_speed': round(5 * random.uniform(0.5, 1.5), 1),
         'timestamp': datetime.now().isoformat(),
-        'city': location
+        'city': location,
+        'is_fallback': True,
+        'source': 'demo',
     }
 
 def get_waqi_data(location):
@@ -91,7 +93,9 @@ def get_waqi_data(location):
                 'pressure': station_data.get('iaqi', {}).get('p', {}).get('v', 'N/A'),
                 'wind_speed': station_data.get('iaqi', {}).get('w', {}).get('v', 'N/A'),
                 'timestamp': station_data.get('time', {}).get('s', datetime.now().isoformat()),
-                'city': station_data.get('city', {}).get('name', location)
+                'city': station_data.get('city', {}).get('name', location),
+                'is_fallback': False,
+                'source': 'waqi',
             }
             
             return air_quality_data

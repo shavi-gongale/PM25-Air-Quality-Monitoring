@@ -1,1 +1,2 @@
 - [Streamlit HTML compatibility](streamlit-html-compatibility.md) — avoid inline JavaScript and event-handler attributes in `st.markdown(..., unsafe_allow_html=True)`.
+- [External API fallback](external-api-fallback.md) — preserve app usability when optional live-data secrets are absent or providers fail.

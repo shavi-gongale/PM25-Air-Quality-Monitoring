@@ -132,6 +132,13 @@ def collect_and_append_realtime_data(station):
         current_data = get_current_observed_weather(station)
         
         if current_data:
+            if current_data.get('is_fallback'):
+                st.warning(
+                    "Live weather or air-quality APIs are not configured. "
+                    "Demo conditions are shown, and they will not be saved as observed readings."
+                )
+                return
+
             # Load existing dataset
             existing_data = get_data()
             
@@ -193,7 +200,17 @@ def get_current_observed_weather(station):
                 'Solar_Radiation': weather_data.get('solar_radiation', 200.0),
                 'Wind_Speed': weather_data.get('wind_speed', 3.0),
                 'Relative_Humidity': weather_data.get('humidity', 65.0),
-                'PM2.5': air_quality_data.get('pm25', 35.0)
+                'PM2.5': air_quality_data.get('pm25', 35.0),
+                'is_fallback': (
+                    weather_data.get('is_fallback', False)
+                    or air_quality_data.get('is_fallback', False)
+                ),
+                'source': (
+                    'demo'
+                    if weather_data.get('is_fallback', False)
+                    or air_quality_data.get('is_fallback', False)
+                    else 'live'
+                ),
             }
         else:
             return None
@@ -857,10 +874,16 @@ if page == "Dashboard":
             # Use real-time data
             latest_pm25 = current_observed['PM2.5']
             latest_date = datetime.now().strftime("%Y-%m-%d %H:%M")
-            st.success("📡 Live data from monitoring stations")
+            if current_observed.get('is_fallback'):
+                st.info(
+                    "Showing demo current conditions because live API keys are not configured."
+                )
+            else:
+                st.success("📡 Live data from monitoring stations")
             
             # Collect and save this data for future training
-            collect_and_append_realtime_data(selected_station)
+            if not current_observed.get('is_fallback'):
+                collect_and_append_realtime_data(selected_station)
             
         else:
             # Fall back to dataset
@@ -2248,16 +2271,14 @@ elif page == "PM2.5 Predictions":
                     """)
                 
             else:
-                st.error("Unable to retrieve real-time observed weather data. Please check your API keys.")
-                
-                # Show what data would be needed
-                st.info("""
-                To use real-time observed weather data, the system needs:
-                - OpenWeather API key for current weather conditions
-                - WAQI API key for current air quality measurements
-                
-                Without these, you can still make predictions using manual parameter input below.
-                """)
+                st.warning(
+                    "Current conditions are unavailable. You can still make predictions "
+                    "using manual parameter input below."
+                )
+                st.info(
+                    "Configure OPENWEATHER_API_KEY and WAQI_API_KEY as project secrets "
+                    "to enable live weather and air-quality readings."
+                )
         
         else:  # Manual parameter input
             st.subheader("Enter Weather Parameters")

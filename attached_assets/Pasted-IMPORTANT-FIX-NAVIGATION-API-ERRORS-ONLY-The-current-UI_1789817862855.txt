@@ -1,0 +1,185 @@
+IMPORTANT: FIX NAVIGATION + API ERRORS ONLY
+
+The current UI redesign is working, and the navigation UI is already correct.
+
+DO NOT redesign the UI again.
+
+DO NOT change the layout.
+
+DO NOT remove any features.
+
+There are TWO remaining issues that must be fixed.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. NAVIGATION — SAME TAB
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Currently, when I click:
+
+Dashboard
+Analytics
+Models
+Predictions
+Satellite
+Historical
+Downloads
+
+the selected page is opening in a NEW browser tab/window.
+
+This must be fixed.
+
+Required behavior:
+
+Click Dashboard
+→ Dashboard opens in the CURRENT browser tab.
+
+Click Analytics
+→ Analytics opens in the CURRENT browser tab.
+
+Click Predictions
+→ Predictions opens in the CURRENT browser tab.
+
+And so on.
+
+NEVER open a new browser tab/window.
+
+Do NOT use:
+
+target="_blank"
+
+window.open()
+
+or any other new-tab behavior.
+
+If HTML links are being used, use normal same-tab navigation.
+
+If Streamlit navigation/session_state is being used, preserve that architecture and render the selected page inside the existing application.
+
+Keep:
+
+• Top navigation
+• Active page indicator
+• Current UI design
+• All pages
+• All existing functionality
+
+Do not create duplicate navigation.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2. API ERROR — DIAGNOSE AND FIX
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+The application is currently showing API-related errors.
+
+Do NOT blindly replace the APIs.
+
+First inspect the complete codebase and identify:
+
+• Which APIs are being used
+• Where API calls are made
+• API endpoints
+• Request parameters
+• Headers
+• Authentication/API keys
+• Environment variables/secrets
+• Response parsing
+• Error handling
+• Timeout handling
+• Any API calls triggered when changing pages
+• Any API calls triggered by station selection
+
+Find the ACTUAL cause of the API error.
+
+Then fix the API integration while preserving the application's existing intended functionality.
+
+IMPORTANT:
+
+Do NOT hardcode API keys.
+
+Do NOT expose secrets in frontend code.
+
+Do NOT commit secrets into source files.
+
+Use the existing environment/secrets configuration.
+
+If an API key is missing or invalid, provide a clear user-friendly error message instead of crashing the application.
+
+If the API response format has changed, update the response parsing accordingly.
+
+If the API request parameters are incorrect, correct them.
+
+If the API URL is incorrect, correct it using the intended existing API.
+
+If there is a timeout, implement appropriate timeout/error handling without breaking the application.
+
+If the API is temporarily unavailable, gracefully handle the failure and keep the rest of the application usable.
+
+IMPORTANT:
+Do NOT replace a working API with a random alternative API just to make the error disappear.
+
+Preserve the original data source and intended functionality whenever possible.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+3. TEST EVERYTHING
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+After fixing the issues, test:
+
+Dashboard
+
+Analytics
+
+Models
+
+Predictions
+
+Satellite
+
+Historical
+
+Downloads
+
+Test navigation from each page.
+
+Confirm every page opens in the SAME browser tab.
+
+Then test all API-dependent functionality.
+
+Confirm:
+
+• Current weather data loads
+• Station selection works
+• PM2.5 data loads
+• Prediction-related API calls work
+• Satellite/API data works where applicable
+• API errors are handled gracefully
+
+Check browser console errors and Streamlit terminal/runtime errors.
+
+Fix any errors directly related to these issues.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+IMPORTANT CONSTRAINT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+The current UI redesign is already complete.
+
+DO NOT redesign anything.
+
+DO NOT change the current layout.
+
+DO NOT change colors.
+
+DO NOT change typography.
+
+DO NOT change animations.
+
+DO NOT change the navigation appearance.
+
+ONLY:
+
+1. Fix same-tab navigation.
+2. Diagnose and fix the existing API issue.
+3. Verify that all existing features continue working.
+
+Do not stop until both issues are resolved.
