@@ -179,7 +179,13 @@ def collect_and_append_realtime_data(station):
             st.json(current_data)
             
         else:
-            st.error("Unable to collect current weather data. Please check API keys.")
+            st.error(
+                "Unable to collect live current weather and air-quality data."
+            )
+            st.info(
+                "Configure OPENWEATHER_API_KEY and WAQI_API_KEY as project secrets "
+                "to enable live collection. No data was saved."
+            )
             
     except Exception as e:
         st.error(f"Error collecting real-time data: {str(e)}")
@@ -201,16 +207,6 @@ def get_current_observed_weather(station):
                 'Wind_Speed': weather_data.get('wind_speed', 3.0),
                 'Relative_Humidity': weather_data.get('humidity', 65.0),
                 'PM2.5': air_quality_data.get('pm25', 35.0),
-                'is_fallback': (
-                    weather_data.get('is_fallback', False)
-                    or air_quality_data.get('is_fallback', False)
-                ),
-                'source': (
-                    'demo'
-                    if weather_data.get('is_fallback', False)
-                    or air_quality_data.get('is_fallback', False)
-                    else 'live'
-                ),
             }
         else:
             return None
@@ -793,7 +789,7 @@ _PAGES_MAP = {
     "Data Download":                  "Downloads",
 }
 _tn_html = "".join([
-    f'<a class="tn-link{" tn-active" if page == k else ""}" href="?page={quote(k)}"><span>{v}</span></a>'
+    f'<a class="tn-link{" tn-active" if page == k else ""}" href="?page={quote(k)}" target="_self"><span>{v}</span></a>'
     for k, v in _PAGES_MAP.items()
 ])
 _is_dark_nav = theme_mode == "Dark Mode"
@@ -815,7 +811,7 @@ st.markdown(f"""
       <span class="tn-station-live"></span>
       {selected_station}
     </div>
-    <a class="tn-icon-btn" id="aqThemeToggle" title="{_theme_title}" href="?page={quote(page)}&theme={quote(_next_theme)}">
+    <a class="tn-icon-btn" id="aqThemeToggle" title="{_theme_title}" href="?page={quote(page)}&theme={quote(_next_theme)}" target="_self">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">{_theme_icon}</svg>
     </a>
   </div>
@@ -874,18 +870,16 @@ if page == "Dashboard":
             # Use real-time data
             latest_pm25 = current_observed['PM2.5']
             latest_date = datetime.now().strftime("%Y-%m-%d %H:%M")
-            if current_observed.get('is_fallback'):
-                st.info(
-                    "Showing demo current conditions because live API keys are not configured."
-                )
-            else:
-                st.success("📡 Live data from monitoring stations")
+            st.success("📡 Live data from monitoring stations")
             
             # Collect and save this data for future training
-            if not current_observed.get('is_fallback'):
-                collect_and_append_realtime_data(selected_station)
+            collect_and_append_realtime_data(selected_station)
             
         else:
+            st.warning(
+                "Live current conditions are unavailable. Showing the latest "
+                "stored PM2.5 reading instead."
+            )
             # Fall back to dataset
             if not data.empty:
                 station_data = data[data['Station'] == selected_station]

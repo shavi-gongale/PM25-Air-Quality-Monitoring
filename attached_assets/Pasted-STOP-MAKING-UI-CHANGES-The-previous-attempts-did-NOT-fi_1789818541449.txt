@@ -1,0 +1,209 @@
+STOP MAKING UI CHANGES.
+
+The previous attempts did NOT fix the problems.
+
+I need you to DEBUG the existing application instead of redesigning anything.
+
+There are currently TWO concrete problems:
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PROBLEM 1 — NAVIGATION OPENS A NEW TAB
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+The top navigation is visually correct and the pages exist.
+
+BUT when I click a navigation item, it opens the destination in a NEW browser tab.
+
+I need the destination page to open INSIDE THE SAME CURRENT BROWSER TAB.
+
+Do NOT guess how the navigation works.
+
+FIRST inspect the actual implementation.
+
+Search the entire codebase for:
+
+- target="_blank"
+- window.open
+- window.location
+- href=
+- markdown links
+- HTML anchor tags
+- st.page_link
+- st.link_button
+- st.navigation
+- multipage navigation
+- session_state navigation
+- query parameters
+- iframe navigation
+- JavaScript navigation
+- custom components responsible for the top navbar
+
+Identify EXACTLY which piece of code causes the new-tab behavior.
+
+Then fix THAT code.
+
+DO NOT redesign the navbar.
+
+DO NOT replace the navigation with a different system unless the current implementation fundamentally cannot support same-tab navigation.
+
+The required behavior is:
+
+Click Dashboard
+→ Dashboard renders in the SAME browser tab.
+
+Click Analytics
+→ Analytics renders in the SAME browser tab.
+
+Click Model Training
+→ Model Training renders in the SAME browser tab.
+
+Click Predictions
+→ Predictions renders in the SAME browser tab.
+
+Click Satellite
+→ Satellite renders in the SAME browser tab.
+
+Click Historical
+→ Historical renders in the SAME browser tab.
+
+Click Downloads
+→ Downloads renders in the SAME browser tab.
+
+There must be NO second browser tab.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PROBLEM 2 — API ERROR
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+There is also an API error in the application.
+
+DO NOT simply tell me that the API should work.
+
+DO NOT replace the API with a random alternative.
+
+DO NOT create mock data.
+
+DO NOT hide the error.
+
+DO NOT remove the feature that uses the API.
+
+FIRST find the actual API error.
+
+Inspect the complete codebase and identify:
+
+1. Which API is failing.
+2. Which file/function makes the request.
+3. Exact endpoint.
+4. HTTP method.
+5. Parameters.
+6. Headers.
+7. Authentication/API key configuration.
+8. Environment variables/secrets being used.
+9. HTTP status code.
+10. Actual API response/error message.
+11. Where the response is parsed.
+12. Whether the response format matches what the application expects.
+
+Then determine the actual root cause.
+
+For example:
+
+- invalid endpoint
+- incorrect parameter
+- missing API key
+- incorrectly loaded environment variable
+- authentication failure
+- changed response format
+- timeout
+- rate limit
+- incorrect JSON parsing
+- API request being made from the wrong place
+- incorrect station/location value
+- dependency issue
+- network/request issue
+
+Fix the ROOT CAUSE.
+
+Do not just suppress the error.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+DEBUGGING PROCESS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Before changing code:
+
+1. Inspect the navigation implementation.
+2. Inspect the API implementation.
+3. Run the application.
+4. Reproduce the navigation issue.
+5. Reproduce the API issue.
+6. Read the actual runtime/terminal error.
+7. Read browser console errors if applicable.
+8. Identify the exact files and lines responsible.
+9. Fix them.
+10. Run the application again.
+11. Test every navigation item.
+12. Test every API-dependent feature.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+VERY IMPORTANT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Do NOT make assumptions.
+
+Do NOT say "this should fix it".
+
+Actually verify the fix.
+
+Do NOT stop after changing code.
+
+Run the application and confirm:
+
+Navigation works in the SAME TAB.
+
+API requests successfully return the expected data.
+
+Existing pages still load.
+
+Existing features still work.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+DO NOT TOUCH THE UI
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+The current redesign is already done.
+
+Do NOT change:
+
+- layout
+- colors
+- typography
+- animations
+- cards
+- hero
+- navigation appearance
+- page design
+
+ONLY fix:
+
+1. Same-tab navigation.
+2. API error.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FINAL RESPONSE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+When finished, tell me:
+
+NAVIGATION:
+What was causing the new-tab behavior?
+What did you change?
+
+API:
+Which API was failing?
+What was the actual error?
+What was the root cause?
+What did you change?
+
+VERIFICATION:
+Confirm that you actually tested both fixes.

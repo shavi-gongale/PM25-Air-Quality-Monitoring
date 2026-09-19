@@ -3,47 +3,7 @@ import os
 import pandas as pd
 from datetime import datetime, timedelta
 import json
-import random
-
-def generate_mock_waqi_data(location):
-    """
-    Generate mock WAQI data for demonstration when API key is not available
-    
-    Args:
-        location (str): Location name
-        
-    Returns:
-        dict: Mock air quality data
-    """
-    # Generate realistic mock data based on location
-    base_values = {
-        'Fort William': {'pm25': 35, 'aqi': 70, 'temp': 28, 'humidity': 75},
-        'Bidhannagar': {'pm25': 42, 'aqi': 85, 'temp': 30, 'humidity': 70}
-    }
-    
-    base = base_values.get(location, base_values['Fort William'])
-    
-    # Add some random variation
-    variation = random.uniform(0.8, 1.2)
-    
-    return {
-        'station': location,
-        'aqi': int(base['aqi'] * variation),
-        'pm25': round(base['pm25'] * variation, 1),
-        'pm10': round(base['pm25'] * variation * 1.5, 1),
-        'no2': round(25 * variation, 1),
-        'so2': round(15 * variation, 1),
-        'co': round(8 * variation, 1),
-        'o3': round(35 * variation, 1),
-        'temperature': round(base['temp'] * random.uniform(0.9, 1.1), 1),
-        'humidity': round(base['humidity'] * random.uniform(0.9, 1.1), 1),
-        'pressure': round(1013 * random.uniform(0.98, 1.02), 1),
-        'wind_speed': round(5 * random.uniform(0.5, 1.5), 1),
-        'timestamp': datetime.now().isoformat(),
-        'city': location,
-        'is_fallback': True,
-        'source': 'demo',
-    }
+import logging
 
 def get_waqi_data(location):
     """
@@ -58,8 +18,10 @@ def get_waqi_data(location):
     api_key = os.environ.get("WAQI_API_KEY")
     
     if not api_key:
-        print("Warning: WAQI API key not found. Using mock data for demonstration.")
-        return generate_mock_waqi_data(location)
+        logging.error(
+            "WAQI air-quality data unavailable: WAQI_API_KEY is not configured."
+        )
+        return None
     
     # Map locations to specific WAQI station names for exact data
     location_mapping = {
@@ -94,16 +56,22 @@ def get_waqi_data(location):
                 'wind_speed': station_data.get('iaqi', {}).get('w', {}).get('v', 'N/A'),
                 'timestamp': station_data.get('time', {}).get('s', datetime.now().isoformat()),
                 'city': station_data.get('city', {}).get('name', location),
-                'is_fallback': False,
-                'source': 'waqi',
             }
             
             return air_quality_data
         else:
-            raise Exception(f"WAQI API error: {data.get('message', 'Unknown error')}")
+            logging.error(
+                "WAQI air-quality request failed: %s",
+                data.get('message', 'Unknown API error'),
+            )
+            return None
             
     except requests.exceptions.RequestException as e:
-        raise Exception(f"Error fetching WAQI data: {e}")
+        logging.error("WAQI air-quality request failed: %s", e)
+        return None
+    except (KeyError, TypeError, ValueError) as e:
+        logging.error("WAQI returned an unexpected response: %s", e)
+        return None
 
 def get_historical_waqi_data(location, days=30):
     """
@@ -116,9 +84,14 @@ def get_historical_waqi_data(location, days=30):
     Returns:
         pd.DataFrame: Historical air quality data
     """
-    # WAQI doesn't provide extensive historical data in free tier
-    # Generate realistic historical data based on current conditions
     current_data = get_waqi_data(location)
+    if not current_data:
+        return pd.DataFrame(
+            columns=[
+                'Date', 'Station', 'PM2.5', 'AQI',
+                'Temperature', 'Humidity', 'Wind_Speed'
+            ]
+        )
     
     dates = pd.date_range(end=datetime.now(), periods=days, freq='D')
     historical_data = []
@@ -159,6 +132,8 @@ def get_waqi_forecast(location, days=7):
         list: Forecast data for the specified days
     """
     current_data = get_waqi_data(location)
+    if not current_data:
+        return []
     forecast_data = []
     
     for i in range(days):

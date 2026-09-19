@@ -10,25 +10,6 @@ _LOCATION_COORDS = {
     'Bidhannagar': {'lat': 22.5775, 'lon': 88.4328},
 }
 
-
-def _fallback_current_weather(location):
-    """Return stable demo conditions when OpenWeather is not configured."""
-    defaults = {
-        'Fort William': {'temp': 28.0, 'humidity': 65.0, 'wind_speed': 3.0},
-        'Bidhannagar': {'temp': 29.0, 'humidity': 70.0, 'wind_speed': 2.5},
-    }
-    values = defaults.get(location, defaults['Fort William']).copy()
-    current_hour = datetime.now().hour
-    hour_factor = max(0, 1 - abs(current_hour - 12) / 12)
-    values.update({
-        'solar_radiation': round(220 * hour_factor, 1),
-        'timestamp': datetime.now().isoformat(),
-        'location': location,
-        'is_fallback': True,
-        'source': 'demo',
-    })
-    return values
-
 def get_current_weather_data(location):
     """
     Get current observed weather data from OpenWeatherMap API
@@ -42,10 +23,11 @@ def get_current_weather_data(location):
     api_key = os.getenv('OPENWEATHER_API_KEY')
     
     if not api_key:
-        logging.warning(
-            "OPENWEATHER_API_KEY is not configured; using demo current weather data."
+        logging.error(
+            "OpenWeather current weather unavailable: "
+            "OPENWEATHER_API_KEY is not configured."
         )
-        return _fallback_current_weather(location)
+        return None
     
     try:
         # Map location names to coordinates
@@ -87,23 +69,24 @@ def get_current_weather_data(location):
                 'solar_radiation': max(0, solar_radiation),
                 'timestamp': datetime.now().isoformat(),
                 'location': location,
-                'is_fallback': False,
-                'source': 'openweathermap',
             }
         else:
-            logging.warning(
-                "OpenWeather returned HTTP %s; using demo current weather data.",
-                response.status_code,
+            try:
+                error_message = response.json().get('message', response.text[:200])
+            except (ValueError, AttributeError):
+                error_message = response.text[:200]
+            logging.error(
+                "OpenWeather current weather request failed: HTTP %s - %s",
+                response.status_code, error_message
             )
-            return _fallback_current_weather(location)
+            return None
             
-    except Exception as e:
-        logging.warning(
-            "Could not fetch OpenWeather current weather (%s); "
-            "using demo current weather data.",
-            e,
-        )
-        return _fallback_current_weather(location)
+    except requests.exceptions.RequestException as e:
+        logging.error("OpenWeather current weather request failed: %s", e)
+        return None
+    except (KeyError, TypeError, ValueError) as e:
+        logging.error("OpenWeather returned an unexpected response: %s", e)
+        return None
 
 def get_current_uv_index(location):
     """
