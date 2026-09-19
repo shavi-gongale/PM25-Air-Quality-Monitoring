@@ -3,8 +3,8 @@ name: External API fallback
 description: Behavior for optional weather and air-quality provider credentials.
 ---
 
-Live provider APIs should remain the primary source, but missing credentials and temporary provider failures must produce labeled demo data rather than `None` values that break combined workflows.
+Live provider APIs must remain the only source for live-data features. Missing credentials and temporary provider failures should produce a clear unavailable state rather than fabricated readings.
 
-**Why:** The project intentionally supports demonstration mode, and one provider already used that pattern while the current-weather path still failed hard when its secret was absent.
+**Why:** The application is intended to report monitoring data, and mock values can be mistaken for real observations or be persisted into model-training data.
 
-**How to apply:** Mark fallback readings as non-live, show a clear configuration message, and never persist fallback readings as observed measurements.
+**How to apply:** Keep provider credentials in Replit Secrets, log the provider's status/error, return an empty/unavailable result, and explain which secret is required in the UI.
