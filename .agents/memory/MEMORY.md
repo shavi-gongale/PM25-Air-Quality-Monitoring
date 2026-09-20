@@ -1,2 +1,0 @@
-- [Streamlit HTML compatibility](streamlit-html-compatibility.md) — avoid inline JavaScript and event-handler attributes in `st.markdown(..., unsafe_allow_html=True)`.
-- [External API credentials](external-api-fallback.md) — use secure secrets for live providers and report missing credentials without fabricating readings.
