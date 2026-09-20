@@ -5,6 +5,40 @@ from datetime import datetime, timedelta
 import json
 import logging
 
+
+_LOCATION_COORDS = {
+    'Fort William': {'lat': 22.5675, 'lon': 88.3476},
+    'Bidhannagar': {'lat': 22.5775, 'lon': 88.4328},
+}
+
+
+def _get_open_meteo_air_quality(location):
+    """Get current PM2.5 from Open-Meteo when WAQI is unavailable."""
+    coords = _LOCATION_COORDS.get(location)
+    if not coords:
+        return None
+
+    response = requests.get(
+        "https://air-quality-api.open-meteo.com/v1/air-quality",
+        params={
+            'latitude': coords['lat'],
+            'longitude': coords['lon'],
+            'current': 'pm2_5',
+            'timezone': 'auto',
+        },
+        timeout=10,
+    )
+    response.raise_for_status()
+    pm25 = response.json()['current']['pm2_5']
+    return {
+        'station': location,
+        'aqi': pm25 * 2,
+        'pm25': pm25,
+        'timestamp': datetime.now().isoformat(),
+        'city': location,
+        'source': 'Open-Meteo',
+    }
+
 def get_waqi_data(location):
     """
     Fetch real-time air quality data from WAQI API for Fort William and Bidhannagar
@@ -21,7 +55,11 @@ def get_waqi_data(location):
         logging.error(
             "WAQI air-quality data unavailable: WAQI_API_KEY is not configured."
         )
-        return None
+        try:
+            return _get_open_meteo_air_quality(location)
+        except (requests.exceptions.RequestException, KeyError, TypeError, ValueError) as e:
+            logging.error("Open-Meteo air-quality request failed: %s", e)
+            return None
     
     # Map locations to specific WAQI station names for exact data
     location_mapping = {
@@ -64,11 +102,19 @@ def get_waqi_data(location):
                 "WAQI air-quality request failed: %s",
                 data.get('message', 'Unknown API error'),
             )
-            return None
+            try:
+                return _get_open_meteo_air_quality(location)
+            except (requests.exceptions.RequestException, KeyError, TypeError, ValueError) as e:
+                logging.error("Open-Meteo air-quality request failed: %s", e)
+                return None
             
     except requests.exceptions.RequestException as e:
         logging.error("WAQI air-quality request failed: %s", e)
-        return None
+        try:
+            return _get_open_meteo_air_quality(location)
+        except (requests.exceptions.RequestException, KeyError, TypeError, ValueError) as fallback_error:
+            logging.error("Open-Meteo air-quality request failed: %s", fallback_error)
+            return None
     except (KeyError, TypeError, ValueError) as e:
         logging.error("WAQI returned an unexpected response: %s", e)
         return None

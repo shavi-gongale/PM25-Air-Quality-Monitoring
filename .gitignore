@@ -1,0 +1,40 @@
+# Python environments and caches
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+.streamlit/secrets.toml
+.streamlit/credentials.toml
+
+# Logs and local tooling
+*.log
+.DS_Store
+.vscode/
+.idea/
+.agents/
+.config/
+
+# Replit-specific local configuration
+.replit
+
+# Runtime-generated application data
+# Existing files are preserved; these rules ignore future generated files.
+data/daily_observed/*
+!data/daily_observed/.gitkeep
+data/predictions/*
+!data/predictions/.gitkeep
+data/user_data/*
+!data/user_data/.gitkeep
+
+# Android/Gradle build output
+android_app/.gradle/
+android_app/build/
+android_app/app/build/
+android_app/local.properties

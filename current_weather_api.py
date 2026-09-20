@@ -10,6 +10,38 @@ _LOCATION_COORDS = {
     'Bidhannagar': {'lat': 22.5775, 'lon': 88.4328},
 }
 
+
+def _get_open_meteo_weather(location):
+    """Get current weather from Open-Meteo when OpenWeather is unavailable."""
+    coords = _LOCATION_COORDS.get(location)
+    if not coords:
+        return None
+
+    response = requests.get(
+        "https://api.open-meteo.com/v1/forecast",
+        params={
+            'latitude': coords['lat'],
+            'longitude': coords['lon'],
+            'current': 'temperature_2m,relative_humidity_2m,wind_speed_10m',
+            'wind_speed_unit': 'ms',
+            'timezone': 'auto',
+        },
+        timeout=10,
+    )
+    response.raise_for_status()
+    current = response.json()['current']
+    current_hour = datetime.now().hour
+    solar_radiation = 0 if current_hour < 6 or current_hour > 18 else 400
+    return {
+        'temp': current['temperature_2m'],
+        'humidity': current['relative_humidity_2m'],
+        'wind_speed': current['wind_speed_10m'],
+        'solar_radiation': solar_radiation,
+        'timestamp': datetime.now().isoformat(),
+        'location': location,
+        'source': 'Open-Meteo',
+    }
+
 def get_current_weather_data(location):
     """
     Get current observed weather data from OpenWeatherMap API
@@ -27,7 +59,11 @@ def get_current_weather_data(location):
             "OpenWeather current weather unavailable: "
             "OPENWEATHER_API_KEY is not configured."
         )
-        return None
+        try:
+            return _get_open_meteo_weather(location)
+        except (requests.exceptions.RequestException, KeyError, TypeError, ValueError) as e:
+            logging.error("Open-Meteo current weather request failed: %s", e)
+            return None
     
     try:
         # Map location names to coordinates
@@ -79,11 +115,19 @@ def get_current_weather_data(location):
                 "OpenWeather current weather request failed: HTTP %s - %s",
                 response.status_code, error_message
             )
-            return None
+            try:
+                return _get_open_meteo_weather(location)
+            except (requests.exceptions.RequestException, KeyError, TypeError, ValueError) as e:
+                logging.error("Open-Meteo current weather request failed: %s", e)
+                return None
             
     except requests.exceptions.RequestException as e:
         logging.error("OpenWeather current weather request failed: %s", e)
-        return None
+        try:
+            return _get_open_meteo_weather(location)
+        except (requests.exceptions.RequestException, KeyError, TypeError, ValueError) as fallback_error:
+            logging.error("Open-Meteo current weather request failed: %s", fallback_error)
+            return None
     except (KeyError, TypeError, ValueError) as e:
         logging.error("OpenWeather returned an unexpected response: %s", e)
         return None

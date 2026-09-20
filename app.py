@@ -207,6 +207,7 @@ def get_current_observed_weather(station):
                 'Wind_Speed': weather_data.get('wind_speed', 3.0),
                 'Relative_Humidity': weather_data.get('humidity', 65.0),
                 'PM2.5': air_quality_data.get('pm25', 35.0),
+                'source': air_quality_data.get('source', weather_data.get('source', 'Live APIs')),
             }
         else:
             return None
@@ -311,8 +312,8 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# Load custom CSS
-with open('.streamlit/styles.css') as f:
+# Load custom CSS (explicit encoding to avoid Windows cp1252 decode errors)
+with open('.streamlit/styles.css', encoding='utf-8', errors='replace') as f:
     st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
 
 # Keep the app compatible with Streamlit's HTML-to-React renderer. Decorative
@@ -870,7 +871,7 @@ if page == "Dashboard":
             # Use real-time data
             latest_pm25 = current_observed['PM2.5']
             latest_date = datetime.now().strftime("%Y-%m-%d %H:%M")
-            st.success("📡 Live data from monitoring stations")
+            st.success(f"📡 Live data from {current_observed.get('source', 'monitoring stations')}")
             
             # Collect and save this data for future training
             collect_and_append_realtime_data(selected_station)
@@ -981,7 +982,6 @@ if page == "Dashboard":
     # ═══════════════════════════════════════════════════════
     st.markdown("""
     <div class="db-section">
-      <p class="db-section-label">Section 02</p>
       <h2 class="db-section-title">Environmental Conditions</h2>
       <p class="db-section-sub">Current weather parameters influencing PM2.5 concentration.</p>
     </div>
@@ -1037,7 +1037,6 @@ if page == "Dashboard":
     # ═══════════════════════════════════════════════════════
     st.markdown("""
     <div class="db-section">
-      <p class="db-section-label">Section 03</p>
       <h2 class="db-section-title">AI Health Intelligence</h2>
       <p class="db-section-sub">Personalised health advisory generated from real-time air quality conditions.</p>
     </div>
@@ -1092,7 +1091,6 @@ if page == "Dashboard":
     # ═══════════════════════════════════════════════════════
     st.markdown("""
     <div class="db-section">
-      <p class="db-section-label">Section 04</p>
       <h2 class="db-section-title">Station &amp; Model Intelligence</h2>
       <p class="db-section-sub">Monitoring station metadata and AI model performance summary.</p>
     </div>
@@ -1166,7 +1164,6 @@ if page == "Dashboard":
     # ═══════════════════════════════════════════════════════
     st.markdown("""
     <div class="db-section">
-      <p class="db-section-label">Section 05</p>
       <h2 class="db-section-title">Model Performance Visualization</h2>
       <p class="db-section-sub">Comparative RMSE across all trained algorithms — lower is better.</p>
     </div>
@@ -1198,7 +1195,6 @@ if page == "Dashboard":
     # ═══════════════════════════════════════════════════════
     st.markdown(f"""
     <div class="db-section">
-      <p class="db-section-label">Section 06</p>
       <h2 class="db-section-title">Realtime Operations</h2>
       <p class="db-section-sub">Live data collection and continuous model retraining for {selected_station}.</p>
     </div>
