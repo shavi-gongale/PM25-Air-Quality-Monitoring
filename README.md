@@ -176,16 +176,11 @@ It cleans and preprocesses the workbook data, trains the configured models, and 
 
 ## Screenshots
 
-Page-specific screenshots are not currently mapped to stable repository paths. Add reviewed screenshots before linking them here:
+### Dashboard
 
-- Dashboard: `TODO: add a reviewed dashboard screenshot path`
-- Data Analysis: `TODO: add a reviewed data-analysis screenshot path`
-- Model Training: `TODO: add a reviewed model-training screenshot path`
-- PM2.5 Prediction: `TODO: add a reviewed prediction screenshot path`
-- Satellite Imagery: `TODO: add a reviewed satellite screenshot path`
-- Historical Analysis: `TODO: add a reviewed historical-analysis screenshot path`
+![PM2.5 Monitoring Dashboard](docs/screenshots/dashboard.png)
 
-The repository currently contains a reference image at `attached_assets/screenshots/youtube_com_shorts_-Eo8G3CYWc.png`, but it is not identified as a page-specific application screenshot.
+This screenshot shows the current Streamlit dashboard with the AURA navigation, Fort William station selector, and live Open-Meteo status.
 
 ## Android Application
 
